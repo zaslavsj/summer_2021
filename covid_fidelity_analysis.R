@@ -91,22 +91,21 @@ plot_df <- fidelity_subset.long %>%
   filter(Gene == "ACE2" | Gene == "TMPRSS2") %>% 
   filter(Brain.Region == "FCX")
 
-ggplot(plot_df, aes(x = Cell.Subtype, y = Fidelity, fill = Gene)) +
+(ggplot(plot_df, aes(x = Cell.Subtype, y = Fidelity, fill = Gene)) +
   geom_bar(stat = "identity", position = "dodge") +
-  theme_minimal()
+  theme_minimal())
 
-### tSNE ###
-tsne <- Rtsne(as.matrix(df_fidelity[,2:ncol(df_fidelity)]), perplexity = 1)
+## tSNE
+tsne <- Rtsne(as.matrix(myFidelity[,2:ncol(myFidelity)]), perplexity = 1)
 
 # tsne_out: the two dimensions and corresponding regions
 tsne_out <- tsne$Y %>%
   data.frame(regions) %>%
-  rename(Brain.Region = regions, V1 = X1, V2 = X2) #rename columns
+  rename(Brain.Region = regions, V1 = X1, V2 = X2) # Rename columns
 
 
-### RSKC ###
-# Use df_fidelity2 for RSKC; has brain region as rows and gene_celltype as columns
-df_fidelity2 <- column_to_rownames(df_fidelity, "Brain.Region")
+## RSKC
+# Use myFidelity for RSKC; has brain region as rows and gene_celltype as columns
 
 while (T) {
   
@@ -146,15 +145,15 @@ while (T) {
     
     # Perform RSKC for whatever-the-value-of-'i'-is many clusters using 'myProt'.
     #    Assign RSKC's output as an entry in 'rskc_list'. 
-    rskc_list[[counter]] <- RSKC(df_fidelity2, 
+    rskc_list[[counter]] <- RSKC(myFidelity, 
                                  ncl = i,
                                  alpha = 0.1,
-                                 L1 = sqrt(ncol(df_fidelity2)))
+                                 L1 = sqrt(ncol(myFidelity)))
     
     
-    # Convert the row names of 'myProt' to a column
+    # Convert the row names of 'myFidelity' to a column
     #   called 'Identifier' and store it in 'proteins_and_ids'.
-    gene_and_region <- df_fidelity2 %>% 
+    gene_and_region <- myFidelity %>% 
       rownames_to_column("Brain.Region")
     
     # For the current object in 'rskc_list' convert the cluster labels
