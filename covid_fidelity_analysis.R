@@ -65,6 +65,7 @@ myFidelity <- fidelity %>%
 ## Prepare a dataset containing all COVID-related genes
 # Drop the columns corresponding to Entrez and Alias.
 all_fidelity2 <- all_fidelity %>% 
+#  filter(Gene %in% genes_full_list) %>% # Include only genes from 'genes_full_list'
   select(-c(2,3))
 
 all_fidelity2.long <- pivot_longer(all_fidelity2, cols = -Gene,
