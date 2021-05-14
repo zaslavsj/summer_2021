@@ -52,10 +52,12 @@ regions <- c("FCX", "PCX", "OCX", "TCX", "STR", "DI", "HIP", "AMY", "CB")
 
 # Choose only the desired brain regions from the data frame.
 fidelity_subset.wide2 <- fidelity_subset.wide %>% 
-  filter(Brain.Region %in% regions)
+  filter(Brain.Region %in% regions) %>% 
+  slice(match(regions, Brain.Region)) # Reorder rows to match entries in "regions" vector
 
 # Drop columns containing missing values.
 fidelity <- fidelity_subset.wide2[, colSums(is.na(fidelity_subset.wide2)) < nrow(fidelity_subset.wide2)]
+
 # Use the brain regions to name the rows and remove the brain region column.
 myFidelity <- fidelity %>% 
   column_to_rownames("Brain.Region")
@@ -96,7 +98,8 @@ plot_df <- fidelity_subset.long %>%
   theme_minimal())
 
 ## tSNE
-tsne <- Rtsne(as.matrix(myFidelity[,2:ncol(myFidelity)]), perplexity = 1)
+# Use fidelity for tSNE; it has brain regions as a column, not row names
+tsne <- Rtsne(as.matrix(fidelity[,2:ncol(fidelity)]), perplexity = 1)
 
 # tsne_out: the two dimensions and corresponding regions
 tsne_out <- tsne$Y %>%
