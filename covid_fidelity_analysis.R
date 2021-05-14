@@ -82,6 +82,10 @@ all_fidelity2.wide2 <- all_fidelity2.wide[-22, ]
 
 # Drop columns containing missing values.
 fidelity_full <- all_fidelity2.wide2[, colSums(is.na(all_fidelity2.wide2)) < nrow(all_fidelity2.wide2)]
+# Remove row corresponding to 'ALL'.
+fidelity_full <- fidelity_full %>% 
+  filter(!(Brain.Region %in% "ALL"))
+
 # Use the brain regions to name the rows and remove the brain region column.
 myFidelity_full <- fidelity_full %>% 
   data.frame(row.names = fidelity_full$Brain.Region) %>% 
