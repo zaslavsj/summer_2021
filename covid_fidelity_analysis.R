@@ -62,7 +62,7 @@ fidelity <- fidelity_subset.wide2[, colSums(is.na(fidelity_subset.wide2)) < nrow
 myFidelity <- fidelity %>% 
   column_to_rownames("Brain.Region")
 
-## Prepare a dataset containing all genes
+## Prepare a dataset containing all COVID-related genes
 # Drop the columns corresponding to Entrez and Alias.
 all_fidelity2 <- all_fidelity %>% 
   select(-c(2,3))
@@ -93,6 +93,7 @@ plot_df <- fidelity_subset.long %>%
   filter(Gene == "ACE2" | Gene == "TMPRSS2") %>% 
   filter(Brain.Region == "FCX")
 
+# Rough plot to check that we can reproduce previously made plots.
 (ggplot(plot_df, aes(x = Cell.Subtype, y = Fidelity, fill = Gene)) +
   geom_bar(stat = "identity", position = "dodge") +
   theme_minimal())
@@ -108,7 +109,6 @@ tsne_out <- tsne$Y %>%
 
 
 ## RSKC
-# Use myFidelity for RSKC; has brain region as rows and gene_celltype as columns
 
 while (T) {
   
@@ -146,8 +146,9 @@ while (T) {
     # Increment 'counter' with a value of 1.
     counter = counter + 1
     
-    # Perform RSKC for whatever-the-value-of-'i'-is many clusters using 'myProt'.
-    #    Assign RSKC's output as an entry in 'rskc_list'. 
+    # Perform RSKC for whatever-the-value-of-'i'-is many clusters using 'myFidelity'.
+    # Assign RSKC's output as an entry in 'rskc_list'. Use myFidelity for 
+    # RSKC; it has brain region as rows and gene_celltype as columns.
     rskc_list[[counter]] <- RSKC(myFidelity, 
                                  ncl = i,
                                  alpha = 0.1,
@@ -155,25 +156,26 @@ while (T) {
     
     
     # Convert the row names of 'myFidelity' to a column
-    #   called 'Identifier' and store it in 'proteins_and_ids'.
+    # called 'Brain.Region' and store it in 'gene_and_regions'.
     gene_and_region <- myFidelity %>% 
       rownames_to_column("Brain.Region")
     
     # For the current object in 'rskc_list' convert the cluster labels
-    #    into characters, and assign them to a new column called 'cluster_labels'
-    #    in 'protein_and_ids'.  
+    # into characters, and assign them to a new column called 'cluster_labels'
+    # in 'gene_and_region'.  
     gene_and_region$cluster_labels <- rskc_list[[counter]]$labels %>% 
       as.character()
     
-    # Merge the first 4 columns of 'tsne.age.prot' with 'protein_and_ids' according
-    #   to their shared 'Identifier' column, and assign to 'tsne_prots_ids_clusts'. 
+    # Merge the first 4 columns of 'tsne_out' with 'gene_and_region' according
+    # to their shared 'Brain.Region' column, and assign to 
+    # 'tsne_gene_region_clusts'. 
     tsne_gene_region_clusts <- merge(tsne_out,
                                      gene_and_region,
                                      by = "Brain.Region")
     
     
     # Create a tSNE scatter plot where each point is colour-coded according to
-    #   its designated RSKC cluster and assign this figure to 'tsne_scatter'.
+    # its designated RSKC cluster and assign this figure to 'tsne_scatter'.
     tsne_scatter <- ggplot(tsne_gene_region_clusts,
                            aes(V1,
                                V2,
@@ -193,7 +195,7 @@ while (T) {
             legend.position = 'bottom',
             legend.background = element_rect(fill = NA,
                                              colour = NA), 
-            legend.title.align=0.5)+
+            legend.title.align=0.5) +
       guides(fill=guide_legend(nrow = 2,
                                ncol = 4, 
                                byrow = TRUE)) +
@@ -204,34 +206,35 @@ while (T) {
     tsne_list[[counter]] <- tsne_scatter
     
     # Order the weights for the current item in 'rskc_list' from largest
-    #   to smallest, extract the names of the proteins in this order,
-    #   convert this object into a data frame, and store this info in
-    #   an object 'weight_df' in a column called 'protein'.
+    # to smallest, extract the names of the proteins in this order,
+    # convert this object into a data frame, and store this info in
+    # an object 'weight_df' in a column called 'gene_celltype'.
     weight_df <- sort(rskc_list[[counter]]$weights,
                       decreasing = T) %>% 
       names() %>% 
       
       as.data.frame() %>% 
       
-      rename('protein' = ".")
+      rename('gene_celltype' = ".")
     
     # Assign the ordered weights for the current item in 'rskc_list' into
-    #  'weight_df', in a column called 'weight', 
+    # 'weight_df', in a column called 'weight'.
     weight_df$weight <- sort(rskc_list[[counter]]$weights,
                              decreasing = T) %>% 
       
       unname() 
     
-    # Impose a factor order on the contents of 'weight_df$protein' in 
-    #   the current order. 
-    weight_df$protein <- factor(weight_df$protein,
-                                weight_df$protein)
+    # Impose a factor order on the contents of 'weight_df$gene_celltype' in 
+    # the current order. 
+    weight_df$gene_celltype <- factor(weight_df$gene_celltype,
+                                      weight_df$gene_celltype)
     
-    # Create a bar graph of the RSKC weights for each protein ordered from
-    #   biggest to largest. Assign this graph to an object, 'weight_bars'
+    # Create a bar graph of the RSKC weights for each gene and cell type 
+    # ordered from largest to smallest. Assign this graph to an object, 
+    # 'weight_bars'.
     weight_bars <- weight_df %>% 
       
-      ggplot(aes(x = protein,
+      ggplot(aes(x = gene_celltype,
                  y = weight)) + 
       
       theme_classic() +
@@ -254,7 +257,7 @@ while (T) {
     weight_list[[counter]] <- weight_bars
     
     # Print the current object in 'tsne_scatter' as a tiff in your working
-    #   directory.
+    # directory.
     png(paste0('RSKC_scatter_k=',i,'.png'), 
         units = "in",
         width = 9, 
@@ -267,8 +270,8 @@ while (T) {
     dev.off()
     
     # Print the current object in 'weight_bars' as a tiff in your working
-    #   directory.
-    png(paste0('RSKC_weights_for7_synprot_k=',i,'.png'),
+    # directory.
+    png(paste0('RSKC_weights_for5_genes_k=',i,'.png'),
         units = "in",
         width = 5+2,
         height = 4+1.5,
