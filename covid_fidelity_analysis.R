@@ -94,3 +94,192 @@ plot_df <- fidelity_subset.long %>%
 ggplot(plot_df, aes(x = Cell.Subtype, y = Fidelity, fill = Gene)) +
   geom_bar(stat = "identity", position = "dodge") +
   theme_minimal()
+
+### tSNE ###
+tsne <- Rtsne(as.matrix(df_fidelity[,2:ncol(df_fidelity)]), perplexity = 1)
+
+# tsne_out: the two dimensions and corresponding regions
+tsne_out <- tsne$Y %>%
+  data.frame(regions) %>%
+  rename(Brain.Region = regions, V1 = X1, V2 = X2) #rename columns
+
+
+### RSKC ###
+# Use df_fidelity2 for RSKC; has brain region as rows and gene_celltype as columns
+df_fidelity2 <- column_to_rownames(df_fidelity, "Brain.Region")
+
+while (T) {
+  
+  # Assign the values of 2, 4, 6 and 8 to 'clust_vect'.
+  clust_vect <- c(2,3,4)
+  
+  # Assign an empty list to 'rskc_list'.
+  rskc_list <- list()
+  
+  # Assign 8 colours to 'col_vect'.
+  col_vect <- c("#FF0000",
+                "#0000FF",
+                "#00FF00",
+                "#A020F0",
+                "#FFA500",
+                "#FFFF00",
+                "#A65628",
+                "#F781BF")
+  
+  # Assign a value of 0 to 'counter'.
+  counter <- 0
+  
+  # Assign an empty list to 'boxplot_list'.
+  boxplot_list <- list()
+  
+  # Assign an empty list to 'tsne_list'.
+  tsne_list <- list()
+  
+  # Assign an empty list to 'weight_list'.
+  weight_list <- list()
+  
+  # For 'i' -- the current number of clusters -- in 'clust_vect'...
+  for (i in clust_vect) {
+    # i = 2
+    # Increment 'counter' with a value of 1.
+    counter = counter + 1
+    
+    # Perform RSKC for whatever-the-value-of-'i'-is many clusters using 'myProt'.
+    #    Assign RSKC's output as an entry in 'rskc_list'. 
+    rskc_list[[counter]] <- RSKC(df_fidelity2, 
+                                 ncl = i,
+                                 alpha = 0.1,
+                                 L1 = sqrt(ncol(df_fidelity2)))
+    
+    
+    # Convert the row names of 'myProt' to a column
+    #   called 'Identifier' and store it in 'proteins_and_ids'.
+    gene_and_region <- df_fidelity2 %>% 
+      rownames_to_column("Brain.Region")
+    
+    # For the current object in 'rskc_list' convert the cluster labels
+    #    into characters, and assign them to a new column called 'cluster_labels'
+    #    in 'protein_and_ids'.  
+    gene_and_region$cluster_labels <- rskc_list[[counter]]$labels %>% 
+      as.character()
+    
+    # Merge the first 4 columns of 'tsne.age.prot' with 'protein_and_ids' according
+    #   to their shared 'Identifier' column, and assign to 'tsne_prots_ids_clusts'. 
+    tsne_gene_region_clusts <- merge(tsne_out,
+                                     gene_and_region,
+                                     by = "Brain.Region")
+    
+    
+    # Create a tSNE scatter plot where each point is colour-coded according to
+    #   its designated RSKC cluster and assign this figure to 'tsne_scatter'.
+    tsne_scatter <- ggplot(tsne_gene_region_clusts,
+                           aes(V1,
+                               V2,
+                               fill = cluster_labels)) +
+      geom_point(shape = 21, size = 3)+ 
+      scale_fill_manual(values = col_vect[1:i],
+                        labels = 1:i,
+                        name = "Cluster") +
+      theme(axis.text.x = element_blank(),
+            axis.ticks.x = element_blank(),
+            axis.text.y = element_blank(),
+            axis.ticks.y = element_blank(),
+            panel.background = element_rect(fill = NA, 
+                                            colour = "white"),
+            panel.border = element_blank(),
+            axis.line = element_line(),
+            legend.position = 'bottom',
+            legend.background = element_rect(fill = NA,
+                                             colour = NA), 
+            legend.title.align=0.5)+
+      guides(fill=guide_legend(nrow = 2,
+                               ncol = 4, 
+                               byrow = TRUE)) +
+      labs(x="V1",
+           y="V2") 
+    
+    # Assign 'tsne_scatter' as an entry in 'tsne_list'.
+    tsne_list[[counter]] <- tsne_scatter
+    
+    # Order the weights for the current item in 'rskc_list' from largest
+    #   to smallest, extract the names of the proteins in this order,
+    #   convert this object into a data frame, and store this info in
+    #   an object 'weight_df' in a column called 'protein'.
+    weight_df <- sort(rskc_list[[counter]]$weights,
+                      decreasing = T) %>% 
+      names() %>% 
+      
+      as.data.frame() %>% 
+      
+      rename('protein' = ".")
+    
+    # Assign the ordered weights for the current item in 'rskc_list' into
+    #  'weight_df', in a column called 'weight', 
+    weight_df$weight <- sort(rskc_list[[counter]]$weights,
+                             decreasing = T) %>% 
+      
+      unname() 
+    
+    # Impose a factor order on the contents of 'weight_df$protein' in 
+    #   the current order. 
+    weight_df$protein <- factor(weight_df$protein,
+                                weight_df$protein)
+    
+    # Create a bar graph of the RSKC weights for each protein ordered from
+    #   biggest to largest. Assign this graph to an object, 'weight_bars'
+    weight_bars <- weight_df %>% 
+      
+      ggplot(aes(x = protein,
+                 y = weight)) + 
+      
+      theme_classic() +
+      
+      geom_bar(stat = 'identity') +
+      
+      theme(axis.text.x = element_text(angle = 45,
+                                       vjust = 0.6)) +
+      
+      scale_y_continuous(expand = c(0,
+                                    0)) +
+      
+      ggtitle(paste0("RSKC Weights for K = ",i)) +
+      
+      xlab("") +
+      
+      ylab("Weights\n")
+    
+    # Assign 'weight_bars' as the current entry into 'weight_list'. 
+    weight_list[[counter]] <- weight_bars
+    
+    # Print the current object in 'tsne_scatter' as a tiff in your working
+    #   directory.
+    png(paste0('RSKC_scatter_k=',i,'.png'), 
+        units = "in",
+        width = 9, 
+        height = 8,
+        res = 300#,compression = 'lzw'
+    )
+    
+    print(tsne_scatter)
+    
+    dev.off()
+    
+    # Print the current object in 'weight_bars' as a tiff in your working
+    #   directory.
+    png(paste0('RSKC_weights_for7_synprot_k=',i,'.png'),
+        units = "in",
+        width = 5+2,
+        height = 4+1.5,
+        res = 300 #,compression = 'lzw'
+    )  
+    
+    print(weight_bars)
+    
+    dev.off()
+    
+  }
+  
+  # break out of the while-loop when for-loop is done. 
+  break
+  
+}
