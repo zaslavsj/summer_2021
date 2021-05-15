@@ -1,5 +1,5 @@
 ###############################################################################
-### COVID-19 Project: RSKC Analysis for Fidelty Scores
+### COVID-19 Project: RSKC Analysis for Fidelity Scores
 ### 
 ### Rachel Kwan and Jonathan Zaslavsky
 ### May 14, 2021
