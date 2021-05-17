@@ -7,6 +7,9 @@ library(simEd)
 library(httr)
 library(Rtsne)
 library(factoextra)
+library(NbClust)
+
+set.seed(05152021)
 
 ### Import and Prepare Datasets ###
 # Load full dataset
@@ -67,10 +70,12 @@ ggplot(plot_df, aes(x = Cell.Subtype, y = Fidelity, fill = Gene)) +
 # Use df_fidelity2 for RSKC; has brain region as rows and gene_celltype as columns
 df_fidelity2 <- column_to_rownames(df_fidelity, "Brain.Region")
 
+set.seed(12345)
+
 while (T) {
   
   # Assign the values of 2, 4, 6 and 8 to 'clust_vect'.
-  clust_vect <- c(2,3,4,5,6,7,8)
+  clust_vect <- c(2,3,4,5,6,7,8,9,10)
   
   # Assign an empty list to 'rskc_list'.
   rskc_list <- list()
@@ -92,7 +97,7 @@ while (T) {
     rskc_list[[counter]] <- RSKC(df_fidelity2, 
                                 ncl = i,
                                 alpha = 0.1,
-                                L1 = NULL)
+                                L1 = sqrt(ncol(df_fidelity2)))
     
     
     # Convert the row names of 'myProt' to a column
@@ -181,7 +186,27 @@ while (T) {
 ## Elbow Plot
 #####################################
 
+# Make an empty vector 'between_ss' to store WBSS values 
+#   and use for loop to fill them in, using RSKC output 'rskc_list'
+between_ss <- matrix(ncol = 1, nrow = length(clust_vect))
 
+for (i in 1:length(clust_vect)){
+  between_ss[i] <- rskc_list[[i]]$WBSS[length(rskc_list[[i]]$WBSS)]
+}
+
+# Make a new dataframe with the WBSS values and their corresponding number of clusters
+objective_function <- data.frame(clust_vect, between_ss) %>%
+  rename(k = clust_vect, WBSS = between_ss)
+  
+ggplot(objective_function, aes(x = k, y = WBSS)) + 
+  geom_line() +
+  geom_point() + 
+  scale_x_continuous(breaks = clust_vect) + 
+  labs(x = "Number of Clusters", y = "Total Weighted Between Sum of Squares")
+
+fviz_nbclust(df_fidelity2, method = "wss", FUNcluster = hcut)
+
+#Clest(as.matrix(df_fidelity2), maxK = 8, alpha = 0.1, L1 = sqrt(ncol(df_fidelity2)), nstart = 2)
 
 #####################################
 ## tSNE
@@ -198,6 +223,7 @@ for (i in 1:20){
 }
 
 # Run tsne on weighted fidelity scores, and assign to 'tsne'
+set.seed(12345)
 tsne <- Rtsne(weighted_fidelity, perplexity = 5)
 
 # tsne_out: the two dimensions and corresponding regions
@@ -205,11 +231,13 @@ tsne_out <- tsne$Y %>%
   data.frame(regions_of_interest) %>%
   rename(Brain.Region = regions_of_interest, V1 = X1, V2 = X2) #rename columns
 
+set.seed(12345)
+
 while (T) {
   
   # Have to manually change the number of clusters to be identified
   #   and has to match the number previously assigned to 'clust_vect' in above while loop for RSKC
-  clust_vect <- c(8)
+  clust_vect <- c(2,4,6,8)
   
   # Assign 8 colours to 'col_vect'.
   col_vect <- c("#FF0000",
