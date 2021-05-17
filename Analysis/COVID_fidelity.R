@@ -59,18 +59,18 @@ ggplot(plot_df, aes(x = Cell.Subtype, y = Fidelity, fill = Gene)) +
   labs(x = "Cell Type") + 
   theme_minimal()
 
-### Elbow Plot ###
 
+#####################################
+## RSKC
+#####################################
 
-
-### RSKC ###
 # Use df_fidelity2 for RSKC; has brain region as rows and gene_celltype as columns
 df_fidelity2 <- column_to_rownames(df_fidelity, "Brain.Region")
 
 while (T) {
   
   # Assign the values of 2, 4, 6 and 8 to 'clust_vect'.
-  clust_vect <- c(8)
+  clust_vect <- c(2,3,4,5,6,7,8)
   
   # Assign an empty list to 'rskc_list'.
   rskc_list <- list()
@@ -92,7 +92,7 @@ while (T) {
     rskc_list[[counter]] <- RSKC(df_fidelity2, 
                                 ncl = i,
                                 alpha = 0.1,
-                                L1 = sqrt(ncol(df_fidelity2)))
+                                L1 = NULL)
     
     
     # Convert the row names of 'myProt' to a column
@@ -177,7 +177,15 @@ while (T) {
 }
 
 
-### tSNE ###
+#####################################
+## Elbow Plot
+#####################################
+
+
+
+#####################################
+## tSNE
+#####################################
 
 # Create vector of the weights obtained from RSKC and assign to 'weights'
 #   and make empty matrix 'weighted_fidelity' for new weighted fidelity scores 
