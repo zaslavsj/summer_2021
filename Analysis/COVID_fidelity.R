@@ -185,6 +185,10 @@ while (T) {
 #####################################
 ## Elbow Plot
 #####################################
+# Based on the elbow plot, an optimal number of clusters is the point at which
+# there is a leveling off while either minimizing the within-cluster 
+# sum of squares, or maximizing the between-cluster sum of squares. In this
+# case, K = 4 appears to be a good number of clusters to pursue.
 
 # Make an empty vector 'between_ss' to store WBSS values 
 #   and use for loop to fill them in, using RSKC output 'rskc_list'
