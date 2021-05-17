@@ -18,6 +18,9 @@ library(simEd)
 library(httr)
 library(Rtsne)
 library(here)
+library(factoextra)
+
+set.seed(05152021)
 
 #####################################
 ## Import and Prepare Dataset
@@ -92,6 +95,11 @@ plot_df <- fidelity_subset.long %>%
 (ggplot(plot_df, aes(x = Cell.Subtype, y = Fidelity, fill = Gene)) +
   geom_bar(stat = "identity", position = "dodge") +
   theme_minimal())
+
+#####################################
+## Choosing K for Clustering (Elbow Plot)
+#####################################
+
 
 #####################################
 ## tSNE
