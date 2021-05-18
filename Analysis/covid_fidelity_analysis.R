@@ -10,17 +10,16 @@
 ## Relevant Packages
 #####################################
 # Load packages
-library(easypackages)
-library(tidyverse)
-library(ggpubr)
-library(RSKC)
-library(simEd)
-library(httr)
-library(Rtsne)
-library(here)
-library(factoextra)
+library(here) # To read in data from directory
+library(tidyverse) # For ggplot2, dplyr
+library(magrittr) # For set_colnames() and set_rownames()
+library(ggpubr) # For making publication-ready plots based on ggplot
+library(RSKC) # For RSKC clustering
+library(Rtsne) # To run t-SNE (dimensionality reduction)
+library(factoextra) # For fviz_nbclust() and clustering analysis/visualization
+library(reshape2) # For melt()
 
-set.seed(05152021)
+set.seed(72613)
 
 #####################################
 ## Import and Prepare Dataset
@@ -99,7 +98,7 @@ plot_df <- fidelity_subset.long %>%
 #####################################
 ## RSKC
 #####################################
-set.seed(12345)
+set.seed(72613)
 
 while (T) {
   
@@ -264,7 +263,7 @@ for (i in 1:20){
 }
 
 # Run tSNE on weighted fidelity scores, and assign to 'tsne'.
-set.seed(12345)
+set.seed(72613)
 tsne <- Rtsne(weighted_fidelity, perplexity = 5)
 
 # 'tsne_out' includes the two dimensions and corresponding brain regions.
@@ -272,7 +271,7 @@ tsne_out <- tsne$Y %>%
   data.frame(regions) %>%
   rename(Brain.Region = regions, V1 = X1, V2 = X2) # Rename columns
 
-set.seed(12345)
+set.seed(72613)
 while (T) {
   
   # Need to manually change the number of clusters to be identified
@@ -640,7 +639,7 @@ rskc.region.labels = data.frame("Region" = rownames(myFidelity))
 rskc.region.weights = data.frame("Case" = colnames(myFidelity))
 
 # Create a vector of seeds for all 100 runs.
-set.seed(54321)
+set.seed(72613)
 x = rdunif(100, a = 1, b = 1000000)
 
 for (i in 1:100) {
