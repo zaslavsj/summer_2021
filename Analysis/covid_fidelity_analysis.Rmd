@@ -318,19 +318,19 @@ while (T) {
 ```
 
 ```{r}
-### Visual Plots ### 
-# Make a figure of all the plots obtained from the while loop above
-# includes the RSKC scatter plots, the RKSC weights, and elbow plot
+# Make figures for all the plots obtained from the while loop above
+# i.e. the RSKC scatter plots, the RKSC weights, and elbow plot
 ggarrange(tsne_list[[1]], tsne_list[[2]],
           tsne_list[[3]], tsne_list[[4]],
-          weight_list[[1]], weight_list[[2]],
+          ncol = 2,
+          nrow = 2)
+
+ggarrange(weight_list[[1]], weight_list[[2]],
           weight_list[[3]], weight_list[[4]],
-          elbow_plot,
-          labels = c("A","","","",
-                     "B","","","",
-                     "C","","",""),
-          ncol = 4,
-          nrow = 3)
+          ncol = 2,
+          nrow = 2)
+
+elbow_plot
 ```
 
 
