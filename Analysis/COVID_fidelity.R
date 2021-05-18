@@ -14,7 +14,7 @@ set.seed(05152021)
 
 ### Import and Prepare Datasets ###
 # Load full dataset
-all_fidelity <- read.csv("~/Documents/Lab/COVID/ALL_Fidelity.csv")
+all_fidelity <- read.csv(here("Data", "ALL_Fidelity.csv"))
 
 # Make a new dataframe containing only genes of interest
 #   Filter full dataset to include only the genes of interest 
