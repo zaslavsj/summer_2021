@@ -24,8 +24,7 @@ set.seed(72613)
 ## Import and Prepare Dataset
 ```{r}
 # Load full dataset
-# all_fidelity <- read.csv(here("Data", "ALL_Fidelity.csv"))
-all_fidelity <- read.csv("~/Documents/R/Murphy_Lab/COVID-19/Data/ALL_Fidelity.csv")
+all_fidelity <- read.csv(here("Data", "ALL_Fidelity.csv"))
 
 # Define a vector containing the five genes of interest.
 genes_subset <- c("ACE2",
@@ -71,12 +70,10 @@ regions <- c("FCX", "PCX", "TCX", "LIM", "IN", "OCX","BF", "CLA", "AMY", "HIP",
              "STR", "GP", "DI", "MID", "PON", "MED", "CB", "WM") #, "SC")
 
 # Choose only the desired brain regions from the data frame.
-fidelity_subset.wide2 <- fidelity_subset.wide %>% 
+fidelity <- fidelity_subset.wide %>% 
   filter(Brain.Region %in% regions) %>% 
-  slice(match(regions, Brain.Region)) # Reorder rows to match entries in "regions" vector
-
-# Drop columns containing missing values.
-fidelity <- fidelity_subset.wide2[, colSums(is.na(fidelity_subset.wide2)) < nrow(fidelity_subset.wide2)]
+  slice(match(regions, Brain.Region)) %>% # Reorder rows to match entries in "regions" vector
+  select(-contains("Percentile")) # Remove NA columns
 
 # Use the brain regions to name the rows and remove the brain region column.
 myFidelity <- fidelity %>% 
@@ -84,6 +81,9 @@ myFidelity <- fidelity %>%
 ```
 
 ## Perform Robust and Sparse K-Means Clustering (RSKC) and t-SNE Together
+
+This while loop contains sections for RSKC, Elbow Plot, obtaining weighted data, and tSNE. Dezi's code was used as template for this while loop, in particular, for the RSKC and tSNE sections.
+
 ```{r}
 set.seed(72613)
 
@@ -119,6 +119,8 @@ while (T) {
     # i = 2
     # Increment 'counter' with a value of 1.
     counter = counter + 1
+    
+    ###### RSKC ######
     
     # Perform RSKC for whatever-the-value-of-'i'-is many clusters using 
     # 'myFidelity', which has brain region as rows and gene_celltype as columns.
@@ -189,23 +191,14 @@ while (T) {
     # Assign 'weight_bars' as the current entry into 'weight_list'. 
     weight_list[[counter]] <- weight_bars
     
-    # Print the current object in 'weight_bars' as a tiff in your working
-    # directory.
-    png(paste0('RSKC_weights_for_gene_fidelity_k=',i,'.png'),
-        units = "in",
-        width = 5+2,
-        height = 4+1.5,
-        res = 300 #,compression = 'lzw'
-    )  
-    
-    print(weight_bars)
-    
-    dev.off()
     
     ###### Elbow Plot ######
     
+    # For the purposes of an elbow plot, we want to run RSKC more times than 
+    # specified in 'clust_vect' above, so create new vector 'elbow_clust_vect'
     elbow_clust_vect <- c(2,3,4,5,6,7,8,9,10,11,12,13,14,15,16)
     
+    # Assign another empty list to 'elbow_rskc_list'.
     elbow_rskc_list <- c()
     
     # Only produce elbow plot when we are on the last run of the while loop,
@@ -219,17 +212,17 @@ while (T) {
         # Increment 'counter' with a value of 1.
         elbow_counter = elbow_counter + 1
         
-        # Perform RSKC for whatever-the-value-of-'i'-is many clusters using 
+        # Perform RSKC for whatever-the-value-of-'n'-is many clusters using 
         # 'myFidelity', which has brain region as rows and gene_celltype as columns.
-        # Assign RSKC's output as an entry in 'rskc_list'. 
+        # Assign RSKC's output as an entry in 'elbow_rskc_list'. 
         elbow_rskc_list[[elbow_counter]] <- RSKC(myFidelity, 
                                                  ncl = n,
                                                  alpha = 0.1,
                                                  L1 = sqrt(ncol(myFidelity)))
       }
       
-      # Create empty vector 'between_ss' to store weighted between sum of squares 
-      # values (WBSS)
+      # Create empty vector 'between_ss' to store weighted between sum of squares (WBSS) 
+      # values from RSKC output
       between_ss <- matrix(ncol = 1, nrow = length(elbow_clust_vect))
       
       # Use for loop to add WBSS values to 'between_ss'
@@ -238,12 +231,12 @@ while (T) {
         between_ss[n] <- elbow_rskc_list[[n]]$WBSS[length(elbow_rskc_list[[n]]$WBSS)]
       }
       
-      # Make a new dataframe with the WBSS values and their corresponding number 
-      # of clusters.
+      # Create a new dataframe 'objective_function' with the WBSS values and 
+      # their corresponding number of clusters.
       objective_function <- data.frame(elbow_clust_vect, between_ss) %>%
         rename(k = elbow_clust_vect, WBSS = between_ss)
       
-      # Create the elbow plot and assign it to 'elbow_plot
+      # Create the elbow plot and assign it to 'elbow_plot'
       elbow_plot <- ggplot(objective_function, aes(x = k, y = WBSS)) + 
         geom_line() +
         geom_point() + 
@@ -251,20 +244,8 @@ while (T) {
         labs(x = "Number of Clusters", 
              y = "Total Weighted Between Sum of Squares")
       
-      # Print the current object in 'weight_bars' as a tiff in your working
-      # directory.
-      png(paste0('Elbow_plot.png'),
-          units = "in",
-          width = 5+2,
-          height = 4+1.5,
-          res = 300 #,compression = 'lzw'
-      )  
-      
-      print(elbow_plot)
-      
-      dev.off()
-      
     }
+    
     
     ###### Apply weights from RSKC to myFidelity ######
     
@@ -287,6 +268,7 @@ while (T) {
     tsne_out <- tsne$Y %>%
       data.frame(regions) %>%
       rename(Brain.Region = regions, V1 = X1, V2 = X2) #rename columns
+    
     
     ###### tSNE (on weighted data) ######
     
@@ -327,19 +309,6 @@ while (T) {
     # Assign 'tsne_scatter' as an entry in 'tsne_list'.
     tsne_list[[counter]] <- tsne_scatter
     
-    # Print the current object in 'tsne_scatter' as a png in your working
-    # directory.
-    png(paste0('RSKC_scatter_k=',i,'.png'), 
-        units = "in",
-        width = 9, 
-        height = 8,
-        res = 300#,compression = 'lzw'
-    )
-    
-    print(tsne_scatter)
-    
-    dev.off()
-    
   }
   
   # Break out of the while-loop when for-loop is done. 
@@ -348,7 +317,24 @@ while (T) {
 }
 ```
 
-## RSKC Clustering Over 100 Runs
+```{r}
+### Visual Plots ### 
+# Make a figure of all the plots obtained from the while loop above
+# includes the RSKC scatter plots, the RKSC weights, and elbow plot
+ggarrange(tsne_list[[1]], tsne_list[[2]],
+          tsne_list[[3]], tsne_list[[4]],
+          weight_list[[1]], weight_list[[2]],
+          weight_list[[3]], weight_list[[4]],
+          elbow_plot,
+          labels = c("A","","","",
+                     "B","","","",
+                     "C","","",""),
+          ncol = 4,
+          nrow = 3)
+```
+
+
+## RSKC Clustering (100 Runs)
 ```{r}
 # Create empty lists to store the results and the RSKC weighted data frames 
 # that result from the clustering.
