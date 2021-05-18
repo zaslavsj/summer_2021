@@ -672,7 +672,7 @@ for (i in 1:100) {
 ## Calculating Proportion of Times Brain Regions are Clustered Together
 #####################################
 # Transpose the data frame with the cluster labels from the 100 runs.
-rskc.region.labels.t <-  region.rskc.labels %>%
+rskc.region.labels.t <-  rskc.region.labels %>%
   column_to_rownames("Region") %>%
   t() %>%
   data.frame()
