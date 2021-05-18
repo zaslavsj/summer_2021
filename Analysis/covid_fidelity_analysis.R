@@ -252,7 +252,6 @@ fviz_nbclust(myFidelity, method = "wss", FUNcluster = hcut)
 #####################################
 ## tSNE
 #####################################
-
 # Create vector of the weights obtained from RSKC and assign them to 'weights'.
 # Make empty matrix 'weighted_fidelity' for new weighted fidelity scores.
 weights <- as.matrix(rskc_list[[1]]$weights)
@@ -360,3 +359,45 @@ while (T) {
   
 }
 
+#####################################
+## RSKC Clustering Over 100 Runs
+#####################################
+# Create empty lists to store the results and the RSKC weighted data frames 
+# that result from the clustering.
+rskc.results.list = list()
+rskc.weighted.list = list()
+
+# Create empty data frames to store the cluster assignments and cluster weights 
+# for each of the 100 runs.
+region.rskc.labels = data.frame("Region" = rownames(myFidelity))
+region.rskc.weights = data.frame("Case" = colnames(myFidelity))
+
+# Create a vector of seeds for all 100 runs.
+set.seed(54321)
+x = rdunif(100, a = 1, b = 1000000)
+
+for (i in 1:100) {
+  
+  # Set the seed.
+  set.seed(x[i])
+  
+  # Perform RSKC clustering on the data; the number of clusters is selected
+  # a priori.
+  rskc.results.list[[i]] = RSKC(myFidelity, 
+                                alpha = 0.1, 
+                                ncl = 4, 
+                                L1 = sqrt(ncol(myFidelity)))
+  
+  # Add the cluster assignments for run i to the 'region.rskc.labels'.
+  region.rskc.labels[i+1] = rskc.results.list[[i]]$labels
+  colnames(region.rskc.labels)[i+1] = paste("Run_", i, sep = "")
+  
+  # Add the variable weights for run i to the 'region.rskc.weights'
+  region.rskc.weights[i+1] = rskc.results.list[[i]]$weights
+  colnames(region.rskc.weights)[i+1] = paste("Run_", i, sep = "")
+  
+  # Create a list of data frames containing the clustering data multiplied by 
+  # the corresponding RSKC variable weights.
+  rskc.weighted.list[[i]] = sweep(myFidelity, 2, 
+                                  rskc.results.list[[i]]$weights, "*")
+}
