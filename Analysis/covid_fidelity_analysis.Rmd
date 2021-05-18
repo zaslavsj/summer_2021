@@ -82,7 +82,7 @@ myFidelity <- fidelity %>%
 
 ## Perform Robust and Sparse K-Means Clustering (RSKC) and t-SNE Together
 
-This while loop contains sections for RSKC, Elbow Plot, obtaining weighted data, and tSNE. Dezi's code was used as template for this while loop, in particular, for the RSKC and tSNE sections.
+This while loop contains sections for RSKC, elbow plot, obtaining weighted data, and tSNE. Dezi's code was used as template for this while loop, in particular, for the RSKC and tSNE sections.
 
 ```{r}
 set.seed(72613)
