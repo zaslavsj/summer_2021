@@ -364,7 +364,7 @@ while (T) {
 ## RSKC to tSNE (All in one loop)
 #####################################
 
-set.seed(12345)
+set.seed(72613)
 
 while (T) {
   
@@ -538,7 +538,7 @@ while (T) {
     }
     
     # Run tsne on weighted fidelity scores, and assign to 'tsne'
-    set.seed(12345)
+    set.seed(72613)
     tsne <- Rtsne(weighted_fidelity, perplexity = 5)
     
     # Create new df 'tsne_out' which contains the two dimensions obtained from tSNE
