@@ -104,7 +104,7 @@ set.seed(12345)
 while (T) {
   
   # Assign the values of 2, 4, 6 and 8 to 'clust_vect'.
-  clust_vect <- c(2,4,6,8)
+  clust_vect <- c(4)
   
   # Assign an empty list to 'rskc_list'.
   rskc_list <- list()
@@ -218,8 +218,9 @@ while (T) {
 # sum of squares, or maximizing the between-cluster sum of squares. In this
 # case, K = 4 appears to be a good number of clusters to pursue.
 
-# Make an empty vector 'between_ss' to store WBSS values and use for loop 
-# to fill them in, using RSKC output of 'rskc_list'.
+# Make an empty vector 'between_ss' to store weighted between-cluster sum of
+# squares (WBSS) values and use for loop to fill them in, using RSKC output 
+# of 'rskc_list'.
 between_ss <- matrix(ncol = 1, nrow = length(clust_vect))
 
 for (i in 1:length(clust_vect)){
@@ -257,7 +258,7 @@ fviz_nbclust(myFidelity, method = "wss", FUNcluster = hcut)
 weights <- as.matrix(rskc_list[[1]]$weights)
 weighted_fidelity <- matrix(nrow = 18, ncol = 20)
 
-# Multiply 'fidelity' by corresponding weights obtained from RSKC
+# Multiply 'fidelity' by corresponding weights obtained from RSKC.
 for (i in 1:20){
   weighted_fidelity[,i] <- myFidelity[,i]*weights[i]
 }
@@ -277,7 +278,7 @@ while (T) {
   # Need to manually change the number of clusters to be identified
   # and has to match the number previously assigned to 'clust_vect' 
   # in above while loop for RSKC.
-  clust_vect <- c(2,4,6,8)
+  clust_vect <- c(4)
   
   # Assign 8 colours to 'col_vect'.
   col_vect <- c("#FF0000",
