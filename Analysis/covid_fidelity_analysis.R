@@ -45,7 +45,7 @@ genes_full_list <- c("ACE2", "DPP4", "ANPEP", "CD209", "ENPEP", "CLEC4G",
 # columns that correspond to "Entrez" and "Alias".
 fidelity_subset <- all_fidelity %>%
   filter(Gene %in% genes_subset) %>% # Includes five genes
-#  filter(Gene %in% genes_full_list) %>% # Includes full list of genes
+  # filter(Gene %in% genes_full_list) %>% # Includes full list of genes
   select(-c(2,3)) 
 
 # Tidy the data frame by separating the previous columns into
@@ -105,7 +105,7 @@ while (T) {
   
   # Assign the values of 2, 4, 6 and 8 to 'clust_vect'.
   clust_vect <- c(2,4,6,8)
-  
+
   # Assign an empty list to 'rskc_list'.
   rskc_list <- list()
   
@@ -483,30 +483,50 @@ while (T) {
     
     ###### Elbow Plot ######
     
+    elbow_clust_vect <- c(2,3,4,5,6,7,8,9,10,11,12,13,14,15,16)
+    
+    elbow_rskc_list <- c()
+    
     # Only produce elbow plot when we are on the last run of the while loop,
     # since we only need one elbow plot
     if (i == clust_vect[length(clust_vect)]){
       
+      elbow_counter = 0
+      
+      for (n in elbow_clust_vect) {
+        # n = 2
+        # Increment 'counter' with a value of 1.
+        elbow_counter = elbow_counter + 1
+        
+        # Perform RSKC for whatever-the-value-of-'i'-is many clusters using 
+        # 'myFidelity', which has brain region as rows and gene_celltype as columns.
+        # Assign RSKC's output as an entry in 'rskc_list'. 
+        elbow_rskc_list[[elbow_counter]] <- RSKC(myFidelity, 
+                                                 ncl = n,
+                                                 alpha = 0.1,
+                                                 L1 = sqrt(ncol(myFidelity)))
+      }
+      
       # Create empty vector 'between_ss' to store weighted between sum of squares 
       # values (WBSS)
-      between_ss <- matrix(ncol = 1, nrow = length(clust_vect))
+      between_ss <- matrix(ncol = 1, nrow = length(elbow_clust_vect))
       
       # Use for loop to add WBSS values to 'between_ss'
       # Some RSKC outputs may give more than one WBSS value, so take the last one
-      for (n in 1:length(clust_vect)){
-        between_ss[n] <- rskc_list[[n]]$WBSS[length(rskc_list[[n]]$WBSS)]
+      for (n in 1:length(elbow_clust_vect)){
+        between_ss[n] <- elbow_rskc_list[[n]]$WBSS[length(elbow_rskc_list[[n]]$WBSS)]
       }
       
       # Make a new dataframe with the WBSS values and their corresponding number 
       # of clusters.
-      objective_function <- data.frame(clust_vect, between_ss) %>%
-        rename(k = clust_vect, WBSS = between_ss)
+      objective_function <- data.frame(elbow_clust_vect, between_ss) %>%
+        rename(k = elbow_clust_vect, WBSS = between_ss)
       
       # Create the elbow plot and assign it to 'elbow_plot
       elbow_plot <- ggplot(objective_function, aes(x = k, y = WBSS)) + 
         geom_line() +
         geom_point() + 
-        scale_x_continuous(breaks = clust_vect) + 
+        scale_x_continuous(breaks = elbow_clust_vect) + 
         labs(x = "Number of Clusters", 
              y = "Total Weighted Between Sum of Squares")
       
