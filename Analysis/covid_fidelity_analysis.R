@@ -606,7 +606,6 @@ while (T) {
   
 }
 
-
 #####################################
 ## RSKC Clustering Over 100 Runs
 #####################################
@@ -617,8 +616,8 @@ rskc.weighted.list = list()
 
 # Create empty data frames to store the cluster assignments and cluster weights 
 # for each of the 100 runs.
-region.rskc.labels = data.frame("Region" = rownames(myFidelity))
-region.rskc.weights = data.frame("Case" = colnames(myFidelity))
+rskc.region.labels = data.frame("Region" = rownames(myFidelity))
+rskc.region.weights = data.frame("Case" = colnames(myFidelity))
 
 # Create a vector of seeds for all 100 runs.
 set.seed(54321)
@@ -636,16 +635,69 @@ for (i in 1:100) {
                                 ncl = 4, 
                                 L1 = sqrt(ncol(myFidelity)))
   
-  # Add the cluster assignments for run i to the 'region.rskc.labels'.
-  region.rskc.labels[i+1] = rskc.results.list[[i]]$labels
-  colnames(region.rskc.labels)[i+1] = paste("Run_", i, sep = "")
+  # Add the cluster assignments for run i to the 'rskc.region.labels'.
+  rskc.region.labels[i+1] = rskc.results.list[[i]]$labels
+  colnames(rskc.region.labels)[i+1] = paste("Run_", i, sep = "")
   
-  # Add the variable weights for run i to the 'region.rskc.weights'
-  region.rskc.weights[i+1] = rskc.results.list[[i]]$weights
-  colnames(region.rskc.weights)[i+1] = paste("Run_", i, sep = "")
+  # Add the variable weights for run i to the 'rskc.region.weights'
+  rskc.region.weights[i+1] = rskc.results.list[[i]]$weights
+  colnames(rskc.region.weights)[i+1] = paste("Run_", i, sep = "")
   
   # Create a list of data frames containing the clustering data multiplied by 
   # the corresponding RSKC variable weights.
   rskc.weighted.list[[i]] = sweep(myFidelity, 2, 
                                   rskc.results.list[[i]]$weights, "*")
 }
+
+#####################################
+## Calculating Proportion of Times Brain Regions are Clustered Together
+#####################################
+# Transpose the data frame with the cluster labels from the 100 runs.
+rskc.region.labels.t <-  region.rskc.labels %>%
+  column_to_rownames("Region") %>%
+  t() %>%
+  data.frame()
+
+# Create an empty 18x18 data frame
+rskc.cluster.regions.wide <-  data.frame(matrix(ncol = 18, nrow = 18)) %>%
+  # Set the column and row names as the regions (ordered alphabetically)
+  set_colnames(regions) %>%
+  set_rownames(regions)
+
+# Add in the number of matches for each ith row/jth column combination to 
+# create the adjacency matrix.
+for (i in 1:length(regions)) {
+  for (j in 1:length(regions)) {
+    
+    rskc.cluster.regions.wide[i,j] = sum(rskc.region.labels.t[[regions[i]]] == rskc.region.labels.t[[regions[j]]])
+    
+  }
+}
+
+# Convert the adjacency matrix to long format for various plotting purposes
+rskc.cluster.regions.long <-  rskc.cluster.regions.wide %>%
+  # Give the region row names their own column
+  rownames_to_column("Region_1") %>%
+  # Lengthen the data with melt() so we have three columns: 
+  # Region_1, Region_2 and the total number of matches.
+  melt(id.vars = "Region_1", variable.name = "Region_2", value.name = "Matches") %>%
+  # Convert the number of matches to a proportion
+  mutate(Matches = Matches / 100)
+
+#####################################
+## Heatmap to Visualize Proportion of Shared Clusters
+#####################################
+# Factor the regions with levels corresponding to the specified brain region
+# names from the 'regions' vector.
+region.rskc.cluster.matches.ordered <-  rskc.cluster.regions.long %>%
+  # Factor Region_1
+  mutate(Region_1 = factor(Region_1, levels = regions)) %>%
+  # Factor Region_2
+  mutate(Region_2 = factor(Region_2, levels = regions))
+
+# Plot the adjacency matrix as a heatmap
+ggplot(region.rskc.cluster.matches.ordered, aes(x = Region_1, y = Region_2, fill = Matches)) +
+  geom_tile(colour = "black") +
+  scale_fill_gradientn(colours = c("lightyellow", "yellow", "orange", "red")) +
+  theme(axis.text.x = element_text(angle = 270)) +
+  labs(x = NULL, y = NULL, fill = "Proportion of Matches on \n100 RSKC Cluster Runs")
