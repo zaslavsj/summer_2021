@@ -335,6 +335,9 @@ ggarrange(tsne_list[[1]], tsne_list[[2]],
 
 
 ## RSKC Clustering (100 Runs)
+
+Having previously selected the number of clusters to use for RSKC, this portion of the code aims to evaluate the proportion of brain regions clustered together over 100 runs (i.e. 100 different set.seed values). The code is derived from previous work (i.e. Keon and Brendan).
+
 ```{r}
 # Create empty lists to store the results and the RSKC weighted data frames 
 # that result from the clustering.
