@@ -1,14 +1,12 @@
-###############################################################################
-### COVID-19 Project: RSKC Analysis for Fidelity Scores
-### 
-### Rachel Kwan and Jonathan Zaslavsky
-### May 14, 2021
-###
-###############################################################################
+---
+title: "COVID-19 Project: RSKC Analysis for Fidelity Scores"
+author: "Rachel Kwan and Jonathan Zaslavsky"
+date: "May 16, 2021"
+output: pdf_document
+---
 
-#####################################
 ## Relevant Packages
-#####################################
+```{r, message = FALSE, warning = FALSE}
 # Load packages
 library(here) # To read in data from directory
 library(tidyverse) # For ggplot2, dplyr
@@ -19,11 +17,12 @@ library(Rtsne) # To run t-SNE (dimensionality reduction)
 library(factoextra) # For fviz_nbclust() and clustering analysis/visualization
 library(reshape2) # For melt()
 
+# Set the seed
 set.seed(72613)
+```
 
-#####################################
 ## Import and Prepare Dataset
-#####################################
+```{r}
 # Load full dataset
 all_fidelity <- read.csv(here("Data", "ALL_Fidelity.csv"))
 
@@ -71,34 +70,21 @@ regions <- c("FCX", "PCX", "TCX", "LIM", "IN", "OCX","BF", "CLA", "AMY", "HIP",
              "STR", "GP", "DI", "MID", "PON", "MED", "CB", "WM") #, "SC")
 
 # Choose only the desired brain regions from the data frame.
-fidelity_subset.wide2 <- fidelity_subset.wide %>% 
+fidelity <- fidelity_subset.wide %>% 
   filter(Brain.Region %in% regions) %>% 
-  slice(match(regions, Brain.Region)) # Reorder rows to match entries in "regions" vector
-
-# Drop columns containing missing values.
-fidelity <- fidelity_subset.wide2[, colSums(is.na(fidelity_subset.wide2)) < nrow(fidelity_subset.wide2)]
+  slice(match(regions, Brain.Region)) %>% # Reorder rows to match entries in "regions" vector
+  select(-contains("Percentile")) # Remove NA columns
 
 # Use the brain regions to name the rows and remove the brain region column.
 myFidelity <- fidelity %>% 
   column_to_rownames("Brain.Region")
+```
 
-#####################################
-## Exploratory Analysis
-#####################################
-# Use data only related to the FCX region and ACE2, TMPRSS2 genes.
-plot_df <- fidelity_subset.long %>% 
-  filter(Gene == "ACE2" | Gene == "TMPRSS2") %>% 
-  filter(Brain.Region == "FCX")
+## Perform Robust and Sparse K-Means Clustering (RSKC) and t-SNE Together
 
-# Rough plot to check that we can reproduce previously made bar plots.
-(ggplot(plot_df, aes(x = Cell.Subtype, y = Fidelity, fill = Gene)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  theme_minimal())
+This while loop contains sections for RSKC, elbow plot, obtaining weighted data, and tSNE. Dezi's code was used as template for this while loop, in particular, for the RSKC and tSNE sections.
 
-#####################################
-## RSKC to tSNE (All in one loop)
-#####################################
-
+```{r}
 set.seed(72613)
 
 while (T) {
@@ -133,6 +119,8 @@ while (T) {
     # i = 2
     # Increment 'counter' with a value of 1.
     counter = counter + 1
+    
+    ###### RSKC ######
     
     # Perform RSKC for whatever-the-value-of-'i'-is many clusters using 
     # 'myFidelity', which has brain region as rows and gene_celltype as columns.
@@ -203,26 +191,14 @@ while (T) {
     # Assign 'weight_bars' as the current entry into 'weight_list'. 
     weight_list[[counter]] <- weight_bars
     
-    # Save plot for the RSKC feature weights in appropriate folder destination
-    # within the project directory.
-    weight_bars_path <- file.path(here("Plots", 
-                                       paste0('RSKC_weights_for_gene_fidelity_k=', i, '.png')))
-    
-    png(file = weight_bars_path,
-        units = "in",
-        width = 5+2,
-        height = 4+1.5,
-        res = 300 #,compression = 'lzw'
-    )
-    
-    print(weight_bars)
-    
-    dev.off()
     
     ###### Elbow Plot ######
     
+    # For the purposes of an elbow plot, we want to run RSKC more times than 
+    # specified in 'clust_vect' above, so create new vector 'elbow_clust_vect'
     elbow_clust_vect <- c(2,3,4,5,6,7,8,9,10,11,12,13,14,15,16)
     
+    # Assign another empty list to 'elbow_rskc_list'.
     elbow_rskc_list <- c()
     
     # Only produce elbow plot when we are on the last run of the while loop,
@@ -236,17 +212,17 @@ while (T) {
         # Increment 'counter' with a value of 1.
         elbow_counter = elbow_counter + 1
         
-        # Perform RSKC for whatever-the-value-of-'i'-is many clusters using 
+        # Perform RSKC for whatever-the-value-of-'n'-is many clusters using 
         # 'myFidelity', which has brain region as rows and gene_celltype as columns.
-        # Assign RSKC's output as an entry in 'rskc_list'. 
+        # Assign RSKC's output as an entry in 'elbow_rskc_list'. 
         elbow_rskc_list[[elbow_counter]] <- RSKC(myFidelity, 
                                                  ncl = n,
                                                  alpha = 0.1,
                                                  L1 = sqrt(ncol(myFidelity)))
       }
       
-      # Create empty vector 'between_ss' to store weighted between sum of squares 
-      # values (WBSS)
+      # Create empty vector 'between_ss' to store weighted between sum of squares (WBSS) 
+      # values from RSKC output
       between_ss <- matrix(ncol = 1, nrow = length(elbow_clust_vect))
       
       # Use for loop to add WBSS values to 'between_ss'
@@ -255,12 +231,12 @@ while (T) {
         between_ss[n] <- elbow_rskc_list[[n]]$WBSS[length(elbow_rskc_list[[n]]$WBSS)]
       }
       
-      # Make a new dataframe with the WBSS values and their corresponding number 
-      # of clusters.
+      # Create a new dataframe 'objective_function' with the WBSS values and 
+      # their corresponding number of clusters.
       objective_function <- data.frame(elbow_clust_vect, between_ss) %>%
         rename(k = elbow_clust_vect, WBSS = between_ss)
       
-      # Create the elbow plot and assign it to 'elbow_plot
+      # Create the elbow plot and assign it to 'elbow_plot'
       elbow_plot <- ggplot(objective_function, aes(x = k, y = WBSS)) + 
         geom_line() +
         geom_point() + 
@@ -268,23 +244,8 @@ while (T) {
         labs(x = "Number of Clusters", 
              y = "Total Weighted Between Sum of Squares")
       
-      # Save the elbow plot in appropriate folder destination
-      # within the project directory.
-      elbow_plot_path <- file.path(here("Plots", 
-                                        paste0('elbow_plot.png')))
-      
-      png(file = elbow_plot_path,
-          units = "in",
-          width = 5+2,
-          height = 4+1.5,
-          res = 300 #,compression = 'lzw'
-      )
-      
-      print(elbow_plot)
-      
-      dev.off()
-      
     }
+    
     
     ###### Apply weights from RSKC to myFidelity ######
     
@@ -307,6 +268,7 @@ while (T) {
     tsne_out <- tsne$Y %>%
       data.frame(regions) %>%
       rename(Brain.Region = regions, V1 = X1, V2 = X2) #rename columns
+    
     
     ###### tSNE (on weighted data) ######
     
@@ -347,32 +309,36 @@ while (T) {
     # Assign 'tsne_scatter' as an entry in 'tsne_list'.
     tsne_list[[counter]] <- tsne_scatter
     
-    # Save the tSNE scatter plot as png in appropriate folder destination
-    # within the project directory.
-    tsne_scatter_path <- file.path(here("Plots", 
-                                        paste0('RSKC_scatter_k=',i,'.png')))
-    
-    png(file = tsne_scatter_path,
-        units = "in",
-        width = 9,
-        height = 8,
-        res = 300 #,compression = 'lzw'
-    ) 
-    
-    print(tsne_scatter)
-    
-    dev.off()
-    
   }
   
   # Break out of the while-loop when for-loop is done. 
   break
   
 }
+```
 
-#####################################
-## RSKC Clustering Over 100 Runs
-#####################################
+```{r}
+# Make figures for all the plots obtained from the while loop above
+# i.e. the RSKC scatter plots, the RKSC weights, and elbow plot
+ggarrange(tsne_list[[1]], tsne_list[[2]],
+          tsne_list[[3]], tsne_list[[4]],
+          ncol = 2,
+          nrow = 2)
+
+ggarrange(weight_list[[1]], weight_list[[2]],
+          weight_list[[3]], weight_list[[4]],
+          ncol = 2,
+          nrow = 2)
+
+elbow_plot
+```
+
+
+## RSKC Clustering (100 Runs)
+
+Having previously selected the number of clusters to use for RSKC, this portion of the code aims to evaluate the proportion of brain regions clustered together over 100 runs (i.e. 100 different set.seed values). The code is derived from previous work (i.e. Keon and Brendan).
+
+```{r}
 # Create empty lists to store the results and the RSKC weighted data frames 
 # that result from the clustering.
 rskc.results.list = list()
@@ -412,10 +378,10 @@ for (i in 1:100) {
   rskc.weighted.list[[i]] = sweep(myFidelity, 2, 
                                   rskc.results.list[[i]]$weights, "*")
 }
+```
 
-#####################################
 ## Calculating Proportion of Times Brain Regions are Clustered Together
-#####################################
+```{r}
 # Transpose the data frame with the cluster labels from the 100 runs.
 rskc.region.labels.t <-  rskc.region.labels %>%
   column_to_rownames("Region") %>%
@@ -447,10 +413,10 @@ rskc.cluster.regions.long <-  rskc.cluster.regions.wide %>%
   melt(id.vars = "Region_1", variable.name = "Region_2", value.name = "Matches") %>%
   # Convert the number of matches to a proportion
   mutate(Matches = Matches / 100)
+```
 
-#####################################
 ## Heatmap to Visualize Proportion of Shared Clusters
-#####################################
+```{r}
 # Factor the regions with levels corresponding to the specified brain region
 # names from the 'regions' vector.
 region.rskc.cluster.matches.ordered <-  rskc.cluster.regions.long %>%
@@ -460,24 +426,10 @@ region.rskc.cluster.matches.ordered <-  rskc.cluster.regions.long %>%
   mutate(Region_2 = factor(Region_2, levels = regions))
 
 # Plot the adjacency matrix as a heatmap
-region_heatmap <- ggplot(region.rskc.cluster.matches.ordered, aes(x = Region_1, y = Region_2, fill = Matches)) +
+ggplot(region.rskc.cluster.matches.ordered, aes(x = Region_1, y = Region_2, fill = Matches)) +
   geom_tile(colour = "black") +
   scale_fill_gradientn(colours = c("lightyellow", "yellow", "orange", "red")) +
   theme(axis.text.x = element_text(angle = 270)) +
   labs(x = NULL, y = NULL, fill = "Proportion of Matches on \n100 RSKC Cluster Runs")
 
-# Save the generated heatmap as png in appropriate folder destination
-# within the project directory.
-region_heatmap_path <- file.path(here("Plots", 
-                                      paste0('RSKC_brain_region_clustering_heatmap.png')))
-
-png(file = region_heatmap_path,
-    units = "in",
-    width = 9,
-    height = 8,
-    res = 300 #,compression = 'lzw'
-)
-
-print(region_heatmap)
-
-dev.off()
+```
