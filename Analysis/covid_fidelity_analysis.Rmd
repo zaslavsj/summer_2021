@@ -18,6 +18,7 @@ library(factoextra) # For fviz_nbclust() and clustering analysis/visualization
 library(reshape2) # For melt()
 library(RColorBrewer) # For color palettes
 library(gplots) # For heatmap.2()
+library(dendextend) # For manipulating visual appearance of dendrograms
 
 # Set the seed
 set.seed(72613)
@@ -452,9 +453,14 @@ prop_function <- function(x){
 rskc.region.prop <- apply(rskc.cluster.regions.wide, 2, prop_function) %>% 
   as.matrix()
 
+# Assign a dendrogram for the matrix of matched clustering of RSKC regions.
+rskc_dendro <- set(as.dendrogram(hclust(dist(rskc.region.prop))), "branches_lwd", 3)
+
 heatmap.2(rskc.region.prop, 
           scale = "none", 
           col = brewer.pal(n = 9, name = "YlOrRd"),
+          Rowv = rskc_dendro,
+          Colv = rskc_dendro,
           key = TRUE,
           key.xlab = "Proportion of Matches on \n 100 RSKC Runs",
           trace = "none",
