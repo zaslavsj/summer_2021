@@ -95,269 +95,269 @@ plot_df <- fidelity_subset.long %>%
   geom_bar(stat = "identity", position = "dodge") +
   theme_minimal())
 
-#####################################
-## RSKC
-#####################################
-set.seed(72613)
-
-while (T) {
-  
-  # Assign the values of 2, 4, 6 and 8 to 'clust_vect'.
-  clust_vect <- c(2,4,6,8)
-
-  # Assign an empty list to 'rskc_list'.
-  rskc_list <- list()
-  
-  # Assign a value of 0 to 'counter'.
-  counter <- 0
-  
-  # Assign an empty list to 'weight_list'.
-  weight_list <- list()
-  
-  # For 'i' -- the current number of clusters -- in 'clust_vect'...
-  for (i in clust_vect) {
-    # i = 2
-    # Increment 'counter' with a value of 1.
-    counter = counter + 1
-    
-    # Perform RSKC for whatever-the-value-of-'i'-is many clusters using 
-    # 'myFidelity', which has brain region as rows and gene_celltype as columns.
-    # Assign RSKC's output as an entry in 'rskc_list'. 
-    rskc_list[[counter]] <- RSKC(myFidelity, 
-                                 ncl = i,
-                                 alpha = 0.1,
-                                 L1 = sqrt(ncol(myFidelity)))
-    
-    
-    # Convert the row names of 'myFidelity' to a column
-    # called 'Brain.Region' and store it in 'gene_and_region'.
-    gene_and_region <- myFidelity %>% 
-      rownames_to_column("Brain.Region")
-    
-    # For the current object in 'rskc_list' convert the cluster labels
-    # into characters, and assign them to a new column called 'cluster_labels'
-    # in 'gene_and_region'.  
-    gene_and_region$cluster_labels <- rskc_list[[counter]]$labels %>% 
-      as.character()
-    
-    # Order the weights for the current item in 'rskc_list' from largest
-    # to smallest, extract the names of the genes in this order,
-    # convert this object into a data frame, and store this info in
-    # an object 'weight_df' in a column called 'gene'.
-    weight_df <- sort(rskc_list[[counter]]$weights,
-                      decreasing = T) %>% 
-      names() %>% 
-      
-      as.data.frame() %>% 
-      
-      rename('gene' = ".")
-    
-    # Assign the ordered weights for the current item in 'rskc_list' into
-    # 'weight_df', in a column called 'weight', 
-    weight_df$weight <- sort(rskc_list[[counter]]$weights,
-                             decreasing = T) %>%
-      unname() 
-    
-    # Impose a factor order on the contents of 'weight_df$gene' in 
-    # the current order. 
-    weight_df$gene <- factor(weight_df$gene,
-                             weight_df$gene)
-    
-    # Create a bar graph of the RSKC weights for each gene ordered from
-    # largest to smallest. Assign this graph to an object, 'weight_bars'.
-    weight_bars <- weight_df %>% 
-      
-      ggplot(aes(x = gene,
-                 y = weight)) + 
-      
-      theme_classic() +
-      
-      geom_bar(stat = 'identity') +
-      
-      theme(axis.text.x = element_text(angle = 45,
-                                       vjust = 0.6)) +
-      
-      scale_y_continuous(expand = c(0,
-                                    0)) +
-      
-      ggtitle(paste0("RSKC Weights for K = ",i)) +
-      
-      xlab("") +
-      
-      ylab("Weights\n")
-    
-    # Assign 'weight_bars' as the current entry into 'weight_list'. 
-    weight_list[[counter]] <- weight_bars
-    
-    # Print the current object in 'weight_bars' as a tiff in your working
-    # directory.
-    png(paste0('RSKC_weights_for_gene_fidelity_k=',i,'.png'),
-        units = "in",
-        width = 5+2,
-        height = 4+1.5,
-        res = 300 #,compression = 'lzw'
-    )  
-    
-    print(weight_bars)
-    
-    dev.off()
-    
-  }
-  
-  # Break out of the while-loop when for-loop is done. 
-  break
-  
-}
-
-#####################################
-## Choosing K for Clustering (Elbow Plot)
-#####################################
-# Based on the elbow plot, an optimal number of clusters is the point at which
-# there is a leveling off while either minimizing the within-cluster 
-# sum of squares, or maximizing the between-cluster sum of squares. In this
-# case, K = 4 appears to be a good number of clusters to pursue.
-
-# Make an empty vector 'between_ss' to store weighted between-cluster sum of
-# squares (WBSS) values and use for loop to fill them in, using RSKC output 
-# of 'rskc_list'.
-between_ss <- matrix(ncol = 1, nrow = length(clust_vect))
-
-for (i in 1:length(clust_vect)){
-  between_ss[i] <- rskc_list[[i]]$WBSS[length(rskc_list[[i]]$WBSS)]
-}
-
-# Make a new dataframe with the WBSS values and their corresponding number 
-# of clusters.
-objective_function <- data.frame(clust_vect, between_ss) %>%
-  rename(k = clust_vect, WBSS = between_ss)
-
-ggplot(objective_function, aes(x = k, y = WBSS)) + 
-  geom_line() +
-  geom_point() + 
-  scale_x_continuous(breaks = clust_vect) + 
-  labs(x = "Number of Clusters", 
-       y = "Total Weighted Between Sum of Squares")
-
-# Elbow plot using total within-cluster sum of squares, but not obtained through
-# RSKC.
-fviz_nbclust(myFidelity, method = "wss", FUNcluster = hcut)
-
-# Clest(as.matrix(myFidelity), 
-#       maxK = 8, 
-#       alpha = 0.1, 
-#       L1 = sqrt(ncol(myFidelity)), 
-#       nstart = 2)
-
-#####################################
-## tSNE
-#####################################
-
-# Create vector of the weights obtained from RSKC and assign them to 'weights'.
-# Make empty matrix 'weighted_fidelity' for new weighted fidelity scores.
-weights <- as.matrix(rskc_list[[1]]$weights)
-weighted_fidelity <- matrix(nrow = 18, ncol = 20)
-
-# Multiply 'fidelity' by corresponding weights obtained from RSKC.
-for (i in 1:20){
-  weighted_fidelity[,i] <- myFidelity[,i]*weights[i]
-}
-
-# Run tSNE on weighted fidelity scores, and assign to 'tsne'.
-set.seed(72613)
-tsne <- Rtsne(weighted_fidelity, perplexity = 5)
-
-# 'tsne_out' includes the two dimensions and corresponding brain regions.
-tsne_out <- tsne$Y %>%
-  data.frame(regions) %>%
-  rename(Brain.Region = regions, V1 = X1, V2 = X2) # Rename columns
-
-set.seed(72613)
-while (T) {
-  
-  # Need to manually change the number of clusters to be identified
-  # and has to match the number previously assigned to 'clust_vect' 
-  # in above while loop for RSKC.
-  clust_vect <- c(4)
-  
-  # Assign 8 colours to 'col_vect'.
-  col_vect <- c("#FF0000",
-                "#0000FF",
-                "#00FF00",
-                "#A020F0",
-                "#FFA500",
-                "#FFFF00",
-                "#A65628",
-                "#F781BF")
-  
-  # Assign a value of 0 to 'counter'.
-  counter <- 0
-  
-  # Assign an empty list to 'tsne_list'.
-  tsne_list <- list()
-  
-  # For 'i' -- the current number of clusters -- in 'clust_vect'...
-  for (i in clust_vect) {
-    # i = 2
-    # Increment 'counter' with a value of 1.
-    counter = counter + 1
-    
-    # Merge 'tsne_out' with 'gene_and_region' according
-    # to their shared 'Brain.Region' column, and assign to 
-    # 'tsne_genes_regions_clusts'. 
-    tsne_genes_regions_clusts <- merge(tsne_out,
-                                       gene_and_region,
-                                       by = "Brain.Region")
-    
-    
-    # Create a tSNE scatter plot where each point is colour-coded according to
-    # its designated RSKC cluster and assign this figure to 'tsne_scatter'.
-    tsne_scatter <- ggplot(tsne_genes_regions_clusts,
-                           aes(V1,
-                               V2,
-                               fill = cluster_labels)) +
-      geom_point(shape = 21, size = 3)+ 
-      scale_fill_manual(values = col_vect[1:i],
-                        labels = 1:i,
-                        name = "Cluster") +
-      theme(axis.text.x = element_blank(),
-            axis.ticks.x = element_blank(),
-            axis.text.y = element_blank(),
-            axis.ticks.y = element_blank(),
-            panel.background = element_rect(fill = NA, 
-                                            colour = "white"),
-            panel.border = element_blank(),
-            axis.line = element_line(),
-            legend.position = 'bottom',
-            legend.background = element_rect(fill = NA,
-                                             colour = NA), 
-            legend.title.align=0.5)+
-      guides(fill=guide_legend(nrow = 2,
-                               ncol = 4, 
-                               byrow = TRUE)) +
-      labs(x="V1", y="V2") 
-    
-    # Assign 'tsne_scatter' as an entry in 'tsne_list'.
-    tsne_list[[counter]] <- tsne_scatter
-    
-    # Print the current object in 'tsne_scatter' as a tiff in your working
-    # directory.
-    png(paste0('RSKC_scatter_k=',i,'.png'), 
-        units = "in",
-        width = 9, 
-        height = 8,
-        res = 300#,compression = 'lzw'
-    )
-    
-    print(tsne_scatter)
-    
-    dev.off()
-    
-  }
-  
-  # Break out of the while-loop when for-loop is done. 
-  break
-  
-}
+# #####################################
+# ## RSKC
+# #####################################
+# set.seed(72613)
+# 
+# while (T) {
+#   
+#   # Assign the values of 2, 4, 6 and 8 to 'clust_vect'.
+#   clust_vect <- c(2,4,6,8)
+# 
+#   # Assign an empty list to 'rskc_list'.
+#   rskc_list <- list()
+#   
+#   # Assign a value of 0 to 'counter'.
+#   counter <- 0
+#   
+#   # Assign an empty list to 'weight_list'.
+#   weight_list <- list()
+#   
+#   # For 'i' -- the current number of clusters -- in 'clust_vect'...
+#   for (i in clust_vect) {
+#     # i = 2
+#     # Increment 'counter' with a value of 1.
+#     counter = counter + 1
+#     
+#     # Perform RSKC for whatever-the-value-of-'i'-is many clusters using 
+#     # 'myFidelity', which has brain region as rows and gene_celltype as columns.
+#     # Assign RSKC's output as an entry in 'rskc_list'. 
+#     rskc_list[[counter]] <- RSKC(myFidelity, 
+#                                  ncl = i,
+#                                  alpha = 0.1,
+#                                  L1 = sqrt(ncol(myFidelity)))
+#     
+#     
+#     # Convert the row names of 'myFidelity' to a column
+#     # called 'Brain.Region' and store it in 'gene_and_region'.
+#     gene_and_region <- myFidelity %>% 
+#       rownames_to_column("Brain.Region")
+#     
+#     # For the current object in 'rskc_list' convert the cluster labels
+#     # into characters, and assign them to a new column called 'cluster_labels'
+#     # in 'gene_and_region'.  
+#     gene_and_region$cluster_labels <- rskc_list[[counter]]$labels %>% 
+#       as.character()
+#     
+#     # Order the weights for the current item in 'rskc_list' from largest
+#     # to smallest, extract the names of the genes in this order,
+#     # convert this object into a data frame, and store this info in
+#     # an object 'weight_df' in a column called 'gene'.
+#     weight_df <- sort(rskc_list[[counter]]$weights,
+#                       decreasing = T) %>% 
+#       names() %>% 
+#       
+#       as.data.frame() %>% 
+#       
+#       rename('gene' = ".")
+#     
+#     # Assign the ordered weights for the current item in 'rskc_list' into
+#     # 'weight_df', in a column called 'weight', 
+#     weight_df$weight <- sort(rskc_list[[counter]]$weights,
+#                              decreasing = T) %>%
+#       unname() 
+#     
+#     # Impose a factor order on the contents of 'weight_df$gene' in 
+#     # the current order. 
+#     weight_df$gene <- factor(weight_df$gene,
+#                              weight_df$gene)
+#     
+#     # Create a bar graph of the RSKC weights for each gene ordered from
+#     # largest to smallest. Assign this graph to an object, 'weight_bars'.
+#     weight_bars <- weight_df %>% 
+#       
+#       ggplot(aes(x = gene,
+#                  y = weight)) + 
+#       
+#       theme_classic() +
+#       
+#       geom_bar(stat = 'identity') +
+#       
+#       theme(axis.text.x = element_text(angle = 45,
+#                                        vjust = 0.6)) +
+#       
+#       scale_y_continuous(expand = c(0,
+#                                     0)) +
+#       
+#       ggtitle(paste0("RSKC Weights for K = ",i)) +
+#       
+#       xlab("") +
+#       
+#       ylab("Weights\n")
+#     
+#     # Assign 'weight_bars' as the current entry into 'weight_list'. 
+#     weight_list[[counter]] <- weight_bars
+#     
+#     # Print the current object in 'weight_bars' as a tiff in your working
+#     # directory.
+#     png(paste0('RSKC_weights_for_gene_fidelity_k=',i,'.png'),
+#         units = "in",
+#         width = 5+2,
+#         height = 4+1.5,
+#         res = 300 #,compression = 'lzw'
+#     )  
+#     
+#     print(weight_bars)
+#     
+#     dev.off()
+#     
+#   }
+#   
+#   # Break out of the while-loop when for-loop is done. 
+#   break
+#   
+# }
+# 
+# #####################################
+# ## Choosing K for Clustering (Elbow Plot)
+# #####################################
+# # Based on the elbow plot, an optimal number of clusters is the point at which
+# # there is a leveling off while either minimizing the within-cluster 
+# # sum of squares, or maximizing the between-cluster sum of squares. In this
+# # case, K = 4 appears to be a good number of clusters to pursue.
+# 
+# # Make an empty vector 'between_ss' to store weighted between-cluster sum of
+# # squares (WBSS) values and use for loop to fill them in, using RSKC output 
+# # of 'rskc_list'.
+# between_ss <- matrix(ncol = 1, nrow = length(clust_vect))
+# 
+# for (i in 1:length(clust_vect)){
+#   between_ss[i] <- rskc_list[[i]]$WBSS[length(rskc_list[[i]]$WBSS)]
+# }
+# 
+# # Make a new dataframe with the WBSS values and their corresponding number 
+# # of clusters.
+# objective_function <- data.frame(clust_vect, between_ss) %>%
+#   rename(k = clust_vect, WBSS = between_ss)
+# 
+# ggplot(objective_function, aes(x = k, y = WBSS)) + 
+#   geom_line() +
+#   geom_point() + 
+#   scale_x_continuous(breaks = clust_vect) + 
+#   labs(x = "Number of Clusters", 
+#        y = "Total Weighted Between Sum of Squares")
+# 
+# # Elbow plot using total within-cluster sum of squares, but not obtained through
+# # RSKC.
+# fviz_nbclust(myFidelity, method = "wss", FUNcluster = hcut)
+# 
+# # Clest(as.matrix(myFidelity), 
+# #       maxK = 8, 
+# #       alpha = 0.1, 
+# #       L1 = sqrt(ncol(myFidelity)), 
+# #       nstart = 2)
+# 
+# #####################################
+# ## tSNE
+# #####################################
+# 
+# # Create vector of the weights obtained from RSKC and assign them to 'weights'.
+# # Make empty matrix 'weighted_fidelity' for new weighted fidelity scores.
+# weights <- as.matrix(rskc_list[[1]]$weights)
+# weighted_fidelity <- matrix(nrow = 18, ncol = 20)
+# 
+# # Multiply 'fidelity' by corresponding weights obtained from RSKC.
+# for (i in 1:20){
+#   weighted_fidelity[,i] <- myFidelity[,i]*weights[i]
+# }
+# 
+# # Run tSNE on weighted fidelity scores, and assign to 'tsne'.
+# set.seed(72613)
+# tsne <- Rtsne(weighted_fidelity, perplexity = 5)
+# 
+# # 'tsne_out' includes the two dimensions and corresponding brain regions.
+# tsne_out <- tsne$Y %>%
+#   data.frame(regions) %>%
+#   rename(Brain.Region = regions, V1 = X1, V2 = X2) # Rename columns
+# 
+# set.seed(72613)
+# while (T) {
+#   
+#   # Need to manually change the number of clusters to be identified
+#   # and has to match the number previously assigned to 'clust_vect' 
+#   # in above while loop for RSKC.
+#   clust_vect <- c(4)
+#   
+#   # Assign 8 colours to 'col_vect'.
+#   col_vect <- c("#FF0000",
+#                 "#0000FF",
+#                 "#00FF00",
+#                 "#A020F0",
+#                 "#FFA500",
+#                 "#FFFF00",
+#                 "#A65628",
+#                 "#F781BF")
+#   
+#   # Assign a value of 0 to 'counter'.
+#   counter <- 0
+#   
+#   # Assign an empty list to 'tsne_list'.
+#   tsne_list <- list()
+#   
+#   # For 'i' -- the current number of clusters -- in 'clust_vect'...
+#   for (i in clust_vect) {
+#     # i = 2
+#     # Increment 'counter' with a value of 1.
+#     counter = counter + 1
+#     
+#     # Merge 'tsne_out' with 'gene_and_region' according
+#     # to their shared 'Brain.Region' column, and assign to 
+#     # 'tsne_genes_regions_clusts'. 
+#     tsne_genes_regions_clusts <- merge(tsne_out,
+#                                        gene_and_region,
+#                                        by = "Brain.Region")
+#     
+#     
+#     # Create a tSNE scatter plot where each point is colour-coded according to
+#     # its designated RSKC cluster and assign this figure to 'tsne_scatter'.
+#     tsne_scatter <- ggplot(tsne_genes_regions_clusts,
+#                            aes(V1,
+#                                V2,
+#                                fill = cluster_labels)) +
+#       geom_point(shape = 21, size = 3)+ 
+#       scale_fill_manual(values = col_vect[1:i],
+#                         labels = 1:i,
+#                         name = "Cluster") +
+#       theme(axis.text.x = element_blank(),
+#             axis.ticks.x = element_blank(),
+#             axis.text.y = element_blank(),
+#             axis.ticks.y = element_blank(),
+#             panel.background = element_rect(fill = NA, 
+#                                             colour = "white"),
+#             panel.border = element_blank(),
+#             axis.line = element_line(),
+#             legend.position = 'bottom',
+#             legend.background = element_rect(fill = NA,
+#                                              colour = NA), 
+#             legend.title.align=0.5)+
+#       guides(fill=guide_legend(nrow = 2,
+#                                ncol = 4, 
+#                                byrow = TRUE)) +
+#       labs(x="V1", y="V2") 
+#     
+#     # Assign 'tsne_scatter' as an entry in 'tsne_list'.
+#     tsne_list[[counter]] <- tsne_scatter
+#     
+#     # Print the current object in 'tsne_scatter' as a tiff in your working
+#     # directory.
+#     png(paste0('RSKC_scatter_k=',i,'.png'), 
+#         units = "in",
+#         width = 9, 
+#         height = 8,
+#         res = 300#,compression = 'lzw'
+#     )
+#     
+#     print(tsne_scatter)
+#     
+#     dev.off()
+#     
+#   }
+#   
+#   # Break out of the while-loop when for-loop is done. 
+#   break
+#   
+# }
 
 #####################################
 ## RSKC to tSNE (All in one loop)
@@ -467,14 +467,17 @@ while (T) {
     # Assign 'weight_bars' as the current entry into 'weight_list'. 
     weight_list[[counter]] <- weight_bars
     
-    # Print the current object in 'weight_bars' as a tiff in your working
-    # directory.
-    png(paste0('RSKC_weights_for_gene_fidelity_k=',i,'.png'),
+    # Save plot for the RSKC feature weights in appropriate folder destination
+    # within the project directory.
+    weight_bars_path <- file.path(here("Plots", 
+                                       paste0('RSKC_weights_for_gene_fidelity_k=', i, '.png')))
+    
+    png(file = weight_bars_path,
         units = "in",
         width = 5+2,
         height = 4+1.5,
         res = 300 #,compression = 'lzw'
-    )  
+    )
     
     print(weight_bars)
     
@@ -529,14 +532,17 @@ while (T) {
         labs(x = "Number of Clusters", 
              y = "Total Weighted Between Sum of Squares")
       
-      # Print the current object in 'weight_bars' as a tiff in your working
-      # directory.
-      png(paste0('Elbow_plot.png'),
+      # Save the elbow plot in appropriate folder destination
+      # within the project directory.
+      elbow_plot_path <- file.path(here("Plots", 
+                                        paste0('elbow_plot.png')))
+      
+      png(file = elbow_plot_path,
           units = "in",
           width = 5+2,
           height = 4+1.5,
           res = 300 #,compression = 'lzw'
-      )  
+      )
       
       print(elbow_plot)
       
@@ -605,14 +611,17 @@ while (T) {
     # Assign 'tsne_scatter' as an entry in 'tsne_list'.
     tsne_list[[counter]] <- tsne_scatter
     
-    # Print the current object in 'tsne_scatter' as a png in your working
-    # directory.
-    png(paste0('RSKC_scatter_k=',i,'.png'), 
+    # Save the tSNE scatter plot as png in appropriate folder destination
+    # within the project directory.
+    tsne_scatter_path <- file.path(here("Plots", 
+                                        paste0('RSKC_scatter_k=',i,'.png')))
+    
+    png(file = tsne_scatter_path,
         units = "in",
-        width = 9, 
+        width = 9,
         height = 8,
-        res = 300#,compression = 'lzw'
-    )
+        res = 300 #,compression = 'lzw'
+    ) 
     
     print(tsne_scatter)
     
@@ -715,8 +724,24 @@ region.rskc.cluster.matches.ordered <-  rskc.cluster.regions.long %>%
   mutate(Region_2 = factor(Region_2, levels = regions))
 
 # Plot the adjacency matrix as a heatmap
-ggplot(region.rskc.cluster.matches.ordered, aes(x = Region_1, y = Region_2, fill = Matches)) +
+region_heatmap <- ggplot(region.rskc.cluster.matches.ordered, aes(x = Region_1, y = Region_2, fill = Matches)) +
   geom_tile(colour = "black") +
   scale_fill_gradientn(colours = c("lightyellow", "yellow", "orange", "red")) +
   theme(axis.text.x = element_text(angle = 270)) +
   labs(x = NULL, y = NULL, fill = "Proportion of Matches on \n100 RSKC Cluster Runs")
+
+# Save the generated heatmap as png in appropriate folder destination
+# within the project directory.
+region_heatmap_path <- file.path(here("Plots", 
+                                      paste0('RSKC_brain_region_clustering_heatmap.png')))
+
+png(file = region_heatmap_path,
+    units = "in",
+    width = 9,
+    height = 8,
+    res = 300 #,compression = 'lzw'
+)
+
+print(region_heatmap)
+
+dev.off()
