@@ -20,6 +20,7 @@ library(factoextra) # For fviz_nbclust() and clustering analysis/visualization
 library(reshape2) # For melt()
 library(RColorBrewer) # For color palettes
 library(gplots) # For heatmap.2()
+library(dendextend) # For manipulating visual appearance of dendrograms
 
 set.seed(72613)
 
