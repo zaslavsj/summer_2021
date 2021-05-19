@@ -18,6 +18,8 @@ library(RSKC) # For RSKC clustering
 library(Rtsne) # To run t-SNE (dimensionality reduction)
 library(factoextra) # For fviz_nbclust() and clustering analysis/visualization
 library(reshape2) # For melt()
+library(RColorBrewer) # For color palettes
+library(gplots) # For heatmap.2()
 
 set.seed(72613)
 
@@ -462,9 +464,15 @@ region.rskc.cluster.matches.ordered <-  rskc.cluster.regions.long %>%
 # Plot the adjacency matrix as a heatmap
 region_heatmap <- ggplot(region.rskc.cluster.matches.ordered, aes(x = Region_1, y = Region_2, fill = Matches)) +
   geom_tile(colour = "black") +
-  scale_fill_gradientn(colours = c("lightyellow", "yellow", "orange", "red")) +
-  theme(axis.text.x = element_text(angle = 270)) +
-  labs(x = NULL, y = NULL, fill = "Proportion of Matches on \n100 RSKC Cluster Runs")
+  scale_fill_gradientn(colours = brewer.pal(n = 9, name = "YlOrRd")) +
+  labs(x = NULL, 
+       y = NULL, 
+       fill = "Proportion of Matches on \n100 RSKC Cluster Runs") +
+  theme_minimal() +
+  theme(panel.border = element_blank(),
+        panel.background = element_blank(),
+        axis.text.x = element_text(colour = "black", angle = 90),
+        axis.text.y = element_text(colour = "black"))
 
 # Save the generated heatmap as png in appropriate folder destination
 # within the project directory.
