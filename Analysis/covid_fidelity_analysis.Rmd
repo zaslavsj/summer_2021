@@ -320,22 +320,27 @@ while (T) {
 }
 ```
 
-```{r}
+```{r, fig.align = 'center', fig.height = 6, fig.width = 6}
 # Make figures for all the plots obtained from the while loop above
 # i.e. the RSKC scatter plots, the RKSC weights, and elbow plot
 ggarrange(tsne_list[[1]], tsne_list[[2]],
           tsne_list[[3]], tsne_list[[4]],
           ncol = 2,
           nrow = 2)
+```
 
+```{r, fig.align = 'center', fig.height = 6, fig.width = 6}
 ggarrange(weight_list[[1]], weight_list[[2]],
           weight_list[[3]], weight_list[[4]],
           ncol = 2,
           nrow = 2)
+```
 
+```{r, echo = FALSE, fig.align = 'center', fig.height = 5, fig.width = 7}
 elbow_plot
 ```
 
+\newpage
 
 ## RSKC (100 Runs)
 
@@ -419,7 +424,7 @@ rskc.cluster.regions.long <-  rskc.cluster.regions.wide %>%
 ```
 
 ## Heat Maps to Visualize Proportion of Shared Clusters
-```{r}
+```{r, fig.align = 'center', fig.height = 5, fig.width = 7}
 # Factor the regions with levels corresponding to the specified brain region
 # names from the 'regions' vector.
 region.rskc.cluster.matches.ordered <-  rskc.cluster.regions.long %>%
@@ -443,7 +448,7 @@ ggplot(region.rskc.cluster.matches.ordered, aes(x = Region_1, y = Region_2, fill
         axis.ticks = element_blank())
 ```
 
-```{r}
+```{r, fig.align = 'center', fig.height = 5, fig.width = 7}
 # Define a function to turn values out of 100 into proportions.
 prop_function <- function(x){
   return(x/100)
@@ -573,73 +578,6 @@ while (T) {
         
         as.character()
       
-      ###### Elbow Plot ######
-      
-      elbow_clust_vect <- c(2,3,4,5,6,7,8,9,10,11,12,13,14,15,16)
-      
-      elbow_rskc_list <- c()
-      
-      # Only produce elbow plot when we are on the last run of the while loop,
-      # since we only need one elbow plot
-      if (i == clust_vect[length(clust_vect)]){
-        
-        elbow_counter = 0
-        
-        for (n in elbow_clust_vect) {
-          # n = 2
-          # Increment 'counter' with a value of 1.
-          elbow_counter = elbow_counter + 1
-          
-          # Perform RSKC for whatever-the-value-of-'i'-is many clusters using 
-          # 'myFidelity', which has brain region as rows and gene_celltype as columns.
-          # Assign RSKC's output as an entry in 'rskc_list'. 
-          elbow_rskc_list[[elbow_counter]] <- RSKC(myFidelity, 
-                                                   ncl = n,
-                                                   alpha = 0.1,
-                                                   L1 = sqrt(ncol(myFidelity)))
-        }
-        
-        # Create empty vector 'between_ss' to store weighted between sum of squares 
-        # values (WBSS)
-        between_ss <- matrix(ncol = 1, nrow = length(elbow_clust_vect))
-        
-        # Use for loop to add WBSS values to 'between_ss'
-        # Some RSKC outputs may give more than one WBSS value, so take the last one
-        for (n in 1:length(elbow_clust_vect)){
-          between_ss[n] <- elbow_rskc_list[[n]]$WBSS[length(elbow_rskc_list[[n]]$WBSS)]
-        }
-        
-        # Make a new dataframe with the WBSS values and their corresponding number 
-        # of clusters.
-        objective_function <- data.frame(elbow_clust_vect, between_ss) %>%
-          rename(k = elbow_clust_vect, WBSS = between_ss)
-        
-        # Create the elbow plot and assign it to 'elbow_plot
-        elbow_plot <- ggplot(objective_function, aes(x = k, y = WBSS)) + 
-          geom_line() +
-          geom_point() + 
-          scale_x_continuous(breaks = elbow_clust_vect) + 
-          labs(x = "Number of Clusters", 
-               y = "Total Weighted Between Sum of Squares")
-        
-        # Save the elbow plot as a png in appropriate folder destination
-        # within the project directory.
-        elbow_plot_path <- file.path(here("Plots", 
-                                          paste0('elbow_plot.png')))
-        
-        png(file = elbow_plot_path,
-            units = "in",
-            width = 5+2,
-            height = 4+1.5,
-            res = 300 #,compression = 'lzw'
-        )
-        
-        print(elbow_plot)
-        
-        dev.off()
-        
-      }
-      
       ###### Apply weights from RSKC to myFidelity ######
       
       # Create vector of the weights obtained from RSKC and assign them to 'weights'.
@@ -653,7 +591,6 @@ while (T) {
       }
       
       # Run tsne on weighted fidelity scores, and assign to 'tsne'
-      set.seed(72613)
       tsne <- Rtsne(weighted_fidelity, perplexity = 5)
       
       # Create new df 'tsne_out' which contains the two dimensions obtained from tSNE
@@ -721,43 +658,40 @@ while (T) {
   break
   
 }
+```
 
-###### Figures ######
+```{r, echo = FALSE, fig.align = 'center', fig.height = 14, fig.width = 6}
+# Create 5x2 figure for the 10 scatter plots using  K = 3 for RSKC.
+ggarrange(tsne_list_3[[1]], tsne_list_3[[2]],
+          tsne_list_3[[3]], tsne_list_3[[4]],
+          tsne_list_3[[5]], tsne_list_3[[6]],
+          tsne_list_3[[7]], tsne_list_3[[8]],
+          tsne_list_3[[9]], tsne_list_3[[10]],
+          ncol = 2,
+          nrow = 5)
+```
+\newpage
 
-# Create 5x2 figure for the 10 scatter plots using 3 clusters for RSKC.
+```{r, echo = FALSE, fig.align = 'center', fig.height = 14, fig.width = 6}
+# Create 5x2 figure for the 10 scatter plots using K = 4 for RSKC.
+ggarrange(tsne_list_4[[1]], tsne_list_4[[2]],
+          tsne_list_4[[3]], tsne_list_4[[4]],
+          tsne_list_4[[5]], tsne_list_4[[6]],
+          tsne_list_4[[7]], tsne_list_4[[8]],
+          tsne_list_4[[9]], tsne_list_4[[10]],
+          ncol = 2,
+          nrow = 5)
+```
+\newpage
 
-print(
-  ggarrange(tsne_list_3[[1]], tsne_list_3[[2]],
-            tsne_list_3[[3]], tsne_list_3[[4]],
-            tsne_list_3[[5]], tsne_list_3[[6]],
-            tsne_list_3[[7]], tsne_list_3[[8]],
-            tsne_list_3[[9]], tsne_list_3[[10]],
-            ncol = 2,
-            nrow = 5)
-)
-
-# Create 5x2 figure for the 10 scatter plots using 4 clusters for RSKC.
-
-print(
-  ggarrange(tsne_list_4[[1]], tsne_list_4[[2]],
-            tsne_list_4[[3]], tsne_list_4[[4]],
-            tsne_list_4[[5]], tsne_list_4[[6]],
-            tsne_list_4[[7]], tsne_list_4[[8]],
-            tsne_list_4[[9]], tsne_list_4[[10]],
-            ncol = 2,
-            nrow = 5)
-)
-
-# Create 5x2 figure for the 10 scatter plots using 5 clusters for RSKC.
-
-print(
-  ggarrange(tsne_list_5[[1]], tsne_list_5[[2]],
-            tsne_list_5[[3]], tsne_list_5[[4]],
-            tsne_list_5[[5]], tsne_list_5[[6]],
-            tsne_list_5[[7]], tsne_list_5[[8]],
-            tsne_list_5[[9]], tsne_list_5[[10]],
-            ncol = 2,
-            nrow = 5)
-)
+```{r, echo = FALSE, fig.align = 'center', fig.height = 14, fig.width = 6}
+# Create 5x2 figure for the 10 scatter plots using K = 5 for RSKC.
+ggarrange(tsne_list_5[[1]], tsne_list_5[[2]],
+          tsne_list_5[[3]], tsne_list_5[[4]],
+          tsne_list_5[[5]], tsne_list_5[[6]],
+          tsne_list_5[[7]], tsne_list_5[[8]],
+          tsne_list_5[[9]], tsne_list_5[[10]],
+          ncol = 2,
+          nrow = 5)
 ```
 
