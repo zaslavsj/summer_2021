@@ -18,6 +18,9 @@ library(RSKC) # For RSKC clustering
 library(Rtsne) # To run t-SNE (dimensionality reduction)
 library(factoextra) # For fviz_nbclust() and clustering analysis/visualization
 library(reshape2) # For melt()
+library(RColorBrewer) # For color palettes
+library(gplots) # For heatmap.2()
+library(dendextend) # For manipulating visual appearance of dendrograms
 
 set.seed(72613)
 
@@ -425,7 +428,7 @@ rskc.region.labels.t <-  rskc.region.labels %>%
   t() %>%
   data.frame()
 
-# Create an empty 18x18 data frame
+# Create an empty 18x18 data frame ( to hold proportion values).
 rskc.cluster.regions.wide <-  data.frame(matrix(ncol = 18, nrow = 18)) %>%
   # Set the column and row names as the regions (ordered alphabetically)
   set_colnames(regions) %>%
@@ -441,7 +444,7 @@ for (i in 1:length(regions)) {
   }
 }
 
-# Convert the adjacency matrix to long format for various plotting purposes
+# Convert the adjacency matrix to long format (for easier plotting).
 rskc.cluster.regions.long <-  rskc.cluster.regions.wide %>%
   # Give the region row names their own column
   rownames_to_column("Region_1") %>%
@@ -452,7 +455,7 @@ rskc.cluster.regions.long <-  rskc.cluster.regions.wide %>%
   mutate(Matches = Matches / 100)
 
 #####################################
-## Heatmap to Visualize Proportion of Shared Clusters
+## Heat map to Visualize Proportion of Shared Clusters
 #####################################
 # Factor the regions with levels corresponding to the specified brain region
 # names from the 'regions' vector.
@@ -462,16 +465,23 @@ region.rskc.cluster.matches.ordered <-  rskc.cluster.regions.long %>%
   # Factor Region_2
   mutate(Region_2 = factor(Region_2, levels = regions))
 
-# Plot the adjacency matrix as a heatmap
+# Plot the adjacency matrix as a heat map.
 region_heatmap <- ggplot(region.rskc.cluster.matches.ordered, aes(x = Region_1, y = Region_2, fill = Matches)) +
-  geom_tile(colour = "black") +
-  scale_fill_gradientn(colours = c("lightyellow", "yellow", "orange", "red")) +
-  theme(axis.text.x = element_text(angle = 270)) +
-  labs(x = NULL, y = NULL, fill = "Proportion of Matches on \n100 RSKC Cluster Runs")
+  geom_tile() +
+  scale_fill_gradientn(colours = brewer.pal(n = 9, name = "YlOrRd")) +
+  labs(x = NULL, 
+       y = NULL, 
+       fill = "Proportion of Matches on \n100 RSKC Runs") +
+  theme_minimal() +
+  theme(panel.border = element_blank(),
+        panel.background = element_blank(),
+        axis.text.x = element_text(colour = "black", angle = 45),
+        axis.text.y = element_text(colour = "black"),
+        axis.ticks = element_blank())
 
-# Save the generated heatmap as png in appropriate folder destination
+# Save the generated heat map as png in appropriate folder destination
 # within the project directory.
-region_heatmap_path <- file.path(here("Plots", 
+region_heatmap_path <- file.path(here("Plots",
                                       paste0('RSKC_brain_region_clustering_heatmap.png')))
 
 png(file = region_heatmap_path,
@@ -485,6 +495,54 @@ print(region_heatmap)
 
 dev.off()
 
+=======
+# Define a function to turn values out of 100 into proportions.
+prop_function <- function(x){
+  return(x/100)
+}
+
+# Convert all values in the 'rskc.cluster.regions.wide' matrix into 
+# proportions.
+rskc.region.prop <- apply(rskc.cluster.regions.wide, 2, prop_function) %>% 
+  as.matrix()
+
+# Assign a dendrogram for the matrix of matched clustering of RSKC regions.
+rskc_dendro <- set(as.dendrogram(hclust(dist(rskc.region.prop))), "branches_lwd", 3)
+
+# Save the generated heat map as png in appropriate folder destination
+# within the project directory.
+region_heatmap2_path <- file.path(here("Plots",
+                                       paste0('RSKC_brain_region_clustering_heatmap_dendro.png')))
+
+png(file = region_heatmap2_path,
+    units = "in",
+    width = 9,
+    height = 8,
+    res = 300 #, compression = 'lzw'
+)
+
+# Make the heat map; group the brain regions in the heat map that are clustered 
+# together.
+heatmap.2(rskc.region.prop, 
+          scale = "none", 
+          col = brewer.pal(n = 9, name = "YlOrRd"),
+          Rowv = rskc_dendro,
+          Colv = rskc_dendro,
+          key = TRUE,
+          keysize = 1,
+          key.xlab = "Proportion of Matches on \n 100 RSKC Runs",
+          trace = "none", # Remove the histogram trace lines from heat map
+          density.info = "none", # Remove the density plot from inside color key
+          srtCol = 45, # Rotate column labels on heat map
+          margins = c(5, 10),
+          key.xtickfun = function(){
+            breaks = pretty(parent.frame()$breaks)
+            breaks = breaks[c(1, length(breaks))]
+            list(at = parent.frame()$scale01(breaks),
+                 labels = breaks)
+          })
+
+dev.off()
 
 #####################################
 ## RSKC to tSNE (All in one loop) - 10 Runs
@@ -793,5 +851,3 @@ print(
 )
 
 dev.off()
-
-
