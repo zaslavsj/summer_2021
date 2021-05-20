@@ -251,7 +251,7 @@ while (T) {
     
     # Create vector of the weights obtained from RSKC and assign them to 'weights'.
     # Make empty matrix 'weighted_fidelity' for new weighted fidelity scores.
-    weights <- as.matrix(rskc_list[[1]]$weights)
+    weights <- as.matrix(rskc_list[[i]]$weights)
     weighted_fidelity <- matrix(nrow = 18, ncol = 20)
     
     # Multiply 'myFidelity' by corresponding weights obtained from RSKC.
