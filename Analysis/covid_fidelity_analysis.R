@@ -137,9 +137,12 @@ while (T) {
     # Increment 'counter' with a value of 1.
     counter = counter + 1
     
+    ###### RSKC ######
+    
     # Perform RSKC for whatever-the-value-of-'i'-is many clusters using 
     # 'myFidelity', which has brain region as rows and gene_celltype as columns.
     # Assign RSKC's output as an entry in 'rskc_list'. 
+    set.seed(72613)
     rskc_list[[counter]] <- RSKC(myFidelity, 
                                  ncl = i,
                                  alpha = 0.1,
@@ -293,7 +296,7 @@ while (T) {
     
     # Create vector of the weights obtained from RSKC and assign them to 'weights'.
     # Make empty matrix 'weighted_fidelity' for new weighted fidelity scores.
-    weights <- as.matrix(rskc_list[[1]]$weights)
+    weights <- as.matrix(rskc_list[[counter]]$weights)
     weighted_fidelity <- matrix(nrow = 18, ncol = 20)
     
     # Multiply 'myFidelity' by corresponding weights obtained from RSKC.
@@ -301,7 +304,7 @@ while (T) {
       weighted_fidelity[,n] <- myFidelity[,n]*weights[n]
     }
     
-    # Run tsne on weighted fidelity scores, and assign to 'tsne'
+    # Run tSNE on weighted fidelity scores, and assign to 'tsne'
     set.seed(72613)
     tsne <- Rtsne(weighted_fidelity, perplexity = 5)
     
@@ -452,7 +455,7 @@ rskc.cluster.regions.long <-  rskc.cluster.regions.wide %>%
   mutate(Matches = Matches / 100)
 
 #####################################
-## Heat map to Visualize Proportion of Shared Clusters
+## Heat Map to Visualize Proportion of Shared Clusters
 #####################################
 # Factor the regions with levels corresponding to the specified brain region
 # names from the 'regions' vector.
@@ -539,3 +542,254 @@ heatmap.2(rskc.region.prop,
           })
 
 dev.off()
+
+#####################################
+## RSKC to tSNE (All in one loop) - 10 Runs
+#####################################
+
+set.seed(72613)
+
+while (T) {
+  
+  # Assign the values of 3, 4, 5 to 'clust_vect'.
+  clust_vect <- c(3,4,5)
+  
+  # Assign empty lists to 'rskc.results.list' and 'rskc.weighted.list'
+  # to store the results and the RSKC weighted data frames that result
+  # from the clustering.
+  rskc_results_list = list()
+  rskc_weighted_list = list()
+  
+  # Assign 5 colours to 'col_vect'.
+  col_vect <- c("#FF0000",
+                "#0000FF",
+                "#00FF00",
+                "#A020F0",
+                "#FFA500")
+  
+  # Assign an empty list to 'tsne_list_3', 'tsne_list_4', and 'tsne_list_5'.
+  tsne_list_3 <- list()
+  tsne_list_4 <- list()
+  tsne_list_5 <- list()
+  
+  # Assign an empty list to 'weight_list'.
+  weight_list <- list()
+  
+  # Create empty data frames to store the cluster assignments and cluster weights 
+  # for each of the 10 runs.
+    rskc_region_labels_3 = data.frame("Region" = rownames(myFidelity))
+    rskc_region_labels_4 = data.frame("Region" = rownames(myFidelity))
+    rskc_region_labels_5 = data.frame("Region" = rownames(myFidelity))
+    rskc_region_weights = data.frame("Case" = colnames(myFidelity))
+    
+  # For 'i' -- the current number of clusters -- in 'clust_vect'...
+  for (i in clust_vect) {
+    
+    ###### RSKC (10 Runs) ######
+    
+    # Create a vector of seeds for all 10 runs.
+    set.seed(72613)
+    x = rdunif(10, a = 1, b = 1000000)
+    
+    for (counter in 1:10) {
+      
+      # Set the seed.
+      set.seed(x[counter])
+      
+      # Perform RSKC for whatever-the-value-of-''-is many clusters using 
+      # 'myFidelity', which has brain region as rows and gene_celltype as columns.
+      # Assign RSKC's output as an entry in 'rskc_results_list'.
+      rskc_results_list[[counter]] <- RSKC(myFidelity, 
+                                           alpha = 0.1, 
+                                           ncl = i, 
+                                           L1 = sqrt(ncol(myFidelity)))
+      
+      # Use the following if statements to add the cluster assignments for run i to 
+      # the corresponding 'rskc_region_labels_3', 'rskc_region_labels_4' or 'rskc_region_labels_5'.
+      if (i == 3){
+        rskc_region_labels_3[counter+1] <- rskc_results_list[[counter]]$labels
+        colnames(rskc_region_labels_3)[counter+1] <- paste("Run_", counter, sep = "")
+      }
+      
+      if (i == 4){
+        rskc_region_labels_4[counter+1] <- rskc_results_list[[counter]]$labels
+        colnames(rskc_region_labels_4)[counter+1] <- paste("Run_", counter, sep = "")
+      }
+      
+      if (i == 5){
+        rskc_region_labels_5[counter+1] <- rskc_results_list[[counter]]$labels
+        colnames(rskc_region_labels_5)[counter+1] <- paste("Run_", counter, sep = "")
+      }
+      
+      # Add the variable weights for run i to the 'rskc_region_weights'
+      rskc_region_weights[counter+1] <- rskc_results_list[[counter]]$weights
+      colnames(rskc_region_weights)[counter+1] <- paste("Run_", counter, sep = "")
+      
+      # Convert the row names of 'myFidelity' to a column
+      # called 'Brain.Region' and store it in 'gene_and_region'.
+      gene_and_region <- myFidelity %>% 
+        rownames_to_column("Brain.Region")
+      
+      # For the current object in 'rskc_list' convert the cluster labels
+      # into characters, and assign them to a new column called 'cluster_labels'
+      # in 'gene_and_region'.  
+      gene_and_region$cluster_labels <- rskc_results_list[[counter]]$labels %>% 
+        
+        as.character()
+     
+      ###### Apply weights from RSKC to myFidelity ######
+      
+      # Create vector of the weights obtained from RSKC and assign them to 'weights'.
+      # Make empty matrix 'weighted_fidelity' for new weighted fidelity scores.
+      weights <- as.matrix(rskc_results_list[[1]]$weights)
+      weighted_fidelity <- matrix(nrow = 18, ncol = 20)
+      
+      # Multiply 'myFidelity' by corresponding weights obtained from RSKC.
+      for (n in 1:20){
+        weighted_fidelity[,n] <- myFidelity[,n]*weights[n]
+      }
+      
+      # Run tsne on weighted fidelity scores, and assign to 'tsne'
+      set.seed(72613)
+      tsne <- Rtsne(weighted_fidelity, perplexity = 5)
+      
+      # Create new df 'tsne_out' which contains the two dimensions obtained from tSNE
+      # and corresponding regions
+      tsne_out <- tsne$Y %>%
+        data.frame(regions) %>%
+        rename(Brain.Region = regions, V1 = X1, V2 = X2) #rename columns
+      
+      ###### tSNE (on weighted data) ######
+      
+      # Merge 'tsne_out' with 'gene_and_region' according
+      # to their shared 'Brain.Region' column, and assign to 
+      # 'tsne_genes_regions_clusts'. 
+      tsne_genes_regions_clusts <- merge(tsne_out,
+                                         gene_and_region,
+                                         by = "Brain.Region")
+      
+      # Create a tSNE scatter plot where each point is colour-coded according to
+      # its designated RSKC cluster and assign this figure to 'tsne_scatter'.
+      tsne_scatter <- ggplot(tsne_genes_regions_clusts,
+                             aes(V1,
+                                 V2,
+                                 fill = cluster_labels)) +
+        geom_point(shape = 21, size = 3) + 
+        scale_fill_manual(values = col_vect[1:i],
+                          labels = 1:i,
+                          name = "Cluster") +
+        theme(axis.text.x = element_blank(),
+              axis.ticks.x = element_blank(),
+              axis.text.y = element_blank(),
+              axis.ticks.y = element_blank(),
+              panel.background = element_rect(fill = NA, 
+                                              colour = "white"),
+              panel.border = element_blank(),
+              axis.line = element_line(),
+              legend.position = 'bottom',
+              legend.background = element_rect(fill = NA,
+                                               colour = NA), 
+              legend.title.align=0.5) +
+        guides(fill=guide_legend(nrow = 2,
+                                 ncol = 4, 
+                                 byrow = TRUE)) +
+        labs(x="V1", y="V2") 
+      
+      # Use if statements to assign 'tsne_scatter' as an entry in 'tsne_list_3',
+      # 'tsne_list_4', or 'tsne_list_5' depending on the current i.
+      if (i == 3){
+        tsne_list_3[[counter]] <- tsne_scatter
+      }
+      
+      if (i == 4){
+        tsne_list_4[[counter]] <- tsne_scatter
+      }
+      
+      if (i == 5){
+        tsne_list_5[[counter]] <- tsne_scatter
+        
+      }
+
+    } 
+    
+  }
+  
+  # Break out of the while-loop when for-loop is done. 
+  break
+  
+}
+
+###### Figures ######
+
+# Save 5x2 figure for the 10 scatter plots using K = 3 for RSKC in appropriate 
+# folder destination within the project directory.
+tsne_scatter_path <- file.path(here("Plots", 
+                                    paste0('RKSC_tSNE_10Runs_k=3.png')))
+
+png(file = tsne_scatter_path,
+    units = "in",
+    width = 6,
+    height = 13,
+    res = 300 #,compression = 'lzw'
+) 
+
+print(
+  ggarrange(tsne_list_3[[1]], tsne_list_3[[2]],
+            tsne_list_3[[3]], tsne_list_3[[4]],
+            tsne_list_3[[5]], tsne_list_3[[6]],
+            tsne_list_3[[7]], tsne_list_3[[8]],
+            tsne_list_3[[9]], tsne_list_3[[10]],
+            ncol = 2,
+            nrow = 5)
+)
+
+dev.off()
+
+# Save 5x2 figure for the 10 scatter plots using K = 4 for RSKC in appropriate 
+# folder destination within the project directory.
+tsne_scatter_path <- file.path(here("Plots", 
+                                    paste0('RKSC_tSNE_10Runs_k=4.png')))
+
+png(file = tsne_scatter_path,
+    units = "in",
+    width = 6,
+    height = 13,
+    res = 300 #,compression = 'lzw'
+) 
+
+print(
+  ggarrange(tsne_list_4[[1]], tsne_list_4[[2]],
+            tsne_list_4[[3]], tsne_list_4[[4]],
+            tsne_list_4[[5]], tsne_list_4[[6]],
+            tsne_list_4[[7]], tsne_list_4[[8]],
+            tsne_list_4[[9]], tsne_list_4[[10]],
+            ncol = 2,
+            nrow = 5)
+)
+
+dev.off()
+
+# Save 5x2 figure for the 10 scatter plots using K = 5 for RSKC in appropriate 
+# folder destination within the project directory.
+tsne_scatter_path <- file.path(here("Plots", 
+                                    paste0('RKSC_tSNE_10Runs_k=5.png')))
+
+png(file = tsne_scatter_path,
+    units = "in",
+    width = 6,
+    height = 13,
+    res = 300 #,compression = 'lzw'
+) 
+
+print(
+  ggarrange(tsne_list_5[[1]], tsne_list_5[[2]],
+            tsne_list_5[[3]], tsne_list_5[[4]],
+            tsne_list_5[[5]], tsne_list_5[[6]],
+            tsne_list_5[[7]], tsne_list_5[[8]],
+            tsne_list_5[[9]], tsne_list_5[[10]],
+            ncol = 2,
+            nrow = 5)
+)
+
+dev.off()
+
