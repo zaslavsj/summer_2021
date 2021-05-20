@@ -139,6 +139,7 @@ while (T) {
     # Perform RSKC for whatever-the-value-of-'i'-is many clusters using 
     # 'myFidelity', which has brain region as rows and gene_celltype as columns.
     # Assign RSKC's output as an entry in 'rskc_list'. 
+    set.seed(72613)
     rskc_list[[counter]] <- RSKC(myFidelity, 
                                  ncl = i,
                                  alpha = 0.1,
@@ -300,7 +301,7 @@ while (T) {
       weighted_fidelity[,n] <- myFidelity[,n]*weights[n]
     }
     
-    # Run tsne on weighted fidelity scores, and assign to 'tsne'
+    # Run tSNE on weighted fidelity scores, and assign to 'tsne'
     set.seed(72613)
     tsne <- Rtsne(weighted_fidelity, perplexity = 5)
     
@@ -497,25 +498,19 @@ while (T) {
   clust_vect <- c(3,4,5)
   
   # Assign empty lists to 'rskc.results.list' and 'rskc.weighted.list'
-  # Create empty lists to store the results and the RSKC weighted data frames 
-  # that result from the clustering.
+  # to store the results and the RSKC weighted data frames that result
+  # from the clustering.
   rskc_results_list = list()
   rskc_weighted_list = list()
   
-  # Assign 8 colours to 'col_vect'.
+  # Assign 5 colours to 'col_vect'.
   col_vect <- c("#FF0000",
                 "#0000FF",
                 "#00FF00",
                 "#A020F0",
-                "#FFA500",
-                "#FFFF00",
-                "#A65628",
-                "#F781BF")
+                "#FFA500")
   
-  # Assign a value of 0 to 'counter'.
-  counter <- 0
-  
-  # Assign an empty list to 'tsne_list'.
+  # Assign an empty list to 'tsne_list_3', 'tsne_list_4', and 'tsne_list_5'.
   tsne_list_3 <- list()
   tsne_list_4 <- list()
   tsne_list_5 <- list()
@@ -523,18 +518,19 @@ while (T) {
   # Assign an empty list to 'weight_list'.
   weight_list <- list()
   
+  # Create empty data frames to store the cluster assignments and cluster weights 
+  # for each of the 10 runs.
+    rskc_region_labels_3 = data.frame("Region" = rownames(myFidelity))
+    rskc_region_labels_4 = data.frame("Region" = rownames(myFidelity))
+    rskc_region_labels_5 = data.frame("Region" = rownames(myFidelity))
+    rskc_region_weights = data.frame("Case" = colnames(myFidelity))
+    
   # For 'i' -- the current number of clusters -- in 'clust_vect'...
   for (i in clust_vect) {
-    # i = 2
     
     ###### RSKC (10 Runs) ######
     
-    # Create empty data frames to store the cluster assignments and cluster weights 
-    # for each of the 100 runs.
-    rskc_region_labels = data.frame("Region" = rownames(myFidelity))
-    rskc_region_weights = data.frame("Case" = colnames(myFidelity))
-    
-    # Create a vector of seeds for all 100 runs.
+    # Create a vector of seeds for all 10 runs.
     set.seed(72613)
     x = rdunif(10, a = 1, b = 1000000)
     
@@ -547,22 +543,30 @@ while (T) {
       # 'myFidelity', which has brain region as rows and gene_celltype as columns.
       # Assign RSKC's output as an entry in 'rskc_results_list'.
       rskc_results_list[[counter]] <- RSKC(myFidelity, 
-                                     alpha = 0.1, 
-                                     ncl = i, 
-                                     L1 = sqrt(ncol(myFidelity)))
+                                           alpha = 0.1, 
+                                           ncl = i, 
+                                           L1 = sqrt(ncol(myFidelity)))
       
-      # Add the cluster assignments for run i to the 'rskc.region.labels'.
-      rskc_region_labels[counter+1] <- rskc_results_list[[counter]]$labels
-      colnames(rskc_region_labels)[counter+1] <- paste("Run_", counter, sep = "")
+      # Use the following if statements to add the cluster assignments for run i to 
+      # the corresponding 'rskc_region_labels_3', 'rskc_region_labels_4' or 'rskc_region_labels_5'.
+      if (i == 3){
+        rskc_region_labels_3[counter+1] <- rskc_results_list[[counter]]$labels
+        colnames(rskc_region_labels_3)[counter+1] <- paste("Run_", counter, sep = "")
+      }
       
-      # Add the variable weights for run i to the 'rskc.region.weights'
+      if (i == 4){
+        rskc_region_labels_4[counter+1] <- rskc_results_list[[counter]]$labels
+        colnames(rskc_region_labels_4)[counter+1] <- paste("Run_", counter, sep = "")
+      }
+      
+      if (i == 5){
+        rskc_region_labels_5[counter+1] <- rskc_results_list[[counter]]$labels
+        colnames(rskc_region_labels_5)[counter+1] <- paste("Run_", counter, sep = "")
+      }
+      
+      # Add the variable weights for run i to the 'rskc_region_weights'
       rskc_region_weights[counter+1] <- rskc_results_list[[counter]]$weights
       colnames(rskc_region_weights)[counter+1] <- paste("Run_", counter, sep = "")
-      
-      # Create a list of data frames containing the clustering data multiplied by 
-      # the corresponding RSKC variable weights.
-      rskc_weighted_list[[counter]] <- sweep(myFidelity, 2, 
-                                       rskc_results_list[[counter]]$weights, "*")
       
       # Convert the row names of 'myFidelity' to a column
       # called 'Brain.Region' and store it in 'gene_and_region'.
@@ -575,7 +579,6 @@ while (T) {
       gene_and_region$cluster_labels <- rskc_results_list[[counter]]$labels %>% 
         
         as.character()
-      
       
       ###### Elbow Plot ######
       
@@ -626,7 +629,7 @@ while (T) {
           labs(x = "Number of Clusters", 
                y = "Total Weighted Between Sum of Squares")
         
-        # Save the elbow plot in appropriate folder destination
+        # Save the elbow plot as a png in appropriate folder destination
         # within the project directory.
         elbow_plot_path <- file.path(here("Plots", 
                                           paste0('elbow_plot.png')))
@@ -648,7 +651,7 @@ while (T) {
       
       # Create vector of the weights obtained from RSKC and assign them to 'weights'.
       # Make empty matrix 'weighted_fidelity' for new weighted fidelity scores.
-      weights <- as.matrix(rskc_results_list[[counter]]$weights)
+      weights <- as.matrix(rskc_results_list[[1]]$weights)
       weighted_fidelity <- matrix(nrow = 18, ncol = 20)
       
       # Multiply 'myFidelity' by corresponding weights obtained from RSKC.
@@ -702,7 +705,8 @@ while (T) {
                                  byrow = TRUE)) +
         labs(x="V1", y="V2") 
       
-      # Assign 'tsne_scatter' as an entry in 'tsne_list'.
+      # Use if statements to assign 'tsne_scatter' as an entry in 'tsne_list_3',
+      # 'tsne_list_4', or 'tsne_list_5' depending on the current i.
       if (i == 3){
         tsne_list_3[[counter]] <- tsne_scatter
       }
@@ -725,6 +729,10 @@ while (T) {
   
 }
 
+###### Figures ######
+
+# Create 5x2 figure for the 10 scatter plots using 3 clusters for RSKC,
+# and save as a png
 png(paste0('RKSC_tSNE_10Runs_k=3.png'),
     units = "in",
     width = 5+7,
@@ -744,6 +752,8 @@ print(
 
 dev.off()
 
+# Create 5x2 figure for the 10 scatter plots using 4 clusters for RSKC,
+# and save as a png
 png(paste0('RKSC_tSNE_10Runs_k=4.png'),
     units = "in",
     width = 5+7,
@@ -763,6 +773,8 @@ print(
 
 dev.off()
 
+# Create 5x2 figure for the 10 scatter plots using 5 clusters for RSKC,
+# and save as a png
 png(paste0('RKSC_tSNE_10Runs_k=5.png'),
     units = "in",
     width = 5+7,
@@ -781,3 +793,5 @@ print(
 )
 
 dev.off()
+
+
