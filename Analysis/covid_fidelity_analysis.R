@@ -142,6 +142,7 @@ while (T) {
     # Perform RSKC for whatever-the-value-of-'i'-is many clusters using 
     # 'myFidelity', which has brain region as rows and gene_celltype as columns.
     # Assign RSKC's output as an entry in 'rskc_list'. 
+    set.seed(72613)
     rskc_list[[counter]] <- RSKC(myFidelity, 
                                  ncl = i,
                                  alpha = 0.1,
@@ -635,7 +636,7 @@ while (T) {
       gene_and_region$cluster_labels <- rskc_results_list[[counter]]$labels %>% 
         
         as.character()
-      
+     
       ###### Apply weights from RSKC to myFidelity ######
       
       # Create vector of the weights obtained from RSKC and assign them to 'weights'.
