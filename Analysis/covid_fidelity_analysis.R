@@ -455,7 +455,7 @@ rskc.cluster.regions.long <-  rskc.cluster.regions.wide %>%
   mutate(Matches = Matches / 100)
 
 #####################################
-## Heat map to Visualize Proportion of Shared Clusters
+## Heat Map to Visualize Proportion of Shared Clusters
 #####################################
 # Factor the regions with levels corresponding to the specified brain region
 # names from the 'regions' vector.
@@ -721,14 +721,17 @@ while (T) {
 
 ###### Figures ######
 
-# Create 5x2 figure for the 10 scatter plots using 3 clusters for RSKC,
-# and save as a png
-png(paste0('RKSC_tSNE_10Runs_k=3.png'),
+# Save 5x2 figure for the 10 scatter plots using K = 3 for RSKC in appropriate 
+# folder destination within the project directory.
+tsne_scatter_path <- file.path(here("Plots", 
+                                    paste0('RKSC_tSNE_10Runs_k=3.png')))
+
+png(file = tsne_scatter_path,
     units = "in",
-    width = 5+7,
-    height = 4+7,
-    res = 300 #, compression = 'lzw'
-)
+    width = 6,
+    height = 13,
+    res = 300 #,compression = 'lzw'
+) 
 
 print(
   ggarrange(tsne_list_3[[1]], tsne_list_3[[2]],
@@ -742,14 +745,17 @@ print(
 
 dev.off()
 
-# Create 5x2 figure for the 10 scatter plots using 4 clusters for RSKC,
-# and save as a png
-png(paste0('RKSC_tSNE_10Runs_k=4.png'),
+# Save 5x2 figure for the 10 scatter plots using K = 4 for RSKC in appropriate 
+# folder destination within the project directory.
+tsne_scatter_path <- file.path(here("Plots", 
+                                    paste0('RKSC_tSNE_10Runs_k=4.png')))
+
+png(file = tsne_scatter_path,
     units = "in",
-    width = 5+7,
-    height = 4+7,
-    res = 300 #, compression = 'lzw'
-)
+    width = 6,
+    height = 13,
+    res = 300 #,compression = 'lzw'
+) 
 
 print(
   ggarrange(tsne_list_4[[1]], tsne_list_4[[2]],
@@ -763,14 +769,17 @@ print(
 
 dev.off()
 
-# Create 5x2 figure for the 10 scatter plots using 5 clusters for RSKC,
-# and save as a png
-png(paste0('RKSC_tSNE_10Runs_k=5.png'),
+# Save 5x2 figure for the 10 scatter plots using K = 5 for RSKC in appropriate 
+# folder destination within the project directory.
+tsne_scatter_path <- file.path(here("Plots", 
+                                    paste0('RKSC_tSNE_10Runs_k=5.png')))
+
+png(file = tsne_scatter_path,
     units = "in",
-    width = 5+7,
-    height = 4+7,
-    res = 300 #, compression = 'lzw'
-)
+    width = 6,
+    height = 13,
+    res = 300 #,compression = 'lzw'
+) 
 
 print(
   ggarrange(tsne_list_5[[1]], tsne_list_5[[2]],
@@ -783,3 +792,4 @@ print(
 )
 
 dev.off()
+
