@@ -447,9 +447,11 @@ rskc.region.prop <- apply(rskc.cluster.regions.wide, 2, prop_function) %>%
 # Assign a dendrogram for the matrix of matched clustering of RSKC regions.
 rskc_dendro <- set(as.dendrogram(hclust(dist(rskc.region.prop))), "branches_lwd", 3)
 
+ylOrRd <- colorRampPalette(brewer.pal(n = 9, name = "YlOrRd"))
+
 heatmap.2(rskc.region.prop, 
           scale = "none", 
-          col = brewer.pal(n = 9, name = "YlOrRd"),
+          col = ylOrRd(100),
           Rowv = rskc_dendro,
           Colv = rskc_dendro,
           key = TRUE,
