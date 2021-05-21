@@ -629,7 +629,8 @@ while (T) {
       }
 
       # When i = 4 and counter = 1 (i.e. on the first run of RSKC using 4 clusters),
-      # assign 'fidelity' as a new dataframe to save the cluster labels for this run 
+      # assign 'fidelity' to a new dataframe 'fidelity_4_clusts' to save the cluster 
+      # labels for this run 
       if ((i == 4) & (counter == 1)){
       fidelity_4_clusts <- fidelity
       }
