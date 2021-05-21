@@ -544,11 +544,7 @@ heatmap.2(rskc.region.prop,
 dev.off()
 
 #####################################
-<<<<<<< HEAD
-####### RSKC to tSNE (All in one loop) - 10 Runs
-=======
 #### RSKC to tSNE (All in one loop) - 10 Runs ####
->>>>>>> 1fc0ad24741b019e709b9ba5eaf3569c956e6bf9
 #####################################
 
 set.seed(72613)
