@@ -577,7 +577,7 @@ while (T) {
       gene_and_region$cluster_labels <- rskc_results_list[[counter]]$labels %>% 
         
         as.character()
-      
+     
       ###### Apply weights from RSKC to myFidelity ######
       
       # Create vector of the weights obtained from RSKC and assign them to 'weights'.
@@ -591,6 +591,7 @@ while (T) {
       }
       
       # Run tsne on weighted fidelity scores, and assign to 'tsne'
+      set.seed(72613)
       tsne <- Rtsne(weighted_fidelity, perplexity = 5)
       
       # Create new df 'tsne_out' which contains the two dimensions obtained from tSNE
