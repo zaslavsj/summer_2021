@@ -713,4 +713,3 @@ heatmap.2(rskc.region.prop,
 fidelity_4_clusts <- fidelity_4_clusts %>%
   select
 ```
-
