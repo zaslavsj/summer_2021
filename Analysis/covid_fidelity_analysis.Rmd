@@ -489,35 +489,11 @@ while (T) {
       
       ###### For Bubble Plot ######
 
-      # When i = 4 and counter = 1 (i.e. on the first run of RSKC using 4 clusters),
-      # assign 'fidelity' to a new dataframe 'fidelity_4_clusts' to save the cluster 
-      # labels for this run 
+      # Make a separate data frame that includes the cluster labels when 
+      # K = 4 appended to 'fidelity'.
       if ((i == 4) & (counter == 1)){
         fidelity_4_clusts <- fidelity
-      
-        # Order the weights for the current item in 'rskc_list' from largest
-        # to smallest, extract the names of the genes in this order,
-        # convert this object into a data frame, and store this info in
-        # an object 'weights_4_clusts' in a column called 'gene'.
-        weights_4_clusts <- sort(rskc_results_list[[1]]$weights, 
-                                 decreasing = T) %>% 
-          names() %>% 
-          as.data.frame() %>% 
-          rename('gene' = ".")
-    
-        # Assign the ordered weights for the current item in 'rskc_list' into
-        # 'weights_4_clusts', in a column called 'weight', 
-        weights_4_clusts$weight <- sort(rskc_results_list[[1]]$weights,
-                                        decreasing = T) %>%
-          unname() 
-    
-        # Impose a factor order on the contents of 'weights_4_clusts$gene' in 
-        # the current order. 
-        weights_4_clusts$gene <- factor(weight_df$gene,
-                                        weight_df$gene)
       }
-      
-      
       
     } 
     
@@ -686,9 +662,12 @@ rskc.region.prop <- apply(rskc.cluster.regions.wide, 2, prop_function) %>%
 # Assign a dendrogram for the matrix of matched clustering of RSKC regions.
 rskc_dendro <- set(as.dendrogram(hclust(dist(rskc.region.prop))), "branches_lwd", 3)
 
+# Define a colour 'ylOrRd' from brewer palette.
+ylOrRd <- colorRampPalette(brewer.pal(n = 9, name = "YlOrRd"))
+
 heatmap.2(rskc.region.prop, 
           scale = "none", 
-          col = brewer.pal(n = 9, name = "YlOrRd"),
+          col = ylOrRd(100),
           Rowv = rskc_dendro,
           Colv = rskc_dendro,
           key = TRUE,
