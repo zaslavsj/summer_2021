@@ -628,12 +628,10 @@ while (T) {
         tsne_list_5[[counter]] <- tsne_scatter
       }
 
-      # Assign 'fidelity' to new dataframe 'fidelity_4_clusts' and add a new column
-      # for cluster labels when i = 4 and counter = 1, i.e. first run of RSKC using
-      # 4 clusters
+      # When i = 4 and counter = 1 (i.e. on the first run of RSKC using 4 clusters),
+      # assign 'fidelity' as a new dataframe to save the cluster labels for this run 
       if ((i == 4) & (counter == 1)){
       fidelity_4_clusts <- fidelity
-      fidelity_4_clusts$cluster_labels <- rskc_results_list[[1]]$labels
       }
       
     } 
