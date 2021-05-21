@@ -1,5 +1,5 @@
 ###############################################################################
-### COVID-19 Project: RSKC Analysis for Fidelity Scores
+#### COVID-19 Project: RSKC Analysis for Fidelity Scores ####
 ### 
 ### Rachel Kwan and Jonathan Zaslavsky
 ### May 14, 2021
@@ -7,7 +7,7 @@
 ###############################################################################
 
 #####################################
-## Relevant Packages
+#### Relevant Packages ####
 #####################################
 # Load packages
 library(here) # To read in data from directory
@@ -25,7 +25,7 @@ library(dendextend) # For manipulating visual appearance of dendrograms
 set.seed(72613)
 
 #####################################
-## Import and Prepare Dataset
+#### Import and Prepare Dataset ####
 #####################################
 # Load full dataset
 all_fidelity <- read.csv(here("Data", "ALL_Fidelity.csv"))
@@ -86,7 +86,7 @@ myFidelity <- fidelity %>%
   column_to_rownames("Brain.Region")
 
 #####################################
-## Exploratory Analysis
+#### Exploratory Analysis ####
 #####################################
 # Use data only related to the FCX region and ACE2, TMPRSS2 genes.
 plot_df <- fidelity_subset.long %>% 
@@ -99,7 +99,7 @@ plot_df <- fidelity_subset.long %>%
   theme_minimal())
 
 #####################################
-## RSKC to tSNE (All in one loop)
+#### RSKC to tSNE (All in one loop) ####
 #####################################
 
 set.seed(72613)
@@ -377,7 +377,7 @@ while (T) {
 }
 
 #####################################
-## RSKC Clustering Over 100 Runs
+#### RSKC Clustering Over 100 Runs ####
 #####################################
 # Create empty lists to store the results and the RSKC weighted data frames 
 # that result from the clustering.
@@ -420,7 +420,7 @@ for (i in 1:100) {
 }
 
 #####################################
-## Calculating Proportion of Times Brain Regions are Clustered Together
+#### Calculating Proportion of Times Brain Regions are Clustered Together ####
 #####################################
 # Transpose the data frame with the cluster labels from the 100 runs.
 rskc.region.labels.t <-  rskc.region.labels %>%
@@ -455,7 +455,7 @@ rskc.cluster.regions.long <-  rskc.cluster.regions.wide %>%
   mutate(Matches = Matches / 100)
 
 #####################################
-## Heat Map to Visualize Proportion of Shared Clusters
+#### Heat Map to Visualize Proportion of Shared Clusters ####
 #####################################
 # Factor the regions with levels corresponding to the specified brain region
 # names from the 'regions' vector.
@@ -544,7 +544,11 @@ heatmap.2(rskc.region.prop,
 dev.off()
 
 #####################################
+<<<<<<< HEAD
 ####### RSKC to tSNE (All in one loop) - 10 Runs
+=======
+#### RSKC to tSNE (All in one loop) - 10 Runs ####
+>>>>>>> 1fc0ad24741b019e709b9ba5eaf3569c956e6bf9
 #####################################
 
 set.seed(72613)
@@ -577,11 +581,11 @@ while (T) {
   
   # Create empty data frames to store the cluster assignments and cluster weights 
   # for each of the 10 runs.
-    rskc_region_labels_3 = data.frame("Region" = rownames(myFidelity))
-    rskc_region_labels_4 = data.frame("Region" = rownames(myFidelity))
-    rskc_region_labels_5 = data.frame("Region" = rownames(myFidelity))
-    rskc_region_weights = data.frame("Case" = colnames(myFidelity))
-    
+  rskc_region_labels_3 = data.frame("Region" = rownames(myFidelity))
+  rskc_region_labels_4 = data.frame("Region" = rownames(myFidelity))
+  rskc_region_labels_5 = data.frame("Region" = rownames(myFidelity))
+  rskc_region_weights = data.frame("Case" = colnames(myFidelity))
+  
   # For 'i' -- the current number of clusters -- in 'clust_vect'...
   for (i in clust_vect) {
     
@@ -625,29 +629,22 @@ while (T) {
       rskc_region_weights[counter+1] <- rskc_results_list[[counter]]$weights
       colnames(rskc_region_weights)[counter+1] <- paste("Run_", counter, sep = "")
       
-      # Convert the row names of 'myFidelity' to a column
-      # called 'Brain.Region' and store it in 'gene_and_region'.
-      gene_and_region <- myFidelity %>% 
-        rownames_to_column("Brain.Region")
-      
       # For the current object in 'rskc_list' convert the cluster labels
       # into characters, and assign them to a new column called 'cluster_labels'
-      # in 'gene_and_region'.  
-      gene_and_region$cluster_labels <- rskc_results_list[[counter]]$labels %>% 
-        
+      # in 'fidelity'.  
+      fidelity$cluster_labels <- rskc_results_list[[counter]]$labels %>% 
         as.character()
-     
+      
       ###### Apply weights from RSKC to myFidelity ######
       
       # Create vector of the weights obtained from RSKC and assign them to 'weights'.
       # Make empty matrix 'weighted_fidelity' for new weighted fidelity scores.
       weights <- as.matrix(rskc_results_list[[1]]$weights)
-      weighted_fidelity <- matrix(nrow = 18, ncol = 20)
       
-      # Multiply 'myFidelity' by corresponding weights obtained from RSKC.
-      for (n in 1:20){
-        weighted_fidelity[,n] <- myFidelity[,n]*weights[n]
-      }
+      # Multiply 'fidelity' columns containing gene_celltype by corresponding 
+      # weights obtained from RSKC.
+      weighted_fidelity <- sweep(t(fidelity[, 2:21]), MARGIN = 1, weights, `*`) %>% 
+        t()
       
       # Run tsne on weighted fidelity scores, and assign to 'tsne'
       set.seed(72613)
@@ -661,11 +658,11 @@ while (T) {
       
       ###### tSNE (on weighted data) ######
       
-      # Merge 'tsne_out' with 'gene_and_region' according
+      # Merge 'tsne_out' with 'fidelity' according
       # to their shared 'Brain.Region' column, and assign to 
       # 'tsne_genes_regions_clusts'. 
       tsne_genes_regions_clusts <- merge(tsne_out,
-                                         gene_and_region,
+                                         fidelity,
                                          by = "Brain.Region")
       
       # Create a tSNE scatter plot where each point is colour-coded according to
@@ -709,7 +706,7 @@ while (T) {
         tsne_list_5[[counter]] <- tsne_scatter
         
       }
-
+      
     } 
     
   }
