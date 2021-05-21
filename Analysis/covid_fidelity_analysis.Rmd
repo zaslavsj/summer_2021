@@ -327,147 +327,6 @@ elbow_plot
 
 \newpage
 
-## RSKC (100 Runs)
-
-Having previously selected the number of clusters to use for RSKC (i.e. 4), this portion of the code aims to evaluate the proportion of brain regions clustered together over 100 runs (i.e. 100 different set.seed values). The code is derived from previous work (i.e. Keon and Brendan).
-
-```{r}
-# Create empty lists to store the results and the RSKC weighted data frames 
-# that result from the clustering.
-rskc.results.list = list()
-rskc.weighted.list = list()
-
-# Create empty data frames to store the cluster assignments and cluster weights 
-# for each of the 100 runs.
-rskc.region.labels = data.frame("Region" = rownames(myFidelity))
-rskc.region.weights = data.frame("Case" = colnames(myFidelity))
-
-# Create a vector of seeds for all 100 runs.
-set.seed(72613)
-x = rdunif(100, a = 1, b = 1000000)
-
-for (i in 1:100) {
-  
-  # Set the seed.
-  set.seed(x[i])
-  
-  # Perform RSKC clustering on the data; the number of clusters is selected
-  # a priori.
-  rskc.results.list[[i]] = RSKC(myFidelity, 
-                                alpha = 0.1, 
-                                ncl = 4, 
-                                L1 = sqrt(ncol(myFidelity)))
-  
-  # Add the cluster assignments for run i to the 'rskc.region.labels'.
-  rskc.region.labels[i+1] = rskc.results.list[[i]]$labels
-  colnames(rskc.region.labels)[i+1] = paste("Run_", i, sep = "")
-  
-  # Add the variable weights for run i to the 'rskc.region.weights'
-  rskc.region.weights[i+1] = rskc.results.list[[i]]$weights
-  colnames(rskc.region.weights)[i+1] = paste("Run_", i, sep = "")
-  
-  # Create a list of data frames containing the clustering data multiplied by 
-  # the corresponding RSKC variable weights.
-  rskc.weighted.list[[i]] = sweep(myFidelity, 2, 
-                                  rskc.results.list[[i]]$weights, "*")
-}
-```
-
-## Calculating Proportion of Times Brain Regions are Clustered Together
-```{r}
-# Transpose the data frame with the cluster labels from the 100 runs.
-rskc.region.labels.t <-  rskc.region.labels %>%
-  column_to_rownames("Region") %>%
-  t() %>%
-  data.frame()
-
-# Create an empty 18x18 data frame
-rskc.cluster.regions.wide <-  data.frame(matrix(ncol = 18, nrow = 18)) %>%
-  # Set the column and row names as the regions (ordered alphabetically)
-  set_colnames(regions) %>%
-  set_rownames(regions)
-
-# Add in the number of matches for each ith row/jth column combination to 
-# create the adjacency matrix.
-for (i in 1:length(regions)) {
-  for (j in 1:length(regions)) {
-    
-    rskc.cluster.regions.wide[i,j] = sum(rskc.region.labels.t[[regions[i]]] == rskc.region.labels.t[[regions[j]]])
-    
-  }
-}
-
-# Convert the adjacency matrix to long format for various plotting purposes
-rskc.cluster.regions.long <-  rskc.cluster.regions.wide %>%
-  # Give the region row names their own column
-  rownames_to_column("Region_1") %>%
-  # Lengthen the data with melt() so we have three columns: 
-  # Region_1, Region_2 and the total number of matches.
-  melt(id.vars = "Region_1", variable.name = "Region_2", value.name = "Matches") %>%
-  # Convert the number of matches to a proportion
-  mutate(Matches = Matches / 100)
-```
-
-## Heat Maps to Visualize Proportion of Shared Clusters
-```{r, fig.align = 'center', fig.height = 5, fig.width = 7}
-# Factor the regions with levels corresponding to the specified brain region
-# names from the 'regions' vector.
-region.rskc.cluster.matches.ordered <-  rskc.cluster.regions.long %>%
-  # Factor Region_1
-  mutate(Region_1 = factor(Region_1, levels = regions)) %>%
-  # Factor Region_2
-  mutate(Region_2 = factor(Region_2, levels = regions))
-
-# Plot the adjacency matrix as a heat map
-ggplot(region.rskc.cluster.matches.ordered, aes(x = Region_1, y = Region_2, fill = Matches)) +
-  geom_tile() +
-  scale_fill_gradientn(colours = brewer.pal(n = 9, name = "YlOrRd")) +
-  labs(x = NULL, 
-       y = NULL, 
-       fill = "Proportion of Matches on \n100 RSKC Runs") +
-  theme_minimal() +
-  theme(panel.border = element_blank(),
-        panel.background = element_blank(),
-        axis.text.x = element_text(colour = "black", angle = 45),
-        axis.text.y = element_text(colour = "black"),
-        axis.ticks = element_blank())
-```
-
-```{r, fig.align = 'center', fig.height = 5, fig.width = 7}
-# Define a function to turn values out of 100 into proportions.
-prop_function <- function(x){
-  return(x/100)
-}
-
-# Convert all values in the 'rskc.cluster.regions.wide' matrix into 
-# proportions.
-rskc.region.prop <- apply(rskc.cluster.regions.wide, 2, prop_function) %>% 
-  as.matrix()
-
-# Assign a dendrogram for the matrix of matched clustering of RSKC regions.
-rskc_dendro <- set(as.dendrogram(hclust(dist(rskc.region.prop))), "branches_lwd", 3)
-
-heatmap.2(rskc.region.prop, 
-          scale = "none", 
-          col = brewer.pal(n = 9, name = "YlOrRd"),
-          Rowv = rskc_dendro,
-          Colv = rskc_dendro,
-          key = TRUE,
-          key.xlab = "Proportion of Matches on \n 100 RSKC Runs",
-          trace = "none", # Remove the histogram trace from heat map
-          density.info = "none", # Remove the histogram from color key
-          srtCol = 45, # Rotate column labels on heat map
-          margins = c(5, 10),
-          key.xtickfun = function(){
-            breaks = pretty(parent.frame()$breaks)
-            breaks = breaks[c(1, length(breaks))]
-            list(at = parent.frame()$scale01(breaks),
-                 labels = breaks)
-          }
-          )
-```
-\newpage
-
 ## RSKC (10 Runs)
 
 This chunk serves as a snapshot of the RSKC over 10 runs (i.e. different set.seed values) in order to visualize the variation in cluster label assignments for each observation. The 10 runs were carried out for each of $K = 3, 4, 5$.
@@ -626,9 +485,40 @@ while (T) {
       
       if (i == 5){
         tsne_list_5[[counter]] <- tsne_scatter
-        
       }
+      
+      ###### For Bubble Plot ######
 
+      # When i = 4 and counter = 1 (i.e. on the first run of RSKC using 4 clusters),
+      # assign 'fidelity' to a new dataframe 'fidelity_4_clusts' to save the cluster 
+      # labels for this run 
+      if ((i == 4) & (counter == 1)){
+        fidelity_4_clusts <- fidelity
+      
+        # Order the weights for the current item in 'rskc_list' from largest
+        # to smallest, extract the names of the genes in this order,
+        # convert this object into a data frame, and store this info in
+        # an object 'weights_4_clusts' in a column called 'gene'.
+        weights_4_clusts <- sort(rskc_results_list[[1]]$weights, 
+                                 decreasing = T) %>% 
+          names() %>% 
+          as.data.frame() %>% 
+          rename('gene' = ".")
+    
+        # Assign the ordered weights for the current item in 'rskc_list' into
+        # 'weights_4_clusts', in a column called 'weight', 
+        weights_4_clusts$weight <- sort(rskc_results_list[[1]]$weights,
+                                        decreasing = T) %>%
+          unname() 
+    
+        # Impose a factor order on the contents of 'weights_4_clusts$gene' in 
+        # the current order. 
+        weights_4_clusts$gene <- factor(weight_df$gene,
+                                        weight_df$gene)
+      }
+      
+      
+      
     } 
     
   }
@@ -674,4 +564,152 @@ ggarrange(tsne_list_5[[1]], tsne_list_5[[2]],
           tsne_list_5[[9]], tsne_list_5[[10]],
           ncol = 2,
           nrow = 5)
+```
+
+## RSKC (100 Runs)
+
+Having previously selected the number of clusters to use for RSKC (i.e. 4), this portion of the code aims to evaluate the proportion of brain regions clustered together over 100 runs (i.e. 100 different set.seed values). The code is derived from previous work (i.e. Keon and Brendan).
+
+```{r}
+# Create empty lists to store the results and the RSKC weighted data frames 
+# that result from the clustering.
+rskc.results.list = list()
+rskc.weighted.list = list()
+
+# Create empty data frames to store the cluster assignments and cluster weights 
+# for each of the 100 runs.
+rskc.region.labels = data.frame("Region" = rownames(myFidelity))
+rskc.region.weights = data.frame("Case" = colnames(myFidelity))
+
+# Create a vector of seeds for all 100 runs.
+set.seed(72613)
+x = rdunif(100, a = 1, b = 1000000)
+
+for (i in 1:100) {
+  
+  # Set the seed.
+  set.seed(x[i])
+  
+  # Perform RSKC clustering on the data; the number of clusters is selected
+  # a priori.
+  rskc.results.list[[i]] = RSKC(myFidelity, 
+                                alpha = 0.1, 
+                                ncl = 4, 
+                                L1 = sqrt(ncol(myFidelity)))
+  
+  # Add the cluster assignments for run i to the 'rskc.region.labels'.
+  rskc.region.labels[i+1] = rskc.results.list[[i]]$labels
+  colnames(rskc.region.labels)[i+1] = paste("Run_", i, sep = "")
+  
+  # Add the variable weights for run i to the 'rskc.region.weights'
+  rskc.region.weights[i+1] = rskc.results.list[[i]]$weights
+  colnames(rskc.region.weights)[i+1] = paste("Run_", i, sep = "")
+  
+  # Create a list of data frames containing the clustering data multiplied by 
+  # the corresponding RSKC variable weights.
+  rskc.weighted.list[[i]] = sweep(myFidelity, 2, 
+                                  rskc.results.list[[i]]$weights, "*")
+}
+```
+
+## Calculating Proportion of Times Brain Regions are Clustered Together
+```{r}
+# Transpose the data frame with the cluster labels from the 100 runs.
+rskc.region.labels.t <-  rskc.region.labels %>%
+  column_to_rownames("Region") %>%
+  t() %>%
+  data.frame()
+
+# Create an empty 18x18 data frame
+rskc.cluster.regions.wide <-  data.frame(matrix(ncol = 18, nrow = 18)) %>%
+  # Set the column and row names as the regions (ordered alphabetically)
+  set_colnames(regions) %>%
+  set_rownames(regions)
+
+# Add in the number of matches for each ith row/jth column combination to 
+# create the adjacency matrix.
+for (i in 1:length(regions)) {
+  for (j in 1:length(regions)) {
+    
+    rskc.cluster.regions.wide[i,j] = sum(rskc.region.labels.t[[regions[i]]] == rskc.region.labels.t[[regions[j]]])
+    
+  }
+}
+
+# Convert the adjacency matrix to long format for various plotting purposes
+rskc.cluster.regions.long <-  rskc.cluster.regions.wide %>%
+  # Give the region row names their own column
+  rownames_to_column("Region_1") %>%
+  # Lengthen the data with melt() so we have three columns: 
+  # Region_1, Region_2 and the total number of matches.
+  melt(id.vars = "Region_1", variable.name = "Region_2", value.name = "Matches") %>%
+  # Convert the number of matches to a proportion
+  mutate(Matches = Matches / 100)
+```
+
+## Heat Maps to Visualize Proportion of Shared Clusters
+```{r, fig.align = 'center', fig.height = 5, fig.width = 7}
+# Factor the regions with levels corresponding to the specified brain region
+# names from the 'regions' vector.
+region.rskc.cluster.matches.ordered <-  rskc.cluster.regions.long %>%
+  # Factor Region_1
+  mutate(Region_1 = factor(Region_1, levels = regions)) %>%
+  # Factor Region_2
+  mutate(Region_2 = factor(Region_2, levels = regions))
+
+# Plot the adjacency matrix as a heat map
+ggplot(region.rskc.cluster.matches.ordered, aes(x = Region_1, y = Region_2, fill = Matches)) +
+  geom_tile() +
+  scale_fill_gradientn(colours = brewer.pal(n = 9, name = "YlOrRd")) +
+  labs(x = NULL, 
+       y = NULL, 
+       fill = "Proportion of Matches on \n100 RSKC Runs") +
+  theme_minimal() +
+  theme(panel.border = element_blank(),
+        panel.background = element_blank(),
+        axis.text.x = element_text(colour = "black", angle = 45),
+        axis.text.y = element_text(colour = "black"),
+        axis.ticks = element_blank())
+```
+
+```{r, fig.align = 'center', fig.height = 5, fig.width = 7}
+# Define a function to turn values out of 100 into proportions.
+prop_function <- function(x){
+  return(x/100)
+}
+
+# Convert all values in the 'rskc.cluster.regions.wide' matrix into 
+# proportions.
+rskc.region.prop <- apply(rskc.cluster.regions.wide, 2, prop_function) %>% 
+  as.matrix()
+
+# Assign a dendrogram for the matrix of matched clustering of RSKC regions.
+rskc_dendro <- set(as.dendrogram(hclust(dist(rskc.region.prop))), "branches_lwd", 3)
+
+heatmap.2(rskc.region.prop, 
+          scale = "none", 
+          col = brewer.pal(n = 9, name = "YlOrRd"),
+          Rowv = rskc_dendro,
+          Colv = rskc_dendro,
+          key = TRUE,
+          key.xlab = "Proportion of Matches on \n 100 RSKC Runs",
+          trace = "none", # Remove the histogram trace from heat map
+          density.info = "none", # Remove the histogram from color key
+          srtCol = 45, # Rotate column labels on heat map
+          margins = c(5, 10),
+          key.xtickfun = function(){
+            breaks = pretty(parent.frame()$breaks)
+            breaks = breaks[c(1, length(breaks))]
+            list(at = parent.frame()$scale01(breaks),
+                 labels = breaks)
+          }
+          )
+```
+\newpage
+
+## Bubble Chart
+
+```{r}
+fidelity_4_clusts <- fidelity_4_clusts %>%
+  select
 ```
