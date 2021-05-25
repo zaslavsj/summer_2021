@@ -19,8 +19,10 @@ library(Rtsne) # To run t-SNE (dimensionality reduction)
 library(factoextra) # For fviz_nbclust() and clustering analysis/visualization
 library(reshape2) # For melt()
 library(RColorBrewer) # For color palettes
+library(viridis) # For color palettes
 library(gplots) # For heatmap.2()
 library(dendextend) # For manipulating visual appearance of dendrograms
+library(ggdendro) # For constructing dendrograms based on ggplot
 
 set.seed(72613)
 

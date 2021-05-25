@@ -17,8 +17,10 @@ library(Rtsne) # To run t-SNE (dimensionality reduction)
 library(factoextra) # For fviz_nbclust() and clustering analysis/visualization
 library(reshape2) # For melt()
 library(RColorBrewer) # For color palettes
+library(viridis) # For color palettes
 library(gplots) # For heatmap.2()
 library(dendextend) # For manipulating visual appearance of dendrograms
+library(ggdendro) # For constructing dendrograms based on ggplot
 
 # Set the seed
 set.seed(72613)
@@ -588,7 +590,7 @@ for (i in 1:100) {
 }
 ```
 
-## Calculating Proportion of Times Brain Regions are Clustered Together
+### Calculating Proportion of Times Brain Regions are Clustered Together
 ```{r}
 # Transpose the data frame with the cluster labels from the 100 runs.
 rskc.region.labels.t <-  rskc.region.labels %>%
@@ -623,7 +625,7 @@ rskc.cluster.regions.long <-  rskc.cluster.regions.wide %>%
   mutate(Matches = Matches / 100)
 ```
 
-## Heat Maps to Visualize Proportion of Shared Clusters
+### Heat Maps to Visualize Proportion of Shared Clusters
 ```{r, fig.align = 'center', fig.height = 5, fig.width = 7}
 # Factor the regions with levels corresponding to the specified brain region
 # names from the 'regions' vector.
@@ -684,11 +686,30 @@ heatmap.2(rskc.region.prop,
           }
           )
 ```
+
 \newpage
 
-## Bubble Chart
-
+## Select Gene and Cell Combinations of Interest Based on RSKC Weights (100 Runs)
 ```{r}
-fidelity_4_clusts <- fidelity_4_clusts %>%
-  select
+# Take the average weight for each gene_celltype across 100 RSKC runs.
+weights_100_runs <- rowMeans(rskc.region.weights[-1]) %>% 
+  as_vector()
+
+# Obtain list of top eight largest average weights and their corresponding 
+# gene_celltype.
+rskc_weights_100_runs <- rskc.region.weights %>% 
+  mutate(Average_Weight = weights_100_runs) %>% 
+  select("Case", "Average_Weight") %>% 
+  arrange(desc(Average_Weight)) %>% 
+  head(8)
+rskc_weights_100_runs
+
+# Select only the top eight features from the 'fidelity_4_clusts' data frame.
+fidelity_top_features <- fidelity_4_clusts[, names(fidelity_4_clusts) %in% 
+                                                rskc_weights_100_runs$Case]
+
+# Append the brain region and cluster labels to the 'fidelity_top_features'
+# data frame.
+fidelity_features_clusts <- bind_cols(fidelity_4_clusts[, c(1,22)],
+                                       fidelity_top_features)
 ```
