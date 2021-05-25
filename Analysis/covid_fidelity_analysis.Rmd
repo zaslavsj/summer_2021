@@ -651,14 +651,9 @@ ggplot(region.rskc.cluster.matches.ordered, aes(x = Region_1, y = Region_2, fill
 ```
 
 ```{r, fig.align = 'center', fig.height = 5, fig.width = 7}
-# Define a function to turn values out of 100 into proportions.
-prop_function <- function(x){
-  return(x/100)
-}
-
 # Convert all values in the 'rskc.cluster.regions.wide' matrix into 
 # proportions.
-rskc.region.prop <- apply(rskc.cluster.regions.wide, 2, prop_function) %>% 
+rskc.region.prop <- apply(rskc.cluster.regions.wide, 2, function(x) return(x/100)) %>% 
   as.matrix()
 
 # Assign a dendrogram for the matrix of matched clustering of RSKC regions.
@@ -726,4 +721,44 @@ fidelity_clust_bubble_mean <- fidelity_features_clusts %>%
   mutate(cluster_labels = as.factor(cluster_labels)) %>% 
   melt(id = c("cluster_labels")) %>% 
   rename("Mean_Fidelity" = value, "Gene_Cell" = variable)
+
+# Make a vector that contains the selected gene and corresponding cell type
+# in order from largest to smallest RSKC weights.
+gene_level_order <- c("NRP1_Astrocyte", "NRP1_Neuron", "DPP4_Astrocyte", 
+                      "NRP1_Microglia", "ITGB3_Oligodendrocyte", 
+                      "NRP1_Oligodendrocyte", "ITGB3_Neuron", "ITGB3_Microglia")
+
+# Modify the order of the gene_celltype in the 'fidelity_clust_bubble' data
+# frame to match the desired order from 'gene_level_order'.
+fidelity_clust_bubble_mean$Gene_Cell <- as.character(fidelity_clust_bubble_mean$Gene_Cell)
+fidelity_clust_bubble_mean$Gene_Cell <- factor(fidelity_clust_bubble_mean$Gene_Cell, 
+                                            levels = rev(gene_level_order))
+```
+
+### Bubble Plot to Visualize Important Gene and Cell Types in Clusters
+```{r, fig.align = 'center', fig.width = 6, fig.height = 5}
+# Create bubble plot showing cluster label vs. gene and cell type. Each point
+# is coloured by the mean fidelity score.
+bubble_clust <- ggplot(fidelity_clust_bubble_mean, aes(x = Gene_Cell, y = cluster_labels)) +
+  geom_point(aes(size = 5, color = Mean_Fidelity)) +
+  coord_flip() +
+  scale_colour_viridis(direction = -1) +
+  labs(x = "Gene and Cell Type", # Arranged in smallest to largest RSKC weights
+       y = "Cluster",
+       color = "Mean Fidelity Score") +
+  theme(axis.text.x = element_text(colour = "black", size = 10),
+        axis.text.y = element_text(colour = "black", size = 10),
+        axis.ticks.x = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_text(size = 12, 
+                                    margin = margin(t = 10, r = 0, b = 0, l = 0)),
+        axis.title.y = element_text(size = 12, 
+                                    margin = margin(t = 0, r = 10, b = 0, l = 0)),
+        legend.title = element_text(size = 10),
+        legend.key = element_blank(),
+        panel.grid.major = element_line(colour = "grey", size = 0.2),
+        panel.background = element_blank(),
+        panel.border = element_blank(),
+        legend.position = "right")
+bubble_clust
 ```
