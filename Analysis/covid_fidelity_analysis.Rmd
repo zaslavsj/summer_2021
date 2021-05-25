@@ -713,3 +713,17 @@ fidelity_top_features <- fidelity_4_clusts[, names(fidelity_4_clusts) %in%
 fidelity_features_clusts <- bind_cols(fidelity_4_clusts[, c(1,22)],
                                        fidelity_top_features)
 ```
+
+## Prepare Data Frame for Fidelity Statistics Based on Clusters
+```{r}
+# Compute the mean fidelity score for each gene_celltype for each cluster label.
+# Pivot data frame for further plotting steps.
+fidelity_clust_bubble_mean <- fidelity_features_clusts %>% 
+  group_by(cluster_labels) %>% 
+  summarize_at(vars(NRP1_Astrocyte, NRP1_Neuron, DPP4_Astrocyte,
+                    NRP1_Microglia, ITGB3_Oligodendrocyte, NRP1_Oligodendrocyte,
+                    ITGB3_Neuron, ITGB3_Microglia), mean) %>% 
+  mutate(cluster_labels = as.factor(cluster_labels)) %>% 
+  melt(id = c("cluster_labels")) %>% 
+  rename("Mean_Fidelity" = value, "Gene_Cell" = variable)
+```
