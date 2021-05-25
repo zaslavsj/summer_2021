@@ -795,7 +795,7 @@ fidelity_region_bubble_mean$Brain.Region <- factor(fidelity_region_bubble_mean$B
 ```
 
 ### Bubble Plot to Visualize Important Gene and Cell Types per Brain Region
-```{r, fig.align = 'center', fig.width = 8, fig.height = 5}
+```{r, warning = FALSE, fig.align = 'center', fig.width = 8, fig.height = 5}
 # Create bubble plot showing brain region vs. gene and cell type. Each point
 # is coloured by the mean fidelity score.
 bubble_region <- ggplot(fidelity_region_bubble_mean, aes(x = Gene_Cell, y = Brain.Region)) +
