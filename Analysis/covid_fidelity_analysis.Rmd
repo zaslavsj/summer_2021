@@ -740,9 +740,9 @@ fidelity_clust_bubble_mean$Gene_Cell <- factor(fidelity_clust_bubble_mean$Gene_C
 # Create bubble plot showing cluster label vs. gene and cell type. Each point
 # is coloured by the mean fidelity score.
 bubble_clust <- ggplot(fidelity_clust_bubble_mean, aes(x = Gene_Cell, y = cluster_labels)) +
-  geom_point(aes(size = 5, color = Mean_Fidelity)) +
+  geom_point(aes(size = 5, fill = Mean_Fidelity), colour = "black", pch = 21) +
   coord_flip() +
-  scale_colour_viridis(direction = -1) +
+  scale_fill_viridis(direction = -1) +
   labs(x = "Gene and Cell Type", # Arranged in smallest to largest RSKC weights
        y = "Cluster",
        color = "Mean Fidelity Score") +
