@@ -717,7 +717,7 @@ fidelity_clust_bubble_mean <- fidelity_features_clusts %>%
   group_by(cluster_labels) %>% 
   summarize_at(vars(NRP1_Astrocyte, NRP1_Neuron, DPP4_Astrocyte,
                     NRP1_Microglia, ITGB3_Oligodendrocyte, NRP1_Oligodendrocyte,
-                    ITGB3_Neuron, ITGB3_Microglia), mean) %>% 
+                    ITGB3_Neuron, ITGB3_Microglia), mean) %>%
   mutate(cluster_labels = as.factor(cluster_labels)) %>% 
   melt(id = c("cluster_labels")) %>% 
   rename("Mean_Fidelity" = value, "Gene_Cell" = variable)
@@ -762,3 +762,7 @@ bubble_clust <- ggplot(fidelity_clust_bubble_mean, aes(x = Gene_Cell, y = cluste
         legend.position = "right")
 bubble_clust
 ```
+
+
+
+
