@@ -626,6 +626,7 @@ rskc.cluster.regions.long <-  rskc.cluster.regions.wide %>%
 ```
 
 ### Heat Maps to Visualize Proportion of Shared Clusters
+#### Unclustered Heat Map
 ```{r, fig.align = 'center', fig.height = 5, fig.width = 7}
 # Factor the regions with levels corresponding to the specified brain region
 # names from the 'regions' vector.
@@ -649,7 +650,7 @@ ggplot(region.rskc.cluster.matches.ordered, aes(x = Region_1, y = Region_2, fill
         axis.text.y = element_text(colour = "black"),
         axis.ticks = element_blank())
 ```
-
+#### Hierarchical Clustered Heat Map
 ```{r, fig.align = 'center', fig.height = 5, fig.width = 7}
 # Convert all values in the 'rskc.cluster.regions.wide' matrix into 
 # proportions.
