@@ -94,7 +94,7 @@ set.seed(72613)
 
 while (T) {
   
-  # Assign the values of 2, 4, 6 and 8 to 'clust_vect'.
+  # Assign desired number of clusters to 'clust_vect'.
   clust_vect <- c(2,4,6,8)
   
   # Assign an empty list to 'rskc_list'.
@@ -249,6 +249,8 @@ while (T) {
       weighted_fidelity[,n] <- myFidelity[,n]*weights[n]
     }
     
+    ###### tSNE (on weighted data) ######
+    
     # Run tsne on weighted fidelity scores, and assign to 'tsne'
     set.seed(72613)
     tsne <- Rtsne(weighted_fidelity, perplexity = 5)
@@ -258,9 +260,6 @@ while (T) {
     tsne_out <- tsne$Y %>%
       data.frame(regions) %>%
       rename(Brain.Region = regions, V1 = X1, V2 = X2) #rename columns
-    
-    
-    ###### tSNE (on weighted data) ######
     
     # Merge 'tsne_out' with 'gene_and_region' according
     # to their shared 'Brain.Region' column, and assign to 
@@ -429,6 +428,8 @@ while (T) {
       weighted_fidelity <- sweep(t(fidelity[, 2:21]), MARGIN = 1, weights, `*`) %>% 
         t()
       
+      ###### tSNE (on weighted data) ######
+      
       # Run tsne on weighted fidelity scores, and assign to 'tsne'
       set.seed(72613)
       tsne <- Rtsne(weighted_fidelity, perplexity = 5)
@@ -438,8 +439,6 @@ while (T) {
       tsne_out <- tsne$Y %>%
         data.frame(regions) %>%
         rename(Brain.Region = regions, V1 = X1, V2 = X2) #rename columns
-      
-      ###### tSNE (on weighted data) ######
       
       # Merge 'tsne_out' with 'fidelity' according
       # to their shared 'Brain.Region' column, and assign to 
@@ -626,6 +625,7 @@ rskc.cluster.regions.long <-  rskc.cluster.regions.wide %>%
 ```
 
 ### Heat Maps to Visualize Proportion of Shared Clusters
+#### Unclustered Heat Map
 ```{r, fig.align = 'center', fig.height = 5, fig.width = 7}
 # Factor the regions with levels corresponding to the specified brain region
 # names from the 'regions' vector.
@@ -649,7 +649,7 @@ ggplot(region.rskc.cluster.matches.ordered, aes(x = Region_1, y = Region_2, fill
         axis.text.y = element_text(colour = "black"),
         axis.ticks = element_blank())
 ```
-
+#### Hierarchical Clustered Heat Map
 ```{r, fig.align = 'center', fig.height = 5, fig.width = 7}
 # Convert all values in the 'rskc.cluster.regions.wide' matrix into 
 # proportions.
@@ -657,7 +657,8 @@ rskc.region.prop <- apply(rskc.cluster.regions.wide, 2, function(x) return(x/100
   as.matrix()
 
 # Assign a dendrogram for the matrix of matched clustering of RSKC regions.
-rskc_dendro <- set(as.dendrogram(hclust(dist(rskc.region.prop))), "branches_lwd", 3)
+rskc_dendro <- set(as.dendrogram(hclust(dist(rskc.region.prop))), "branches_lwd", 3) %>%
+  reorder(1:20)
 
 # Define a colour 'ylOrRd' from brewer palette.
 ylOrRd <- colorRampPalette(brewer.pal(n = 9, name = "YlOrRd"))
@@ -742,7 +743,9 @@ fidelity_clust_bubble_mean$Gene_Cell <- factor(fidelity_clust_bubble_mean$Gene_C
 bubble_clust <- ggplot(fidelity_clust_bubble_mean, aes(x = Gene_Cell, y = cluster_labels)) +
   geom_point(aes(size = 5, fill = Mean_Fidelity), colour = "black", pch = 21) +
   coord_flip() +
-  scale_fill_viridis(direction = -1) +
+  scale_color_gradient2(low="blue", mid="white",
+                        high="red", space ="Lab", guide = "colourbar",
+                        aesthetics = "fill") +
   labs(x = "Gene and Cell Type", # Arranged in smallest to largest RSKC weights
        y = "Cluster",
        fill = "Mean Fidelity Score") +
@@ -763,6 +766,117 @@ bubble_clust <- ggplot(fidelity_clust_bubble_mean, aes(x = Gene_Cell, y = cluste
 bubble_clust
 ```
 
+## Prepare Data Frame for Fidelity Statistics Based on Brain Regions
+```{r}
+# Compute the mean fidelity score for each gene_celltype for each brain region.
+# Pivot data frame for further plotting steps.
+fidelity_region_bubble_mean <- fidelity_features_clusts %>% 
+  group_by(Brain.Region) %>% 
+  summarize_at(vars(NRP1_Astrocyte, NRP1_Neuron, DPP4_Astrocyte,
+                    NRP1_Microglia, ITGB3_Oligodendrocyte, NRP1_Oligodendrocyte,
+                    ITGB3_Neuron, ITGB3_Microglia), mean) %>% 
+  melt(id = c("Brain.Region")) %>% 
+  rename("Mean_Fidelity" = value, "Gene_Cell" = variable)
+
+# Modify the order of the gene_celltype in the 'fidelity_region_bubble_mean' 
+# data frame to match the desired order from 'gene_level_order'.
+fidelity_region_bubble_mean$Gene_Cell <- as.character(fidelity_region_bubble_mean$Gene_Cell)
+fidelity_region_bubble_mean$Gene_Cell <- factor(fidelity_region_bubble_mean$Gene_Cell, 
+                                                levels = rev(gene_level_order))
+
+# Make a vector that contains the brain regions in order of the four clusters.
+region_clust_order <- c("STR", "AMY", "MED", "PON", 
+                        "PCX", "FCX", "TCX", "OCX", "CB",
+                        "WM", "DI",
+                        "IN", "LIM", "BF", "CLA", "HIP", "GP", "MID")
+
+# Modify the order of the brain region in the 'fidelity_region_bubble_mean' data
+# frame to match the desired order from 'region_clust_order'.
+fidelity_region_bubble_mean$Brain.Region <- as.character(fidelity_region_bubble_mean$Brain.Region)
+fidelity_region_bubble_mean$Brain.Region <- factor(fidelity_region_bubble_mean$Brain.Region, 
+                                            levels = rev(region_clust_order))
+```
+
+### Bubble Plot to Visualize Important Gene and Cell Types per Brain Region
+```{r, fig.align = 'center', fig.width = 8, fig.height = 5}
+# Create bubble plot showing brain region vs. gene and cell type. Each point
+# is coloured by the mean fidelity score.
+bubble_region <- ggplot(fidelity_region_bubble_mean, aes(x = Gene_Cell, y = Brain.Region)) +
+  geom_point(aes(size = 5, fill = Mean_Fidelity), colour = "black", pch = 21) +
+  coord_flip() +
+  scale_color_gradient2(low="blue", mid="white",
+                        high="red", space ="Lab", guide = "colourbar",
+                        aesthetics = "fill") +
+  labs(x = "Gene and Cell Type", # Arranged in smallest to largest RSKC weights
+       y = "Brain Region",
+       fill = "Mean Fidelity Score",
+       size = "Size") +
+  theme(axis.text.x = element_text(colour = "black", size = 10, angle = 45,
+                                   margin = margin(t = 10, r = 10, b = 0, l = 0)),
+        axis.text.y = element_text(colour = "black", size = 10),
+        axis.ticks.x = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_text(size = 12),
+        axis.title.y = element_text(size = 12,
+                                    margin = margin(t = 0, r = 10, b = 0, l = 0)),
+        legend.title = element_text(size = 10),
+        legend.key = element_blank(),
+        panel.grid.major = element_line(colour = "grey", size = 0.2),
+        panel.background = element_blank(),
+        panel.border = element_blank(),
+        legend.position = "right")
+bubble_region
+
+# # Alternate version of bubble plot using ggballoonplot. Note: the y-axis does 
+# # not display the correct ordering of the features (i.e. it is in reverse
+# # order, from highest to lowest weight).
+# bubble_region2 <- ggballoonplot(fidelity_region_bubble_mean, aes(x = Brain.Region, 
+#                                                                  y = Gene_Cell),
+#                                 size = 5,
+#                                 fill = "value") +
+#   scale_fill_viridis(direction = -1) +
+#   labs(fill = "Mean Fidelity Score") +
+#   theme(
+#     axis.text.x = element_text(colour = "black", size = 10),
+#     axis.text.y = element_text(colour = "black", size = 10),
+#     axis.ticks.x = element_blank(),
+#     axis.ticks.y = element_blank())
+# bubble_region2
+
+# Plot dendrogram of brain regions made previously for heat map.
+dendro <- ggdendrogram(rskc_dendro) +
+  geom_segment(aes(y=x, x=y, yend=xend, xend=yend)) + 
+  theme_dendro()
+dendro
+  
+```
 
 
+
+```{r include=FALSE}
+# Compute the mean fidelity score for each gene_celltype for each cluster label.
+# Pivot data frame for further plotting steps.
+fidelity_clust_bubble_mean2 <- fidelity_features_clusts %>% 
+  group_by(cluster_labels) %>% 
+  summarize_at(vars(NRP1_Astrocyte, NRP1_Neuron, DPP4_Astrocyte,
+                    NRP1_Microglia, ITGB3_Oligodendrocyte, NRP1_Oligodendrocyte,
+                    ITGB3_Neuron, ITGB3_Microglia), mean) %>% 
+  t() %>%
+  as.data.frame() %>%
+  slice(-c(1)) %>%
+  rename("1" = V1, "2" = V2, "3" = V3, "4" = V4)
+
+# Make data continuous, for plotting 
+fidelity_clust_bubble_mean2$`1`=as.numeric(levels(fidelity_clust_bubble_mean2$`1`))[fidelity_clust_bubble_mean2$`1`]
+fidelity_clust_bubble_mean2$`2`=as.numeric(levels(fidelity_clust_bubble_mean2$`2`))[fidelity_clust_bubble_mean2$`2`]
+fidelity_clust_bubble_mean2$`3`=as.numeric(levels(fidelity_clust_bubble_mean2$`3`))[fidelity_clust_bubble_mean2$`3`]
+fidelity_clust_bubble_mean2$`4`=as.numeric(levels(fidelity_clust_bubble_mean2$`4`))[fidelity_clust_bubble_mean2$`4`]
+
+ggballoonplot(fidelity_clust_bubble_mean2,
+              fill = "value",
+              size = 8) + 
+  scale_color_gradient2(low="blue", mid="white",
+                        high="red", space ="Lab", guide = "colourbar",
+                        aesthetics = "fill")
+```
 
