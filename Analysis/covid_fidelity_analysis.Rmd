@@ -737,7 +737,7 @@ fidelity_clust_bubble_mean$Gene_Cell <- factor(fidelity_clust_bubble_mean$Gene_C
 ```
 
 ### Bubble Plot to Visualize Important Gene and Cell Types in Clusters
-```{r, fig.align = 'center', fig.width = 6, fig.height = 5}
+```{r, fig.align = 'center', fig.width = 8, fig.height = 4}
 # Create bubble plot showing cluster label vs. gene and cell type. Each point
 # is coloured by the mean fidelity score.
 bubble_clust <- ggplot(fidelity_clust_bubble_mean, aes(x = Gene_Cell, y = cluster_labels)) +
@@ -745,7 +745,12 @@ bubble_clust <- ggplot(fidelity_clust_bubble_mean, aes(x = Gene_Cell, y = cluste
   coord_flip() +
   scale_color_gradient2(low="blue", mid="white",
                         high="red", space ="Lab", guide = "colourbar",
+<<<<<<< HEAD
                         aesthetics = "fill") +
+=======
+                        aesthetics = "fill") + # Blue-white-red colour gradient
+  # scale_fill_viridis(direction = -1) + # Viridis colour gradient
+>>>>>>> 4aa0e16cfd74ffac0b16a62463772496670d7115
   labs(x = "Gene and Cell Type", # Arranged in smallest to largest RSKC weights
        y = "Cluster",
        fill = "Mean Fidelity Score") +
@@ -798,7 +803,7 @@ fidelity_region_bubble_mean$Brain.Region <- factor(fidelity_region_bubble_mean$B
 ```
 
 ### Bubble Plot to Visualize Important Gene and Cell Types per Brain Region
-```{r, fig.align = 'center', fig.width = 8, fig.height = 5}
+```{r, warning = FALSE, fig.align = 'center', fig.width = 8, fig.height = 5}
 # Create bubble plot showing brain region vs. gene and cell type. Each point
 # is coloured by the mean fidelity score.
 bubble_region <- ggplot(fidelity_region_bubble_mean, aes(x = Gene_Cell, y = Brain.Region)) +
@@ -806,7 +811,12 @@ bubble_region <- ggplot(fidelity_region_bubble_mean, aes(x = Gene_Cell, y = Brai
   coord_flip() +
   scale_color_gradient2(low="blue", mid="white",
                         high="red", space ="Lab", guide = "colourbar",
+<<<<<<< HEAD
                         aesthetics = "fill") +
+=======
+                        aesthetics = "fill") + # Blue-white-red colour gradient
+  # scale_fill_viridis(direction = -1) + # Viridis colour gradient
+>>>>>>> 4aa0e16cfd74ffac0b16a62463772496670d7115
   labs(x = "Gene and Cell Type", # Arranged in smallest to largest RSKC weights
        y = "Brain Region",
        fill = "Mean Fidelity Score",
