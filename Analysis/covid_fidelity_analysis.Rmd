@@ -745,12 +745,8 @@ bubble_clust <- ggplot(fidelity_clust_bubble_mean, aes(x = Gene_Cell, y = cluste
   coord_flip() +
   scale_color_gradient2(low="blue", mid="white",
                         high="red", space ="Lab", guide = "colourbar",
-<<<<<<< HEAD
-                        aesthetics = "fill") +
-=======
                         aesthetics = "fill") + # Blue-white-red colour gradient
   # scale_fill_viridis(direction = -1) + # Viridis colour gradient
->>>>>>> 4aa0e16cfd74ffac0b16a62463772496670d7115
   labs(x = "Gene and Cell Type", # Arranged in smallest to largest RSKC weights
        y = "Cluster",
        fill = "Mean Fidelity Score") +
@@ -811,12 +807,8 @@ bubble_region <- ggplot(fidelity_region_bubble_mean, aes(x = Gene_Cell, y = Brai
   coord_flip() +
   scale_color_gradient2(low="blue", mid="white",
                         high="red", space ="Lab", guide = "colourbar",
-<<<<<<< HEAD
-                        aesthetics = "fill") +
-=======
                         aesthetics = "fill") + # Blue-white-red colour gradient
   # scale_fill_viridis(direction = -1) + # Viridis colour gradient
->>>>>>> 4aa0e16cfd74ffac0b16a62463772496670d7115
   labs(x = "Gene and Cell Type", # Arranged in smallest to largest RSKC weights
        y = "Brain Region",
        fill = "Mean Fidelity Score",
@@ -854,9 +846,7 @@ bubble_region
 # bubble_region2
 
 # Plot dendrogram of brain regions made previously for heat map.
-dendro <- ggdendrogram(rskc_dendro) +
-  geom_segment(aes(y=x, x=y, yend=xend, xend=yend)) + 
-  theme_dendro()
+dendro <- ggdendrogram(rskc_dendro)
 dendro
   
 ```
