@@ -853,30 +853,3 @@ dendro
 
 
 
-```{r include=FALSE}
-# Compute the mean fidelity score for each gene_celltype for each cluster label.
-# Pivot data frame for further plotting steps.
-fidelity_clust_bubble_mean2 <- fidelity_features_clusts %>% 
-  group_by(cluster_labels) %>% 
-  summarize_at(vars(NRP1_Astrocyte, NRP1_Neuron, DPP4_Astrocyte,
-                    NRP1_Microglia, ITGB3_Oligodendrocyte, NRP1_Oligodendrocyte,
-                    ITGB3_Neuron, ITGB3_Microglia), mean) %>% 
-  t() %>%
-  as.data.frame() %>%
-  slice(-c(1)) %>%
-  rename("1" = V1, "2" = V2, "3" = V3, "4" = V4)
-
-# Make data continuous, for plotting 
-fidelity_clust_bubble_mean2$`1`=as.numeric(levels(fidelity_clust_bubble_mean2$`1`))[fidelity_clust_bubble_mean2$`1`]
-fidelity_clust_bubble_mean2$`2`=as.numeric(levels(fidelity_clust_bubble_mean2$`2`))[fidelity_clust_bubble_mean2$`2`]
-fidelity_clust_bubble_mean2$`3`=as.numeric(levels(fidelity_clust_bubble_mean2$`3`))[fidelity_clust_bubble_mean2$`3`]
-fidelity_clust_bubble_mean2$`4`=as.numeric(levels(fidelity_clust_bubble_mean2$`4`))[fidelity_clust_bubble_mean2$`4`]
-
-ggballoonplot(fidelity_clust_bubble_mean2,
-              fill = "value",
-              size = 8) + 
-  scale_color_gradient2(low="blue", mid="white",
-                        high="red", space ="Lab", guide = "colourbar",
-                        aesthetics = "fill")
-```
-
