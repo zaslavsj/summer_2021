@@ -711,7 +711,7 @@ region.rskc.cluster.matches.ordered <-  rskc.cluster.regions.long %>%
   mutate(Region_2 = factor(Region_2, levels = regions))
 
 # Plot the adjacency matrix as a heat map.
-region_heatmap <- ggplot(region.rskc.cluster.matches.ordered, aes(x = Region_1, y = Region_2, fill = Matches)) +
+region_heatmap1 <- ggplot(region.rskc.cluster.matches.ordered, aes(x = Region_1, y = Region_2, fill = Matches)) +
   geom_tile() +
   scale_fill_gradientn(colours = brewer.pal(n = 9, name = "YlOrRd")) +
   labs(x = NULL, 
@@ -720,23 +720,24 @@ region_heatmap <- ggplot(region.rskc.cluster.matches.ordered, aes(x = Region_1, 
   theme_minimal() +
   theme(panel.border = element_blank(),
         panel.background = element_blank(),
-        axis.text.x = element_text(colour = "black", angle = 45),
-        axis.text.y = element_text(colour = "black"),
+        axis.text.x = element_text(size = 12, colour = "black", angle = 45, vjust = 0.6),
+        axis.text.y = element_text(size = 12, colour = "black"),
+        legend.text = element_text(size = 11, colour = "black"),
         axis.ticks = element_blank())
 
 # Save the generated heat map as png in appropriate folder destination
 # within the project directory.
-region_heatmap_path <- file.path(here("Plots",
-                                      paste0('RSKC_brain_region_clustering_heatmap.png')))
+region_heatmap1_path <- file.path(here("Plots",
+                                       paste0('RSKC_brain_region_clustering_heatmap.png')))
 
-png(file = region_heatmap_path,
+png(file = region_heatmap1_path,
     units = "in",
-    width = 9,
-    height = 8,
+    width = 8,
+    height = 6,
     res = 300 #,compression = 'lzw'
 )
 
-print(region_heatmap)
+print(region_heatmap1)
 
 dev.off()
 
@@ -755,8 +756,8 @@ region_heatmap2_path <- file.path(here("Plots",
 
 png(file = region_heatmap2_path,
     units = "in",
-    width = 9,
-    height = 8,
+    width = 8,
+    height = 6,
     res = 300 #, compression = 'lzw'
 )
 
@@ -774,6 +775,8 @@ heatmap.2(rskc.region.prop,
           density.info = "none", # Remove the density plot from inside color key
           srtCol = 45, # Rotate column labels on heat map
           margins = c(5, 10),
+          cexRow = 1,
+          cexCol = 1,
           key.xtickfun = function(){
             breaks = pretty(parent.frame()$breaks)
             breaks = breaks[c(1, length(breaks))]
