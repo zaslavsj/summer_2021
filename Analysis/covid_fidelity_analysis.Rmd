@@ -94,7 +94,7 @@ set.seed(72613)
 
 while (T) {
   
-  # Assign the values of 2, 4, 6 and 8 to 'clust_vect'.
+  # Assign desired number of clusters to 'clust_vect'.
   clust_vect <- c(2,4,6,8)
   
   # Assign an empty list to 'rskc_list'.
@@ -249,6 +249,8 @@ while (T) {
       weighted_fidelity[,n] <- myFidelity[,n]*weights[n]
     }
     
+    ###### tSNE (on weighted data) ######
+    
     # Run tsne on weighted fidelity scores, and assign to 'tsne'
     set.seed(72613)
     tsne <- Rtsne(weighted_fidelity, perplexity = 5)
@@ -258,9 +260,6 @@ while (T) {
     tsne_out <- tsne$Y %>%
       data.frame(regions) %>%
       rename(Brain.Region = regions, V1 = X1, V2 = X2) #rename columns
-    
-    
-    ###### tSNE (on weighted data) ######
     
     # Merge 'tsne_out' with 'gene_and_region' according
     # to their shared 'Brain.Region' column, and assign to 
@@ -429,6 +428,8 @@ while (T) {
       weighted_fidelity <- sweep(t(fidelity[, 2:21]), MARGIN = 1, weights, `*`) %>% 
         t()
       
+      ###### tSNE (on weighted data) ######
+      
       # Run tsne on weighted fidelity scores, and assign to 'tsne'
       set.seed(72613)
       tsne <- Rtsne(weighted_fidelity, perplexity = 5)
@@ -438,8 +439,6 @@ while (T) {
       tsne_out <- tsne$Y %>%
         data.frame(regions) %>%
         rename(Brain.Region = regions, V1 = X1, V2 = X2) #rename columns
-      
-      ###### tSNE (on weighted data) ######
       
       # Merge 'tsne_out' with 'fidelity' according
       # to their shared 'Brain.Region' column, and assign to 
@@ -658,7 +657,8 @@ rskc.region.prop <- apply(rskc.cluster.regions.wide, 2, function(x) return(x/100
   as.matrix()
 
 # Assign a dendrogram for the matrix of matched clustering of RSKC regions.
-rskc_dendro <- set(as.dendrogram(hclust(dist(rskc.region.prop))), "branches_lwd", 3)
+rskc_dendro <- set(as.dendrogram(hclust(dist(rskc.region.prop))), "branches_lwd", 3) %>%
+  reorder(1:20)
 
 # Define a colour 'ylOrRd' from brewer palette.
 ylOrRd <- colorRampPalette(brewer.pal(n = 9, name = "YlOrRd"))
@@ -718,7 +718,7 @@ fidelity_clust_bubble_mean <- fidelity_features_clusts %>%
   group_by(cluster_labels) %>% 
   summarize_at(vars(NRP1_Astrocyte, NRP1_Neuron, DPP4_Astrocyte,
                     NRP1_Microglia, ITGB3_Oligodendrocyte, NRP1_Oligodendrocyte,
-                    ITGB3_Neuron, ITGB3_Microglia), mean) %>% 
+                    ITGB3_Neuron, ITGB3_Microglia), mean) %>%
   mutate(cluster_labels = as.factor(cluster_labels)) %>% 
   melt(id = c("cluster_labels")) %>% 
   rename("Mean_Fidelity" = value, "Gene_Cell" = variable)
@@ -766,6 +766,7 @@ bubble_clust <- ggplot(fidelity_clust_bubble_mean, aes(x = Gene_Cell, y = cluste
         legend.position = "right")
 bubble_clust
 ```
+
 ## Prepare Data Frame for Fidelity Statistics Based on Brain Regions
 ```{r}
 # Compute the mean fidelity score for each gene_celltype for each brain region.
@@ -782,7 +783,7 @@ fidelity_region_bubble_mean <- fidelity_features_clusts %>%
 # data frame to match the desired order from 'gene_level_order'.
 fidelity_region_bubble_mean$Gene_Cell <- as.character(fidelity_region_bubble_mean$Gene_Cell)
 fidelity_region_bubble_mean$Gene_Cell <- factor(fidelity_region_bubble_mean$Gene_Cell, 
-                                            levels = rev(gene_level_order))
+                                                levels = rev(gene_level_order))
 
 # Make a vector that contains the brain regions in order of the four clusters.
 region_clust_order <- c("STR", "AMY", "MED", "PON", 
@@ -845,5 +846,14 @@ bubble_region
 # bubble_region2
 
 # Plot dendrogram of brain regions made previously for heat map.
+<<<<<<< HEAD
 dendro_plot <- plot(rskc_dendro %>% set("branches_lwd", 4), labels = FALSE)
+=======
+dendro <- ggdendrogram(rskc_dendro)
+dendro
+  
+>>>>>>> 80346a2ddff75ef3f8438395b144df309e6e163a
 ```
+
+
+
