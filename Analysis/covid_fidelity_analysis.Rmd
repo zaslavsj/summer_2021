@@ -876,9 +876,13 @@ png(file = bubble_region_path,
 # bubble_region2
 
 # Plot dendrogram of brain regions made previously for heat map.
+<<<<<<< HEAD
+dendro_plot <- plot(rskc_dendro %>% set("branches_lwd", 4), labels = FALSE)
+=======
 dendro <- ggdendrogram(rskc_dendro)
 dendro
   
+>>>>>>> 80346a2ddff75ef3f8438395b144df309e6e163a
 ```
 
 ```{r}
