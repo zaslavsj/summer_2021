@@ -326,6 +326,26 @@ ggarrange(weight_list[[1]], weight_list[[2]],
 elbow_plot
 ```
 
+## Perform Density-preserving t-SNE
+```{r, echo = FALSE, include = FALSE, eval = FALSE}
+# MNIST Subsample dataset
+data <- data.table::fread("http://cb.csail.mit.edu/cb/densvis/datasets/mnist_subsample.txt", sep=" ")
+# For a smaller dataset, download `trial_data.txt' in this repo
+data <- read.table("trial_data.txt", sep=" ")
+
+source("densne.R")
+
+out <- run_densne(data, no_dims=2, perplexity=50, theta=0.5, randseed=-1,
+                  verbose=FALSE, use_pca=FALSE,
+                  max_iter=1000, dens_frac=0.3, final_dens=TRUE)
+
+# Attempt denSNE on 'weighted_fidelity' data frame.
+denSNE_fidelity <- run_densne(weighted_fidelity, no_dims=2, perplexity=5, theta=0.5, randseed=-1,
+                              verbose=FALSE, use_pca=FALSE,
+                              max_iter=1000, dens_frac=0.3, final_dens=TRUE)
+```
+
+
 \newpage
 
 ## RSKC (10 Runs)
