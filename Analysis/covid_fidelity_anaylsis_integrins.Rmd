@@ -439,7 +439,7 @@ while (T) {
       
       # Multiply 'fidelity' columns containing gene_celltype by corresponding 
       # weights obtained from RSKC.
-      weighted_fidelity <- sweep(t(fidelity[,2:ncol(fidelity)-1]), MARGIN = 1, weights, `*`) %>% 
+      weighted_fidelity <- sweep(t(fidelity[,2:(ncol(fidelity)-1)]), MARGIN = 1, weights, `*`) %>% 
         t()
       
       ###### tSNE (on weighted data) ######
