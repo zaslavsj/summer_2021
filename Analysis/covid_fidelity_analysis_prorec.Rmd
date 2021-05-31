@@ -31,13 +31,6 @@ set.seed(72613)
 # Load full dataset
 all_fidelity <- read.csv(here("Data", "ALL_Fidelity.csv"))
 
-# Define a vector containing the five genes of interest.
-genes_subset <- c("ACE2",
-                  "DPP4",
-                  "TMPRSS2",
-                  "NRP1",
-                  "ITGB3")
-
 # Define a vector containing all SARS-CoV-2 related protease and rector genes
 # of interest.
 genes_prorec_subset <- c("ANPEP", "ENPEP", "ACE2", "DPP4", "SCARB1", "AXL", 
