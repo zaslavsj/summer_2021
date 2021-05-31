@@ -423,9 +423,10 @@ while (T) {
       # Make empty matrix 'weighted_fidelity' for new weighted fidelity scores.
       weights <- as.matrix(rskc_results_list[[1]]$weights)
       
-      # Multiply 'fidelity' columns containing gene_celltype by corresponding 
-      # weights obtained from RSKC.
-      weighted_fidelity <- sweep(t(fidelity[, 2:21]), MARGIN = 1, weights, `*`) %>% 
+       # Multiply 'fidelity' columns containing gene_celltype by corresponding 
+      # weights obtained from RSKC. For the 'fidelity' data frame, choose 
+      # columns from 2 to ncol(fidelity) - 1.
+      weighted_fidelity <- sweep(t(fidelity[, 2:(ncol(fidelity)-1)]), MARGIN = 1, weights, `*`) %>% 
         t()
       
       ###### tSNE (on weighted data) ######
@@ -697,12 +698,13 @@ rskc_weights_100_runs <- rskc.region.weights %>%
   mutate(Average_Weight = weights_100_runs) %>% 
   select("Case", "Average_Weight") %>% 
   arrange(desc(Average_Weight)) %>% 
-  head(8)
+  head(8) %>% 
+  rename(Gene_Cell = Case)
 rskc_weights_100_runs
 
 # Select only the top eight features from the 'fidelity_4_clusts' data frame.
 fidelity_top_features <- fidelity_4_clusts[, names(fidelity_4_clusts) %in% 
-                                                rskc_weights_100_runs$Case]
+                                                rskc_weights_100_runs$Gene_Cell]
 
 # Append the brain region and cluster labels to the 'fidelity_top_features'
 # data frame.
