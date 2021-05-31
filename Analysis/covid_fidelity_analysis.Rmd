@@ -767,21 +767,6 @@ bubble_clust <- ggplot(fidelity_clust_bubble_mean, aes(x = Gene_Cell, y = cluste
         panel.border = element_blank(),
         legend.position = "right")
 bubble_clust
-
-# Save png of bubble plot
-bubble_clust_path <- file.path(here("Plots", 
-                                    paste0('RKSC_Bubbleplot_byCluster.png')))
-
-png(file = bubble_clust_path,
-        units = "in",
-        width = 8,
-        height = 4.5,
-        res = 300 #,compression = 'lzw'
-    )
-    
-    print(bubble_clust)
-    
-    dev.off()
 ```
 
 ## Prepare Data Frame for Fidelity Statistics Based on Brain Regions
@@ -846,45 +831,7 @@ bubble_region <- ggplot(fidelity_region_bubble_mean, aes(x = Gene_Cell, y = Brai
         legend.position = "right")
 bubble_region
 
-# Save png of bubble plot
-bubble_region_path <- file.path(here("Plots", 
-                                     paste0('RKSC_Bubbleplot_byRegion.png')))
-
-png(file = bubble_region_path,
-        units = "in",
-        width = 10,
-        height = 4,
-        res = 300 #,compression = 'lzw'
-    )
-    
-    print(bubble_region)
-    
-    dev.off()
-
-# # Alternate version of bubble plot using ggballoonplot. Note: the y-axis does 
-# # not display the correct ordering of the features (i.e. it is in reverse
-# # order, from highest to lowest weight).
-# bubble_region2 <- ggballoonplot(fidelity_region_bubble_mean, aes(x = Brain.Region, 
-#                                                                  y = Gene_Cell),
-#                                 size = 5,
-#                                 fill = "value") +
-#   scale_fill_viridis(direction = -1) +
-#   labs(fill = "Mean Fidelity Score") +
-#   theme(
-#     axis.text.x = element_text(colour = "black", size = 10),
-#     axis.text.y = element_text(colour = "black", size = 10),
-#     axis.ticks.x = element_blank(),
-#     axis.ticks.y = element_blank())
-# bubble_region2
-
 # Plot dendrogram of brain regions made previously for heat map.
-
-
 dendro <- ggdendrogram(rskc_dendro)
 dendro
-  
 ```
-
-
-
-
