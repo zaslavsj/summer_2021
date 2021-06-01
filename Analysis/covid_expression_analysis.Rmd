@@ -1,13 +1,9 @@
 ---
-title: "COVID Expression Analysis"
+title: "COVID-19 Project: RSKC Analysis for Gene Expression"
 author: "Rachel Kwan and Jonathan Zaslavsky"
-date: "01/06/2021"
+date: "`r Sys.Date()`"
 output: pdf_document
 ---
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
 
 ## Relevant Packages
 ```{r, message = FALSE, warning = FALSE}
@@ -28,9 +24,19 @@ set.seed(72613)
 # Load full dataset
 all_expression <- read.csv(here("Data", "COVID Data - 28 Genes - 1281 Samples from 16 Regions - No Transformation.csv"))
 
-myExpression <- all_expression %>%
-  select(-Sample, -Years) %>%
-  arrange(Region)
+# Create a vector containing all of the names of the genes of interest.
+genes <- as_vector(colnames(gene_expression_data)[4:31])
+
+# Create a data frame grouping each observation by the brain region and 
+# computing the average expression of each gene within a given brain region.
+gene_expression <- all_expression %>% 
+  group_by(Region) %>% 
+  summarize_at(vars(all_of(genes)), mean) %>%
+  rename(Brain.Region = Region)
+
+# Use the brain regions to name the rows and remove the brain region column.
+myExpression <- gene_expression %>%
+  column_to_rownames("Brain.Region")
 ```
 
 ## Perform Robust and Sparse K-Means Clustering (RSKC) and t-SNE Together
@@ -74,17 +80,16 @@ while (T) {
     ###### RSKC ######
     
     # Perform RSKC for whatever-the-value-of-'i'-is many clusters using 
-    # 'myFidelity', which has brain region as rows and gene_celltype as columns.
+    # 'myExpression', which has brain region as rows and gene_celltype as columns.
     # Assign RSKC's output as an entry in 'rskc_list'. 
-    rskc_list[[counter]] <- RSKC(myFidelity, 
+    rskc_list[[counter]] <- RSKC(myExpression, 
                                  ncl = i,
                                  alpha = 0.1,
-                                 L1 = sqrt(ncol(myFidelity)))
+                                 L1 = sqrt(ncol(myExpression)))
     
-    
-    # Convert the row names of 'myFidelity' to a column
+    # Convert the row names of 'myExpression' to a column
     # called 'Brain.Region' and store it in 'gene_and_region'.
-    gene_and_region <- myFidelity %>% 
+    gene_and_region <- myExpression %>% 
       rownames_to_column("Brain.Region")
     
     # For the current object in 'rskc_list' convert the cluster labels
@@ -129,29 +134,31 @@ while (T) {
     # Assign 'weight_bars' as the current entry into 'weight_list'. 
     weight_list[[counter]] <- weight_bars
     
-    ###### Apply weights from RSKC to myFidelity ######
+    ###### Apply weights from RSKC to myExpression ######
     
     # Create vector of the weights obtained from RSKC and assign them to 'weights'.
-    # Make empty matrix 'weighted_fidelity' for new weighted fidelity scores.
+    # Make empty matrix 'weighted_expression' for new weighted exprression.
     weights <- as.matrix(rskc_list[[1]]$weights)
-    weighted_fidelity <- matrix(nrow = 18, ncol = 20)
     
-    # Multiply 'myFidelity' by corresponding weights obtained from RSKC.
-    for (n in 1:20){
-      weighted_fidelity[,n] <- myFidelity[,n]*weights[n]
-    }
+    # Multiply 'myExpression' columns containing gene_celltype by corresponding 
+    # weights obtained from RSKC.
+    weighted_expression <- sweep(t(myExpression), 
+                                 MARGIN = 1, weights,
+                                 `*`) %>% 
+      t()
     
     ###### tSNE (on weighted data) ######
     
-    # Run tsne on weighted fidelity scores, and assign to 'tsne'
+    # Run tsne on weighted expression scores, and assign to 'tsne'
     set.seed(72613)
-    tsne <- Rtsne(weighted_fidelity, perplexity = 5)
+    tsne <- Rtsne(weighted_expression, perplexity = 5)
     
     # Create new df 'tsne_out' which contains the two dimensions obtained from tSNE
     # and corresponding regions
     tsne_out <- tsne$Y %>%
-      data.frame(regions) %>%
-      rename(Brain.Region = regions, V1 = X1, V2 = X2) #rename columns
+      data.frame(gene_and_region$Brain.Region) %>%
+      rename(Brain.Region = gene_and_region.Brain.Region,
+             V1 = X1, V2 = X2) #rename column
     
     # Merge 'tsne_out' with 'gene_and_region' according
     # to their shared 'Brain.Region' column, and assign to 
@@ -244,7 +251,8 @@ while (T) {
                 "#FFFF00",
                 "#A65628")
   
-  # Assign an empty list to 'tsne_list_5', 'tsne_list_6', and 'tsne_list_7'.
+  # Assign an empty list to 'tsne_list_3', 'tsne_list_4', 'tsne_list_5', 
+  # and 'tsne_list_6'.
   tsne_list_3 <- list()
   tsne_list_4 <- list()
   tsne_list_5 <- list()
@@ -255,11 +263,11 @@ while (T) {
   
   # Create empty data frames to store the cluster assignments and cluster weights 
   # for each of the 10 runs.
-    rskc_region_labels_3 = data.frame("Region" = rownames(myFidelity))
-    rskc_region_labels_4 = data.frame("Region" = rownames(myFidelity))
-    rskc_region_labels_5 = data.frame("Region" = rownames(myFidelity))
-    rskc_region_labels_6 = data.frame("Region" = rownames(myFidelity))
-    rskc_region_weights = data.frame("Case" = colnames(myFidelity))
+    rskc_region_labels_3 = data.frame("Region" = rownames(myExpression))
+    rskc_region_labels_4 = data.frame("Region" = rownames(myExpression))
+    rskc_region_labels_5 = data.frame("Region" = rownames(myExpression))
+    rskc_region_labels_6 = data.frame("Region" = rownames(myExpression))
+    rskc_region_weights = data.frame("Case" = colnames(myExpression))
     
   # For 'i' -- the current number of clusters -- in 'clust_vect'...
   for (i in clust_vect) {
@@ -278,13 +286,14 @@ while (T) {
       # Perform RSKC for whatever-the-value-of-''-is many clusters using 
       # 'myFidelity', which has brain region as rows and gene_celltype as columns.
       # Assign RSKC's output as an entry in 'rskc_results_list'.
-      rskc_results_list[[counter]] <- RSKC(myFidelity, 
+      rskc_results_list[[counter]] <- RSKC(myExpression, 
                                            alpha = 0.1, 
                                            ncl = i, 
-                                           L1 = sqrt(ncol(myFidelity)))
+                                           L1 = sqrt(ncol(myExpression)))
       
       # Use the following if statements to add the cluster assignments for run i to 
-      # the corresponding 'rskc_region_labels_3', 'rskc_region_labels_4' or 'rskc_region_labels_5'.
+      # the corresponding 'rskc_region_labels_3', 'rskc_region_labels_4', 'rskc_region_labels_5',
+      # or 'rskc_region_labels_6'.
       if (i == 3){
         rskc_region_labels_3[counter+1] <- rskc_results_list[[counter]]$labels
         colnames(rskc_region_labels_3)[counter+1] <- paste("Run_", counter, sep = "")
@@ -311,38 +320,41 @@ while (T) {
       
       # For the current object in 'rskc_list' convert the cluster labels
       # into characters, and assign them to a new column called 'cluster_labels'
-      # in 'fidelity'.  
-      fidelity$cluster_labels <- rskc_results_list[[counter]]$labels %>% 
+      # in 'gene_expression'.  
+      gene_expression$cluster_labels <- rskc_results_list[[counter]]$labels %>% 
         as.character()
      
-      ###### Apply weights from RSKC to myFidelity ######
+      ###### Apply weights from RSKC to gene_expression ######
       
       # Create vector of the weights obtained from RSKC and assign them to 'weights'.
-      # Make empty matrix 'weighted_fidelity' for new weighted fidelity scores.
+      # Make empty matrix 'weighted_expression' for new weighted expression.
       weights <- as.matrix(rskc_results_list[[1]]$weights)
       
       # Multiply 'fidelity' columns containing gene_celltype by corresponding 
       # weights obtained from RSKC.
-      weighted_fidelity <- sweep(t(fidelity[,2:(ncol(fidelity)-1)]), MARGIN = 1, weights, `*`) %>% 
+      weighted_expression <- sweep(t(gene_expression[,2:(ncol(gene_expression)-1)]), 
+                                 MARGIN = 1, weights, `*`) %>%  
         t()
       
       ###### tSNE (on weighted data) ######
       
-      # Run tsne on weighted fidelity scores, and assign to 'tsne'
+      # Run tsne on weighted expression scores, and assign to 'tsne'
       set.seed(72613)
-      tsne <- Rtsne(weighted_fidelity, perplexity = 5)
+      tsne <- Rtsne(weighted_expression, perplexity = 5)
       
       # Create new df 'tsne_out' which contains the two dimensions obtained from tSNE
       # and corresponding regions
       tsne_out <- tsne$Y %>%
-        data.frame(regions) %>%
-        rename(Brain.Region = regions, V1 = X1, V2 = X2) #rename columns
+        data.frame(gene_expression$Brain.Region) %>%
+        rename(Brain.Region = gene_expression.Brain.Region, 
+               V1 = X1, 
+               V2 = X2) #rename columns
       
-      # Merge 'tsne_out' with 'fidelity' according
+      # Merge 'tsne_out' with 'gene_expression' according
       # to their shared 'Brain.Region' column, and assign to 
       # 'tsne_genes_regions_clusts'. 
       tsne_genes_regions_clusts <- merge(tsne_out,
-                                         fidelity,
+                                         gene_expression,
                                          by = "Brain.Region")
       
       # Create a tSNE scatter plot where each point is colour-coded according to
@@ -373,7 +385,7 @@ while (T) {
         labs(x="V1", y="V2") 
       
       # Use if statements to assign 'tsne_scatter' as an entry in 'tsne_list_3',
-      # 'tsne_list_4', or 'tsne_list_5' depending on the current i.
+      # 'tsne_list_4', 'tsne_list_5', or 'tsne_list_6 depending on the current i.
       if (i == 3){
         tsne_list_3[[counter]] <- tsne_scatter
       }
