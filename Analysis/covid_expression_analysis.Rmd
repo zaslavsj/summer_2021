@@ -324,15 +324,15 @@ while (T) {
       gene_expression$cluster_labels <- rskc_results_list[[counter]]$labels %>% 
         as.character()
      
-      ###### Apply weights from RSKC to gene_expression ######
+      ###### Apply weights from RSKC to myExpression ######
       
       # Create vector of the weights obtained from RSKC and assign them to 'weights'.
       # Make empty matrix 'weighted_expression' for new weighted expression.
       weights <- as.matrix(rskc_results_list[[1]]$weights)
       
-      # Multiply 'fidelity' columns containing gene_celltype by corresponding 
+      # Multiply 'myExpression' columns containing gene_celltype by corresponding 
       # weights obtained from RSKC.
-      weighted_expression <- sweep(t(gene_expression[,2:(ncol(gene_expression)-1)]), 
+      weighted_expression <- sweep(t(myExpression), 
                                  MARGIN = 1, weights, `*`) %>%  
         t()
       
