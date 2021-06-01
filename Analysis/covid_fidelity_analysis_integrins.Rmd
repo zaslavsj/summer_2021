@@ -728,7 +728,7 @@ rskc_weights_top_8
 
 # Select only the top eight features from the 'fidelity_4_clusts' data frame.
 fidelity_top_features <- fidelity_6_clusts[,names(fidelity_6_clusts) %in% 
-                                            rskc_weights_100_runs$Case]
+                                            rskc_weights_top_8$Case]
 
 # Append the brain region and cluster labels to the 'fidelity_top_features'
 # data frame.
@@ -804,6 +804,24 @@ bubble_clust <- ggplot(fidelity_clust_bubble_mean, aes(x = Gene_Cell, y = cluste
 bubble_clust
 ```
 
+```{r, echo = FALSE, include = FALSE}
+# Save the generated cluster bubble plot as png in appropriate folder destination
+# within the project directory.
+bubble_clust_path <- file.path(here("Plots", 
+                                     paste0('RSKC_bubbleplot_clusters_K=6_integrins.png')))
+
+png(file = bubble_clust_path,
+    units = "in",
+    width = 7,
+    height = 4,
+    res = 300 #,compression = 'lzw'
+)
+
+print(bubble_clust)
+
+dev.off()
+```
+
 ## Prepare Data Frame for Fidelity Statistics Based on Brain Regions
 ```{r}
 # Compute the mean fidelity score for each gene_celltype for each brain region.
@@ -864,4 +882,22 @@ bubble_region
 # Plot dendrogram of brain regions made previously for heat map.
 dendro <- ggdendrogram(rskc_dendro)
 dendro
+```
+
+```{r, echo = FALSE, include = FALSE}
+# Save the generated brain region bubble plot as png in appropriate folder destination
+# within the project directory.
+bubble_region_path <- file.path(here("Plots", 
+                                     paste0('RSKC_bubbleplot_regions_K=6_integrins.png')))
+
+png(file = bubble_region_path,
+    units = "in",
+    width = 8,
+    height = 4,
+    res = 300 #,compression = 'lzw'
+)
+
+print(bubble_region)
+
+dev.off()
 ```
