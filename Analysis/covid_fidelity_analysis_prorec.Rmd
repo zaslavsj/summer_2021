@@ -329,7 +329,7 @@ set.seed(72613)
 
 while (T) {
   
-  # Assign the values of 3, 4, 5 to 'clust_vect'.
+  # Assign the values of 3, 4, 5, 6 to 'clust_vect'.
   clust_vect <- c(3,4,5,6)
   
   # Assign empty lists to 'rskc.results.list' and 'rskc.weighted.list'
@@ -344,9 +344,7 @@ while (T) {
                 "#00FF00",
                 "#A020F0",
                 "#FFA500",
-                "#FFFF00")#,
-                # "#A65628",
-                # "#F781BF")
+                "#FFFF00")
   
   # Assign an empty list to 'tsne_list_3', 'tsne_list_4', and 'tsne_list_6'.
   tsne_list_3 <- list()
@@ -568,6 +566,7 @@ ggarrange(tsne_list_6[[1]], tsne_list_6[[2]],
           ncol = 2,
           nrow = 5)
 ```
+
 ## RSKC (100 Runs)
 
 Having previously selected the number of clusters to use for RSKC (i.e. 4), this portion of the code aims to evaluate the proportion of brain regions clustered together over 100 runs (i.e. 100 different set.seed values). The code is derived from previous work (i.e. Keon and Brendan).
@@ -734,20 +733,35 @@ fidelity_top_features <- fidelity_6_clusts[, names(fidelity_6_clusts) %in%
 # data frame.
 fidelity_features_clusts <- bind_cols(fidelity_6_clusts[, c(1,66)],
                                        fidelity_top_features)
+
+# Create a duplicate data frame containing column for cluster labels that are
+# reassigned based on the order of appearance in the clustered heat map (i.e.
+# clusters in order 1-6 when reading the heat map left to right).
+fidelity_features_clusts2 <- fidelity_features_clusts %>% 
+  select(cluster_labels) %>% 
+  mutate(cluster_labels2 = case_when(
+    cluster_labels == 1 ~ 4,
+    cluster_labels == 2 ~ 6,
+    cluster_labels == 3 ~ 2,
+    cluster_labels == 4 ~ 3,
+    cluster_labels == 5 ~ 1,
+    cluster_labels == 6 ~ 5)) %>% 
+  select(cluster_labels2) %>% 
+  add_column(fidelity_features_clusts2)
 ```
 
 ## Prepare Data Frame for Fidelity Statistics Based on Clusters
 ```{r}
 # Compute the mean fidelity score for each gene_celltype for each cluster label.
 # Pivot data frame for further plotting steps.
-fidelity_clust_bubble_mean <- fidelity_features_clusts %>% 
-  group_by(cluster_labels) %>% 
+fidelity_clust_bubble_mean <- fidelity_features_clusts2 %>% 
+  group_by(cluster_labels2) %>% 
   summarize_at(vars(AXL_Astrocyte, SCARB1_Oligodendrocyte, 
                     ADAM17_Oligodendrocyte, NRP1_Astrocyte,
                     SCARB1_Microglia, NRP2_Microglia,
                     AXL_Oligodendrocyte, CTSL_Oligodendrocyte), mean) %>%
-  mutate(cluster_labels = as.factor(cluster_labels)) %>% 
-  melt(id = c("cluster_labels")) %>% 
+  mutate(cluster_labels2 = as.factor(cluster_labels2)) %>% 
+  melt(id = c("cluster_labels2")) %>% 
   rename("Mean_Fidelity" = value, "Gene_Cell" = variable)
 
 # Make a vector that contains the selected gene and corresponding cell type
@@ -768,7 +782,7 @@ fidelity_clust_bubble_mean$Gene_Cell <- factor(fidelity_clust_bubble_mean$Gene_C
 ```{r, fig.align = 'center', fig.width = 8, fig.height = 4}
 # Create bubble plot showing cluster label vs. gene and cell type. Each point
 # is coloured by the mean fidelity score.
-bubble_clust <- ggplot(fidelity_clust_bubble_mean, aes(x = Gene_Cell, y = cluster_labels)) +
+bubble_clust <- ggplot(fidelity_clust_bubble_mean, aes(x = Gene_Cell, y = cluster_labels2)) +
   geom_point(aes(size = 5, fill = Mean_Fidelity), colour = "black", pch = 21) +
   coord_flip() +
   scale_color_gradient2(low="blue", mid="white",
