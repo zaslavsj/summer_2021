@@ -808,6 +808,23 @@ bubble_clust <- ggplot(fidelity_clust_bubble_mean, aes(x = Gene_Cell, y = cluste
         legend.position = "right")
 bubble_clust
 ```
+```{r, echo = FALSE, include = FALSE}
+# Save the generated cluster bubble plot as png in appropriate folder destination
+# within the project directory.
+bubble_clust_path <- file.path(here("Plots", 
+                                     paste0('RSKC_bubbleplot_clusters_K=6_prorec.png')))
+
+png(file = bubble_clust_path,
+    units = "in",
+    width = 7,
+    height = 4,
+    res = 300 #,compression = 'lzw'
+)
+
+print(bubble_clust)
+
+dev.off()
+```
 
 ## Prepare Data Frame for Fidelity Statistics Based on Brain Regions
 ```{r}
@@ -895,5 +912,20 @@ dendro <- ggdendrogram(rskc_dendro)
 dendro
 ```
 
+```{r, echo = FALSE, include = FALSE}
+# Save the generated brain region bubble plot as png in appropriate folder destination
+# within the project directory.
+bubble_region_path <- file.path(here("Plots", 
+                                     paste0('RSKC_bubbleplot_regions_K=6_prorec.png')))
 
+png(file = bubble_region_path,
+    units = "in",
+    width = 8,
+    height = 4,
+    res = 300 #,compression = 'lzw'
+)
 
+print(bubble_region)
+
+dev.off()
+```
