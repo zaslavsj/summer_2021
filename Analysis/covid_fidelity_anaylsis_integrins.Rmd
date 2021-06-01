@@ -1,13 +1,9 @@
 ---
-title: "Integrins Fidelity Score Analysis"
+title: "COVID-19 Project: RSKC Analysis for Fidelity Scores - Integrins Subset"
 author: "Rachel Kwan and Jonathan Zaslavsky"
-date: "31/05/2021"
+date: "`r Sys.Date()`"
 output: pdf_document
 ---
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
 
 ## Relevant Packages
 ```{r, message = FALSE, warning = FALSE}
