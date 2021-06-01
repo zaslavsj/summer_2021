@@ -25,7 +25,7 @@ set.seed(72613)
 all_expression <- read.csv(here("Data", "COVID Data - 28 Genes - 1281 Samples from 16 Regions - No Transformation.csv"))
 
 # Create a vector containing all of the names of the genes of interest.
-genes <- as_vector(colnames(gene_expression_data)[4:31])
+genes <- as_vector(colnames(all_expression)[4:31])
 
 # Create a data frame grouping each observation by the brain region and 
 # computing the average expression of each gene within a given brain region.
@@ -225,7 +225,7 @@ ggarrange(weight_list[[1]], weight_list[[2]],
 
 ## RSKC (10 Runs)
 
-This chunk serves as a snapshot of the RSKC over 10 runs (i.e. different set.seed values) in order to visualize the variation in cluster label assignments for each observation. The 10 runs were carried out for each of $K = 3, 4, 5$.
+This chunk serves as a snapshot of the RSKC over 10 runs (i.e. different set.seed values) in order to visualize the variation in cluster label assignments for each observation. The 10 runs were carried out for each of $K = 3, 4, 5, 6$.
 
 
 ```{r}
@@ -233,7 +233,7 @@ set.seed(72613)
 
 while (T) {
   
-  # Assign the values of 5, 6, 7 to 'clust_vect'.
+  # Assign the values of 3, 4, 5, 6 to 'clust_vect'.
   clust_vect <- c(3,4,5,6)
   
   # Assign empty lists to 'rskc.results.list' and 'rskc.weighted.list'
