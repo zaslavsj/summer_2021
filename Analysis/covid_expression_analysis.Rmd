@@ -26,7 +26,11 @@ set.seed(72613)
 ## Import and Prepare Dataset
 ```{r}
 # Load full dataset
-all_fidelity <- read.csv(here("Data", "COVID Data - 28 Genes - 1281 Samples from 16 Regions - No Transformation.csv"))
+all_expression <- read.csv(here("Data", "COVID Data - 28 Genes - 1281 Samples from 16 Regions - No Transformation.csv"))
+
+myExpression <- all_expression %>%
+  select(-Sample, -Years) %>%
+  arrange(Region)
 ```
 
 ## Perform Robust and Sparse K-Means Clustering (RSKC) and t-SNE Together
@@ -44,15 +48,13 @@ while (T) {
   # Assign an empty list to 'rskc_list'.
   rskc_list <- list()
   
-  # Assign 8 colours to 'col_vect'.
+  # Assign 6 colours to 'col_vect'.
   col_vect <- c("#FF0000",
                 "#0000FF",
                 "#00FF00",
                 "#A020F0",
                 "#FFA500",
-                "#FFFF00",
-                "#A65628",
-                "#F781BF")
+                "#FFFF00")
   
   # Assign a value of 0 to 'counter'.
   counter <- 0
@@ -65,7 +67,7 @@ while (T) {
   
   # For 'i' -- the current number of clusters -- in 'clust_vect'...
   for (i in clust_vect) {
-    # i = 2
+    # i = 3
     # Increment 'counter' with a value of 1.
     counter = counter + 1
     
