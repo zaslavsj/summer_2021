@@ -1,13 +1,9 @@
 ---
-title: "COVID Expression Analysis"
+title: "COVID-19 Project: RSKC Analysis for Gene Expression"
 author: "Rachel Kwan and Jonathan Zaslavsky"
-date: "01/06/2021"
+date: "`r Sys.Date()`"
 output: pdf_document
 ---
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
 
 ## Relevant Packages
 ```{r, message = FALSE, warning = FALSE}
@@ -26,7 +22,16 @@ set.seed(72613)
 ## Import and Prepare Dataset
 ```{r}
 # Load full dataset
-all_fidelity <- read.csv(here("Data", "COVID Data - 28 Genes - 1281 Samples from 16 Regions - No Transformation.csv"))
+gene_expression_data <- read.csv(here("Data", "COVID Data - 28 Genes - 1281 Samples from 16 Regions - No Transformation.csv"))
+
+# Create a vector containing all of the names of the genes of interest.
+genes <- as_vector(colnames(gene_expression_data) [4:31])
+
+# Create a data frame grouping each observation by the brain region and 
+# computing the average expression of each gene within a given brain region.
+gene_expression <- gene_expression_data %>% 
+  group_by(Region) %>% 
+  summarize_at(vars(all_of(genes)), mean)
 ```
 
 ## Perform Robust and Sparse K-Means Clustering (RSKC) and t-SNE Together
