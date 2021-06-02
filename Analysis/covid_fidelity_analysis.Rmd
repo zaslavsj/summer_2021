@@ -87,7 +87,7 @@ myFidelity <- fidelity %>%
 
 ## Perform Robust and Sparse K-Means Clustering (RSKC) and t-SNE Together
 
-This while loop contains sections for RSKC, elbow plot, obtaining weighted data, and tSNE. Dezi's code was used as template for this while loop, in particular, for the RSKC and tSNE sections.
+This while loop contains sections for RSKC, elbow plot, obtaining weighted data, and tSNE. Desmond's code was used as template for this while loop, in particular, for the RSKC and tSNE sections.
 
 ```{r}
 set.seed(72613)
@@ -240,14 +240,12 @@ while (T) {
     ###### Apply weights from RSKC to myFidelity ######
     
     # Create vector of the weights obtained from RSKC and assign them to 'weights'.
-    # Make empty matrix 'weighted_fidelity' for new weighted fidelity scores.
     weights <- as.matrix(rskc_list[[1]]$weights)
-    weighted_fidelity <- matrix(nrow = 18, ncol = 20)
     
-    # Multiply 'myFidelity' by corresponding weights obtained from RSKC.
-    for (n in 1:20){
-      weighted_fidelity[,n] <- myFidelity[,n]*weights[n]
-    }
+    # Multiply 'myFidelity' columns containing gene_celltype by corresponding 
+    # weights obtained from RSKC, and assign to 'weighted_fidelity'
+    weighted_fidelity <- sweep(t(myFidelity), MARGIN = 1, weights, `*`) %>% 
+      t()
     
     ###### tSNE (on weighted data) ######
     
@@ -420,12 +418,11 @@ while (T) {
       ###### Apply weights from RSKC to myFidelity ######
       
       # Create vector of the weights obtained from RSKC and assign them to 'weights'.
-      # Make empty matrix 'weighted_fidelity' for new weighted fidelity scores.
       weights <- as.matrix(rskc_results_list[[1]]$weights)
       
-      # Multiply 'fidelity' columns containing gene_celltype by corresponding 
-      # weights obtained from RSKC.
-      weighted_fidelity <- sweep(t(fidelity[, 2:21]), MARGIN = 1, weights, `*`) %>% 
+      # Multiply 'myFidelity' columns containing gene_celltype by corresponding 
+      # weights obtained from RSKC, and assign to 'weighted_fidelity'
+      weighted_fidelity <- sweep(t(myFidelity), MARGIN = 1, weights, `*`) %>% 
         t()
       
       ###### tSNE (on weighted data) ######
@@ -494,6 +491,13 @@ while (T) {
       # K = 4 appended to 'fidelity'.
       if ((i == 4) & (counter == 1)){
         fidelity_4_clusts <- fidelity
+      }
+      
+      # Make a separate data frame that includes the cluster labels when 
+      # K = 5 appended to 'fidelity'. Use third run of RSKC (counter = 3) 
+      # since we want CB to be a cluster on its own
+      if ((i == 5) & (counter == 3)){
+        fidelity_5_clusts <- fidelity
       }
       
     } 
@@ -571,7 +575,7 @@ for (i in 1:100) {
   # a priori.
   rskc.results.list[[i]] = RSKC(myFidelity, 
                                 alpha = 0.1, 
-                                ncl = 4, 
+                                ncl = 5, 
                                 L1 = sqrt(ncol(myFidelity)))
   
   # Add the cluster assignments for run i to the 'rskc.region.labels'.
@@ -693,21 +697,21 @@ weights_100_runs <- rowMeans(rskc.region.weights[-1]) %>%
 
 # Obtain list of top eight largest average weights and their corresponding 
 # gene_celltype.
-rskc_weights_100_runs <- rskc.region.weights %>% 
+rskc_weights_top_8 <- rskc.region.weights %>% 
   mutate(Average_Weight = weights_100_runs) %>% 
   select("Case", "Average_Weight") %>% 
   arrange(desc(Average_Weight)) %>% 
   head(8)
-rskc_weights_100_runs
+rskc_weights_top_8
 
 # Select only the top eight features from the 'fidelity_4_clusts' data frame.
-fidelity_top_features <- fidelity_4_clusts[, names(fidelity_4_clusts) %in% 
-                                                rskc_weights_100_runs$Case]
+fidelity_top_features <- fidelity_4_clusts[,names(fidelity_5_clusts) %in% 
+                                            rskc_weights_top_8$Case]
 
 # Append the brain region and cluster labels to the 'fidelity_top_features'
 # data frame.
-fidelity_features_clusts <- bind_cols(fidelity_4_clusts[, c(1,22)],
-                                       fidelity_top_features)
+fidelity_features_clusts <- bind_cols(fidelity_5_clusts[,c(1,22)],
+                                      fidelity_top_features)
 ```
 
 ## Prepare Data Frame for Fidelity Statistics Based on Clusters
@@ -716,24 +720,20 @@ fidelity_features_clusts <- bind_cols(fidelity_4_clusts[, c(1,22)],
 # Pivot data frame for further plotting steps.
 fidelity_clust_bubble_mean <- fidelity_features_clusts %>% 
   group_by(cluster_labels) %>% 
-  summarize_at(vars(NRP1_Astrocyte, NRP1_Neuron, DPP4_Astrocyte,
-                    NRP1_Microglia, ITGB3_Oligodendrocyte, NRP1_Oligodendrocyte,
-                    ITGB3_Neuron, ITGB3_Microglia), mean) %>%
+  summarize_at(as.vector(rskc_weights_top_8$Case), mean) %>%
   mutate(cluster_labels = as.factor(cluster_labels)) %>% 
   melt(id = c("cluster_labels")) %>% 
   rename("Mean_Fidelity" = value, "Gene_Cell" = variable)
 
 # Make a vector that contains the selected gene and corresponding cell type
 # in order from largest to smallest RSKC weights.
-gene_level_order <- c("NRP1_Astrocyte", "NRP1_Neuron", "DPP4_Astrocyte", 
-                      "NRP1_Microglia", "ITGB3_Oligodendrocyte", 
-                      "NRP1_Oligodendrocyte", "ITGB3_Neuron", "ITGB3_Microglia")
+gene_level_order <- as.vector(rskc_weights_top_8$Case)
 
 # Modify the order of the gene_celltype in the 'fidelity_clust_bubble' data
 # frame to match the desired order from 'gene_level_order'.
 fidelity_clust_bubble_mean$Gene_Cell <- as.character(fidelity_clust_bubble_mean$Gene_Cell)
 fidelity_clust_bubble_mean$Gene_Cell <- factor(fidelity_clust_bubble_mean$Gene_Cell, 
-                                            levels = rev(gene_level_order))
+                                               levels = rev(gene_level_order))
 ```
 
 ### Bubble Plot to Visualize Important Gene and Cell Types in Clusters
@@ -767,15 +767,31 @@ bubble_clust <- ggplot(fidelity_clust_bubble_mean, aes(x = Gene_Cell, y = cluste
 bubble_clust
 ```
 
+```{r, echo = FALSE, include = FALSE}
+# Save the generated cluster bubble plot as png in appropriate folder destination
+# within the project directory.
+bubble_clust_path <- file.path(here("Plots", 
+                                     paste0('RSKC_bubbleplot_clusters_K=5.png')))
+
+png(file = bubble_clust_path,
+    units = "in",
+    width = 7,
+    height = 4,
+    res = 300 #,compression = 'lzw'
+)
+
+print(bubble_clust)
+
+dev.off()
+```
+
 ## Prepare Data Frame for Fidelity Statistics Based on Brain Regions
 ```{r}
 # Compute the mean fidelity score for each gene_celltype for each brain region.
 # Pivot data frame for further plotting steps.
 fidelity_region_bubble_mean <- fidelity_features_clusts %>% 
   group_by(Brain.Region) %>% 
-  summarize_at(vars(NRP1_Astrocyte, NRP1_Neuron, DPP4_Astrocyte,
-                    NRP1_Microglia, ITGB3_Oligodendrocyte, NRP1_Oligodendrocyte,
-                    ITGB3_Neuron, ITGB3_Microglia), mean) %>% 
+  summarize_at(as.vector(rskc_weights_top_8$Case), mean) %>% 
   melt(id = c("Brain.Region")) %>% 
   rename("Mean_Fidelity" = value, "Gene_Cell" = variable)
 
@@ -786,16 +802,13 @@ fidelity_region_bubble_mean$Gene_Cell <- factor(fidelity_region_bubble_mean$Gene
                                                 levels = rev(gene_level_order))
 
 # Make a vector that contains the brain regions in order of the four clusters.
-region_clust_order <- c("STR", "AMY", "MED", "PON", 
-                        "PCX", "FCX", "TCX", "OCX", "CB",
-                        "WM", "DI",
-                        "IN", "LIM", "BF", "CLA", "HIP", "GP", "MID")
+region_clust_order <- as.list(labels(rskc_dendro))
 
 # Modify the order of the brain region in the 'fidelity_region_bubble_mean' data
 # frame to match the desired order from 'region_clust_order'.
 fidelity_region_bubble_mean$Brain.Region <- as.character(fidelity_region_bubble_mean$Brain.Region)
 fidelity_region_bubble_mean$Brain.Region <- factor(fidelity_region_bubble_mean$Brain.Region, 
-                                            levels = rev(region_clust_order))
+                                                   levels = rev(region_clust_order))
 ```
 
 ### Bubble Plot to Visualize Important Gene and Cell Types per Brain Region
@@ -829,26 +842,26 @@ bubble_region <- ggplot(fidelity_region_bubble_mean, aes(x = Gene_Cell, y = Brai
         legend.position = "right")
 bubble_region
 
-# # Alternate version of bubble plot using ggballoonplot. Note: the y-axis does 
-# # not display the correct ordering of the features (i.e. it is in reverse
-# # order, from highest to lowest weight).
-# bubble_region2 <- ggballoonplot(fidelity_region_bubble_mean, aes(x = Brain.Region, 
-#                                                                  y = Gene_Cell),
-#                                 size = 5,
-#                                 fill = "value") +
-#   scale_fill_viridis(direction = -1) +
-#   labs(fill = "Mean Fidelity Score") +
-#   theme(
-#     axis.text.x = element_text(colour = "black", size = 10),
-#     axis.text.y = element_text(colour = "black", size = 10),
-#     axis.ticks.x = element_blank(),
-#     axis.ticks.y = element_blank())
-# bubble_region2
-
 # Plot dendrogram of brain regions made previously for heat map.
 dendro <- ggdendrogram(rskc_dendro)
 dendro
 ```
 
+```{r, echo = FALSE, include = FALSE}
+# Save the generated brain region bubble plot as png in appropriate folder destination
+# within the project directory.
+bubble_region_path <- file.path(here("Plots", 
+                                     paste0('RSKC_bubbleplot_regions_K=5.png')))
 
+png(file = bubble_region_path,
+    units = "in",
+    width = 8,
+    height = 4,
+    res = 300 #,compression = 'lzw'
+)
+
+print(bubble_region)
+
+dev.off()
+```
 
