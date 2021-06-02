@@ -808,7 +808,7 @@ region_clust_order <- as.list(labels(rskc_dendro))
 # frame to match the desired order from 'region_clust_order'.
 fidelity_region_bubble_mean$Brain.Region <- as.character(fidelity_region_bubble_mean$Brain.Region)
 fidelity_region_bubble_mean$Brain.Region <- factor(fidelity_region_bubble_mean$Brain.Region, 
-                                                   levels = rev(region_clust_order))
+                                                   levels = region_clust_order)
 ```
 
 ### Bubble Plot to Visualize Important Gene and Cell Types per Brain Region
