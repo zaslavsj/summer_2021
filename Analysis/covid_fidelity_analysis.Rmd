@@ -653,6 +653,7 @@ ggplot(region.rskc.cluster.matches.ordered, aes(x = Region_1, y = Region_2, fill
         axis.text.y = element_text(colour = "black"),
         axis.ticks = element_blank())
 ```
+
 #### Hierarchical Clustered Heat Map
 ```{r, fig.align = 'center', fig.height = 5, fig.width = 7}
 # Convert all values in the 'rskc.cluster.regions.wide' matrix into 
@@ -704,12 +705,12 @@ rskc_weights_top_8 <- rskc.region.weights %>%
   head(8)
 rskc_weights_top_8
 
-# Select only the top eight features from the 'fidelity_4_clusts' data frame.
-fidelity_top_features <- fidelity_4_clusts[,names(fidelity_5_clusts) %in% 
+# Select only the top eight features from the 'fidelity_5_clusts' data frame.
+fidelity_top_features <- fidelity_5_clusts[,names(fidelity_5_clusts) %in% 
                                             rskc_weights_top_8$Case]
 
-# Append the brain region and cluster labels to the 'fidelity_top_features'
-# data frame.
+# Append the brain regions and cluster labels from fidelity_5_clusts
+# to 'fidelity_top_features' and assign to 'fidelity_features_clusts'.
 fidelity_features_clusts <- bind_cols(fidelity_5_clusts[,c(1,22)],
                                       fidelity_top_features)
 ```
