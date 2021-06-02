@@ -241,14 +241,12 @@ while (T) {
     ###### Apply weights from RSKC to myFidelity ######
     
     # Create vector of the weights obtained from RSKC and assign them to 'weights'.
-    # Make empty matrix 'weighted_fidelity' for new weighted fidelity scores.
     weights <- as.matrix(rskc_list[[1]]$weights)
-    weighted_fidelity <- matrix(nrow = 18, ncol = 20)
     
-    # Multiply 'myFidelity' by corresponding weights obtained from RSKC.
-    for (n in 1:20){
-      weighted_fidelity[,n] <- myFidelity[,n]*weights[n]
-    }
+    # Multiply 'myFidelity' columns containing gene_celltype by corresponding 
+    # weights obtained from RSKC, and assign to 'weighted_fidelity'
+    weighted_fidelity <- sweep(t(myFidelity), MARGIN = 1, weights, `*`) %>% 
+      t()
     
     ###### tSNE (on weighted data) ######
     
@@ -430,12 +428,11 @@ while (T) {
       ###### Apply weights from RSKC to myFidelity ######
       
       # Create vector of the weights obtained from RSKC and assign them to 'weights'.
-      # Make empty matrix 'weighted_fidelity' for new weighted fidelity scores.
       weights <- as.matrix(rskc_results_list[[1]]$weights)
       
-      # Multiply 'fidelity' columns containing gene_celltype by corresponding 
-      # weights obtained from RSKC.
-      weighted_fidelity <- sweep(t(fidelity[,2:(ncol(fidelity)-1)]), MARGIN = 1, weights, `*`) %>% 
+      # Multiply 'myFidelity' columns containing gene_celltype by corresponding 
+      # weights obtained from RSKC, and assign to 'weighted_fidelity'
+      weighted_fidelity <- sweep(t(myFidelity), MARGIN = 1, weights, `*`) %>% 
         t()
       
       ###### tSNE (on weighted data) ######
