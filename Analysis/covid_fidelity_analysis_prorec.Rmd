@@ -79,7 +79,7 @@ myFidelity <- fidelity %>%
 
 ## Perform Robust and Sparse K-Means Clustering (RSKC) and t-SNE Together
 
-This while loop contains sections for RSKC, elbow plot, obtaining weighted data, and tSNE. Dezi's code was used as template for this while loop, in particular, for the RSKC and tSNE sections.
+This while loop contains sections for RSKC, elbow plot, obtaining weighted data, and tSNE. Desmond's code was used as template for this while loop, in particular, for the RSKC and tSNE sections.
 
 ```{r}
 set.seed(72613)
@@ -778,7 +778,7 @@ fidelity_clust_bubble_mean$Gene_Cell <- factor(fidelity_clust_bubble_mean$Gene_C
 bubble_clust <- ggplot(fidelity_clust_bubble_mean, aes(x = Gene_Cell, y = cluster_labels2)) +
   geom_point(aes(size = 5, fill = Mean_Fidelity), colour = "black", pch = 21) +
   coord_flip() +
-  scale_fill_gradient2(low = "blue", mid = "white", midpoint = 18, high = "red") +
+  scale_fill_gradient2(low = "blue", mid = "white", midpoint = 10, high = "red") +
   # scale_color_gradient2(low="blue", mid="white",
   #                       high="red", space ="Lab", guide = "colourbar",
   #                       aesthetics = "fill") + # Blue-white-red colour gradient
@@ -853,7 +853,7 @@ fidelity_region_bubble_mean$Brain.Region <- factor(fidelity_region_bubble_mean$B
 bubble_region <- ggplot(fidelity_region_bubble_mean, aes(x = Gene_Cell, y = Brain.Region)) +
   geom_point(aes(size = 5, fill = Mean_Fidelity), colour = "black", pch = 21) +
   coord_flip() +
-  scale_fill_gradient2(low = "blue", mid = "white", midpoint = 20, high = "red") +
+  scale_fill_gradient2(low = "blue", mid = "white", midpoint = 10, high = "red") +
   # scale_color_gradient2(low="blue", mid="white",
   #                       high="red", space ="Lab", guide = "colourbar",
   #                       aesthetics = "fill") + # Blue-white-red colour gradient
