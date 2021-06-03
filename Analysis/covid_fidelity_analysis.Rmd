@@ -618,7 +618,7 @@ for (i in 1:length(regions)) {
 }
 
 # Convert the adjacency matrix to long format for various plotting purposes
-rskc.cluster.regions.long <-  rskc.cluster.regions.wide %>%
+rskc.cluster.regions.long <- rskc.cluster.regions.wide %>%
   # Give the region row names their own column
   rownames_to_column("Region_1") %>%
   # Lengthen the data with melt() so we have three columns: 
@@ -633,7 +633,7 @@ rskc.cluster.regions.long <-  rskc.cluster.regions.wide %>%
 ```{r, fig.align = 'center', fig.height = 5, fig.width = 7}
 # Factor the regions with levels corresponding to the specified brain region
 # names from the 'regions' vector.
-region.rskc.cluster.matches.ordered <-  rskc.cluster.regions.long %>%
+region.rskc.cluster.matches.ordered <- rskc.cluster.regions.long %>%
   # Factor Region_1
   mutate(Region_1 = factor(Region_1, levels = regions)) %>%
   # Factor Region_2
