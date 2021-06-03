@@ -588,29 +588,29 @@ rskc_dendro <- set(as.dendrogram(hclust(dist(rskc.region.prop))), "branches_lwd"
 # Define a colour 'ylOrRd' from brewer palette.
 ylOrRd <- colorRampPalette(brewer.pal(n = 9, name = "YlOrRd"))
 
-heatmap <- heatmap.2(rskc.region.prop, 
-                     scale = "none", 
-                     col = ylOrRd(100),
-                     Rowv = rskc_dendro,
-                     Colv = rskc_dendro,
-                     key = TRUE,
-                     key.xlab = "Proportion of Matches on \n 100 RSKC Runs",
-                     trace = "none", # Remove the histogram trace from heat map
-                     density.info = "none", # Remove the histogram from color key
-                     srtCol = 45, # Rotate column labels on heat map
-                     margins = c(5, 10),
-                     key.xtickfun = function(){
-                       breaks = pretty(parent.frame()$breaks)
-                       breaks = breaks[c(1, length(breaks))]
-                       list(at = parent.frame()$scale01(breaks),
-                            labels = breaks)
-                     }
-                     )
+heatmap.2(rskc.region.prop, 
+          scale = "none", 
+          col = ylOrRd(100),
+          Rowv = rskc_dendro,
+          Colv = rskc_dendro,
+          key = TRUE,
+          key.xlab = "Proportion of Matches on \n 100 RSKC Runs",
+          trace = "none", # Remove the histogram trace from heat map
+          density.info = "none", # Remove the histogram from color key
+          srtCol = 45, # Rotate column labels on heat map
+          margins = c(5, 10),
+          key.xtickfun = function(){
+            breaks = pretty(parent.frame()$breaks)
+            breaks = breaks[c(1, length(breaks))]
+            list(at = parent.frame()$scale01(breaks),
+                 labels = breaks)
+          }
+          )
 ```
 
 ### K = 4 Dendrogram-wrapped Heat Map
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, fig.align = 'center', fig.width = 7, fig.height = 5}
 # Create empty lists to store the results and the RSKC weighted data frames 
 # that result from the clustering.
 rskc.results.list = list()
@@ -695,29 +695,29 @@ rskc_dendro <- set(as.dendrogram(hclust(dist(rskc.region.prop))), "branches_lwd"
 # Define a colour 'ylOrRd' from brewer palette.
 ylOrRd <- colorRampPalette(brewer.pal(n = 9, name = "YlOrRd"))
 
-heatmap <- heatmap.2(rskc.region.prop, 
-                     scale = "none", 
-                     col = ylOrRd(100),
-                     Rowv = rskc_dendro,
-                     Colv = rskc_dendro,
-                     key = TRUE,
-                     key.xlab = "Proportion of Matches on \n 100 RSKC Runs",
-                     trace = "none", # Remove the histogram trace from heat map
-                     density.info = "none", # Remove the histogram from color key
-                     srtCol = 45, # Rotate column labels on heat map
-                     margins = c(5, 10),
-                     key.xtickfun = function(){
-                       breaks = pretty(parent.frame()$breaks)
-                       breaks = breaks[c(1, length(breaks))]
-                       list(at = parent.frame()$scale01(breaks),
-                            labels = breaks)
-                     }
-                     )
+heatmap.2(rskc.region.prop, 
+          scale = "none", 
+          col = ylOrRd(100),
+          Rowv = rskc_dendro,
+          Colv = rskc_dendro,
+          key = TRUE,
+          key.xlab = "Proportion of Matches on \n 100 RSKC Runs",
+          trace = "none", # Remove the histogram trace from heat map
+          density.info = "none", # Remove the histogram from color key
+          srtCol = 45, # Rotate column labels on heat map
+          margins = c(5, 10),
+          key.xtickfun = function(){
+            breaks = pretty(parent.frame()$breaks)
+            breaks = breaks[c(1, length(breaks))]
+            list(at = parent.frame()$scale01(breaks),
+                 labels = breaks)
+          }
+          )
 ```
 
 ### K = 5 Dendrogram-wrapped Heat Map
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, fig.align = 'center', fig.width = 7, fig.height = 5}
 # Create empty lists to store the results and the RSKC weighted data frames 
 # that result from the clustering.
 rskc.results.list = list()
@@ -802,29 +802,29 @@ rskc_dendro <- set(as.dendrogram(hclust(dist(rskc.region.prop))), "branches_lwd"
 # Define a colour 'ylOrRd' from brewer palette.
 ylOrRd <- colorRampPalette(brewer.pal(n = 9, name = "YlOrRd"))
 
-heatmap <- heatmap.2(rskc.region.prop, 
-                     scale = "none", 
-                     col = ylOrRd(100),
-                     Rowv = rskc_dendro,
-                     Colv = rskc_dendro,
-                     key = TRUE,
-                     key.xlab = "Proportion of Matches on \n 100 RSKC Runs",
-                     trace = "none", # Remove the histogram trace from heat map
-                     density.info = "none", # Remove the histogram from color key
-                     srtCol = 45, # Rotate column labels on heat map
-                     margins = c(5, 10),
-                     key.xtickfun = function(){
-                       breaks = pretty(parent.frame()$breaks)
-                       breaks = breaks[c(1, length(breaks))]
-                       list(at = parent.frame()$scale01(breaks),
-                            labels = breaks)
-                     }
-                     )
+heatmap.2(rskc.region.prop, 
+          scale = "none", 
+          col = ylOrRd(100),
+          Rowv = rskc_dendro,
+          Colv = rskc_dendro,
+          key = TRUE,
+          key.xlab = "Proportion of Matches on \n 100 RSKC Runs",
+          trace = "none", # Remove the histogram trace from heat map
+          density.info = "none", # Remove the histogram from color key
+          srtCol = 45, # Rotate column labels on heat map
+          margins = c(5, 10),
+          key.xtickfun = function(){
+            breaks = pretty(parent.frame()$breaks)
+            breaks = breaks[c(1, length(breaks))]
+            list(at = parent.frame()$scale01(breaks),
+                 labels = breaks)
+          }
+          )
 ```
 
 ### K = 6 Dendrogram-wrapped Heat Map
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, fig.align = 'center', fig.width = 7, fig.height = 5}
 # Create empty lists to store the results and the RSKC weighted data frames 
 # that result from the clustering.
 rskc.results.list = list()
@@ -909,23 +909,23 @@ rskc_dendro <- set(as.dendrogram(hclust(dist(rskc.region.prop))), "branches_lwd"
 # Define a colour 'ylOrRd' from brewer palette.
 ylOrRd <- colorRampPalette(brewer.pal(n = 9, name = "YlOrRd"))
 
-heatmap <- heatmap.2(rskc.region.prop, 
-                     scale = "none", 
-                     col = ylOrRd(100),
-                     Rowv = rskc_dendro,
-                     Colv = rskc_dendro,
-                     key = TRUE,
-                     key.xlab = "Proportion of Matches on \n 100 RSKC Runs",
-                     trace = "none", # Remove the histogram trace from heat map
-                     density.info = "none", # Remove the histogram from color key
-                     srtCol = 45, # Rotate column labels on heat map
-                     margins = c(5, 10),
-                     key.xtickfun = function(){
-                       breaks = pretty(parent.frame()$breaks)
-                       breaks = breaks[c(1, length(breaks))]
-                       list(at = parent.frame()$scale01(breaks),
-                            labels = breaks)
-                     }
-                     )
+heatmap.2(rskc.region.prop, 
+          scale = "none", 
+          col = ylOrRd(100),
+          Rowv = rskc_dendro,
+          Colv = rskc_dendro,
+          key = TRUE,
+          key.xlab = "Proportion of Matches on \n 100 RSKC Runs",
+          trace = "none", # Remove the histogram trace from heat map
+          density.info = "none", # Remove the histogram from color key
+          srtCol = 45, # Rotate column labels on heat map
+          margins = c(5, 10),
+          key.xtickfun = function(){
+            breaks = pretty(parent.frame()$breaks)
+            breaks = breaks[c(1, length(breaks))]
+            list(at = parent.frame()$scale01(breaks),
+                 labels = breaks)
+          }
+          )
 ```
 
