@@ -29,7 +29,7 @@ set.seed(72613)
 ## Import and Prepare Dataset
 ```{r}
 # Load full dataset
-all_fidelity <- read.csv(here("./COVID-19/Data/ALL_Fidelity.csv"))
+all_fidelity <- read.csv(here("Data", "ALL_Fidelity.csv"))
 
 # Define a vector containing all SARS-CoV-2 related genes of interest.
 genes_full_list <- c("ANPEP", "ENPEP", "ACE2", "DPP4", "SCARB1", "AXL", 
@@ -791,7 +791,7 @@ bubble_clust
 # Save the generated cluster bubble plot as png in appropriate folder destination
 # within the project directory.
 bubble_clust_path <- file.path(here("Plots", 
-                                     paste0('RSKC_bubbleplot_clusters_K=5.png')))
+                                     paste0('RSKC_bubbleplot_clusters_K=5_full.png')))
 
 png(file = bubble_clust_path,
     units = "in",
@@ -871,7 +871,7 @@ dendro
 # Save the generated brain region bubble plot as png in appropriate folder destination
 # within the project directory.
 bubble_region_path <- file.path(here("Plots", 
-                                     paste0('RSKC_bubbleplot_regions_K=5.png')))
+                                     paste0('RSKC_bubbleplot_regions_K=5_full.png')))
 
 png(file = bubble_region_path,
     units = "in",
