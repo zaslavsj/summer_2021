@@ -567,7 +567,7 @@ ggarrange(tsne_list_7[[1]], tsne_list_7[[2]],
 
 ## RSKC (100 Runs)
 
-Having previously selected the number of clusters to use for RSKC (i.e. 4), this portion of the code aims to evaluate the proportion of brain regions clustered together over 100 runs (i.e. 100 different set.seed values). The code is derived from previous work (i.e. Keon and Brendan).
+Having previously selected the number of clusters to use for RSKC (i.e. 6), this portion of the code aims to evaluate the proportion of brain regions clustered together over 100 runs (i.e. 100 different set.seed values). The code is derived from previous work (i.e. Keon and Brendan).
 
 ```{r}
 # Create empty lists to store the results and the RSKC weighted data frames 
@@ -723,16 +723,16 @@ rskc_weights_top_8 <- rskc.region.weights %>%
   head(8)
 rskc_weights_top_8
 
-# Select only the top eight features from the 'fidelity_4_clusts' data frame.
+# Select only the top eight features from the 'fidelity_6_clusts' data frame.
 fidelity_top_features <- fidelity_6_clusts[,names(fidelity_6_clusts) %in% 
                                             rskc_weights_top_8$Case]
 
-# Append the brain region and cluster labels to the 'fidelity_top_features'
-# data frame.
+# Append the brain regions and cluster labels from fidelity_6_clusts
+# to 'fidelity_top_features' and assign to 'fidelity_features_clusts'.
 fidelity_features_clusts <- bind_cols(fidelity_6_clusts[,c(1,50)],
                                       fidelity_top_features)
 
-# Create a duplicate data frame containing column for cluster labels that are
+# Create a duplicate data frame containing a column for cluster labels which are
 # reassigned based on the order of appearance in the clustered heat map (i.e.
 # clusters in order 1-6 when reading the heat map left to right).
 fidelity_features_clusts <- fidelity_features_clusts %>% 
