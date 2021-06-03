@@ -608,33 +608,324 @@ heatmap <- heatmap.2(rskc.region.prop,
                      )
 ```
 
-```{r, echo = FALSE, include = FALSE}
-# Save the generated heat map as png in appropriate folder destination
-# within the project directory.
-# Change number in file name to match cluster number
-heatmap_path <- file.path(here("Plots", 
-                               paste0('RSKC_heatmap_K=3_expression.png'))) 
+### K = 4 Dendrogram-wrapped Heat Map
 
-png(file = heatmap_path,
-    units = "in",
-    width = 8,
-    height = 4,
-    res = 300
-)
+```{r, echo = FALSE}
+# Create empty lists to store the results and the RSKC weighted data frames 
+# that result from the clustering.
+rskc.results.list = list()
+rskc.weighted.list = list()
 
-print(heatmap)
+# Create empty data frames to store the cluster assignments and cluster weights 
+# for each of the 100 runs.
+rskc.region.labels = data.frame("Region" = rownames(myExpression))
+rskc.region.weights = data.frame("Case" = colnames(myExpression))
 
-dev.off()
+# Create a vector of seeds for all 100 runs.
+set.seed(72613)
+x = rdunif(100, a = 1, b = 1000000)
+
+for (i in 1:100) {
+  
+  # Set the seed.
+  set.seed(x[i])
+  
+  # Perform RSKC clustering on the data; the number of clusters is selected
+  # a priori.
+  rskc.results.list[[i]] = RSKC(myExpression, 
+                                alpha = 0.1, 
+                                ncl = 4, #change number of clusters
+                                L1 = sqrt(ncol(myExpression)))
+  
+  # Add the cluster assignments for run i to the 'rskc.region.labels'.
+  rskc.region.labels[i+1] = rskc.results.list[[i]]$labels
+  colnames(rskc.region.labels)[i+1] = paste("Run_", i, sep = "")
+  
+  # Add the variable weights for run i to the 'rskc.region.weights'
+  rskc.region.weights[i+1] = rskc.results.list[[i]]$weights
+  colnames(rskc.region.weights)[i+1] = paste("Run_", i, sep = "")
+  
+  # Create a list of data frames containing the clustering data multiplied by 
+  # the corresponding RSKC variable weights.
+  rskc.weighted.list[[i]] = sweep(myExpression, 2, 
+                                  rskc.results.list[[i]]$weights, "*")
+}
+
+# Transpose the data frame with the cluster labels from the 100 runs.
+rskc.region.labels.t <-  rskc.region.labels %>%
+  column_to_rownames("Region") %>%
+  t() %>%
+  data.frame()
+
+# Create an empty 16x16 data frame
+rskc.cluster.regions.wide <-  data.frame(matrix(ncol = 16, nrow = 16)) %>%
+  # Set the column and row names as the regions (ordered alphabetically)
+  set_colnames(regions) %>%
+  set_rownames(regions)
+
+# Add in the number of matches for each ith row/jth column combination to 
+# create the adjacency matrix.
+for (i in 1:length(regions)) {
+  for (j in 1:length(regions)) {
+    
+    rskc.cluster.regions.wide[i,j] = sum(rskc.region.labels.t[[regions[i]]] == rskc.region.labels.t[[regions[j]]])
+    
+  }
+}
+
+# Convert the adjacency matrix to long format for various plotting purposes
+rskc.cluster.regions.long <-  rskc.cluster.regions.wide %>%
+  # Give the region row names their own column
+  rownames_to_column("Region_1") %>%
+  # Lengthen the data with melt() so we have three columns: 
+  # Region_1, Region_2 and the total number of matches.
+  melt(id.vars = "Region_1", variable.name = "Region_2", value.name = "Matches") %>%
+  # Convert the number of matches to a proportion
+  mutate(Matches = Matches / 100)
+
+# Convert all values in the 'rskc.cluster.regions.wide' matrix into 
+# proportions.
+rskc.region.prop <- apply(rskc.cluster.regions.wide, 2, function(x) return(x/100)) %>% 
+  as.matrix()
+
+# Assign a dendrogram for the matrix of matched clustering of RSKC regions.
+rskc_dendro <- set(as.dendrogram(hclust(dist(rskc.region.prop))), "branches_lwd", 3) %>%
+  reorder(1:20)
+
+# Define a colour 'ylOrRd' from brewer palette.
+ylOrRd <- colorRampPalette(brewer.pal(n = 9, name = "YlOrRd"))
+
+heatmap <- heatmap.2(rskc.region.prop, 
+                     scale = "none", 
+                     col = ylOrRd(100),
+                     Rowv = rskc_dendro,
+                     Colv = rskc_dendro,
+                     key = TRUE,
+                     key.xlab = "Proportion of Matches on \n 100 RSKC Runs",
+                     trace = "none", # Remove the histogram trace from heat map
+                     density.info = "none", # Remove the histogram from color key
+                     srtCol = 45, # Rotate column labels on heat map
+                     margins = c(5, 10),
+                     key.xtickfun = function(){
+                       breaks = pretty(parent.frame()$breaks)
+                       breaks = breaks[c(1, length(breaks))]
+                       list(at = parent.frame()$scale01(breaks),
+                            labels = breaks)
+                     }
+                     )
 ```
 
-```{r}
-# Run heatmap code for each desired number of clusters and then use this 
-# chunk to visualize them all at once
+### K = 5 Dendrogram-wrapped Heat Map
+
+```{r, echo = FALSE}
+# Create empty lists to store the results and the RSKC weighted data frames 
+# that result from the clustering.
+rskc.results.list = list()
+rskc.weighted.list = list()
+
+# Create empty data frames to store the cluster assignments and cluster weights 
+# for each of the 100 runs.
+rskc.region.labels = data.frame("Region" = rownames(myExpression))
+rskc.region.weights = data.frame("Case" = colnames(myExpression))
+
+# Create a vector of seeds for all 100 runs.
+set.seed(72613)
+x = rdunif(100, a = 1, b = 1000000)
+
+for (i in 1:100) {
+  
+  # Set the seed.
+  set.seed(x[i])
+  
+  # Perform RSKC clustering on the data; the number of clusters is selected
+  # a priori.
+  rskc.results.list[[i]] = RSKC(myExpression, 
+                                alpha = 0.1, 
+                                ncl = 5, #change number of clusters
+                                L1 = sqrt(ncol(myExpression)))
+  
+  # Add the cluster assignments for run i to the 'rskc.region.labels'.
+  rskc.region.labels[i+1] = rskc.results.list[[i]]$labels
+  colnames(rskc.region.labels)[i+1] = paste("Run_", i, sep = "")
+  
+  # Add the variable weights for run i to the 'rskc.region.weights'
+  rskc.region.weights[i+1] = rskc.results.list[[i]]$weights
+  colnames(rskc.region.weights)[i+1] = paste("Run_", i, sep = "")
+  
+  # Create a list of data frames containing the clustering data multiplied by 
+  # the corresponding RSKC variable weights.
+  rskc.weighted.list[[i]] = sweep(myExpression, 2, 
+                                  rskc.results.list[[i]]$weights, "*")
+}
+
+# Transpose the data frame with the cluster labels from the 100 runs.
+rskc.region.labels.t <-  rskc.region.labels %>%
+  column_to_rownames("Region") %>%
+  t() %>%
+  data.frame()
+
+# Create an empty 16x16 data frame
+rskc.cluster.regions.wide <-  data.frame(matrix(ncol = 16, nrow = 16)) %>%
+  # Set the column and row names as the regions (ordered alphabetically)
+  set_colnames(regions) %>%
+  set_rownames(regions)
+
+# Add in the number of matches for each ith row/jth column combination to 
+# create the adjacency matrix.
+for (i in 1:length(regions)) {
+  for (j in 1:length(regions)) {
+    
+    rskc.cluster.regions.wide[i,j] = sum(rskc.region.labels.t[[regions[i]]] == rskc.region.labels.t[[regions[j]]])
+    
+  }
+}
+
+# Convert the adjacency matrix to long format for various plotting purposes
+rskc.cluster.regions.long <-  rskc.cluster.regions.wide %>%
+  # Give the region row names their own column
+  rownames_to_column("Region_1") %>%
+  # Lengthen the data with melt() so we have three columns: 
+  # Region_1, Region_2 and the total number of matches.
+  melt(id.vars = "Region_1", variable.name = "Region_2", value.name = "Matches") %>%
+  # Convert the number of matches to a proportion
+  mutate(Matches = Matches / 100)
+
+# Convert all values in the 'rskc.cluster.regions.wide' matrix into 
+# proportions.
+rskc.region.prop <- apply(rskc.cluster.regions.wide, 2, function(x) return(x/100)) %>% 
+  as.matrix()
+
+# Assign a dendrogram for the matrix of matched clustering of RSKC regions.
+rskc_dendro <- set(as.dendrogram(hclust(dist(rskc.region.prop))), "branches_lwd", 3) %>%
+  reorder(1:20)
+
+# Define a colour 'ylOrRd' from brewer palette.
+ylOrRd <- colorRampPalette(brewer.pal(n = 9, name = "YlOrRd"))
+
+heatmap <- heatmap.2(rskc.region.prop, 
+                     scale = "none", 
+                     col = ylOrRd(100),
+                     Rowv = rskc_dendro,
+                     Colv = rskc_dendro,
+                     key = TRUE,
+                     key.xlab = "Proportion of Matches on \n 100 RSKC Runs",
+                     trace = "none", # Remove the histogram trace from heat map
+                     density.info = "none", # Remove the histogram from color key
+                     srtCol = 45, # Rotate column labels on heat map
+                     margins = c(5, 10),
+                     key.xtickfun = function(){
+                       breaks = pretty(parent.frame()$breaks)
+                       breaks = breaks[c(1, length(breaks))]
+                       list(at = parent.frame()$scale01(breaks),
+                            labels = breaks)
+                     }
+                     )
 ```
 
+### K = 6 Dendrogram-wrapped Heat Map
 
+```{r, echo = FALSE}
+# Create empty lists to store the results and the RSKC weighted data frames 
+# that result from the clustering.
+rskc.results.list = list()
+rskc.weighted.list = list()
 
+# Create empty data frames to store the cluster assignments and cluster weights 
+# for each of the 100 runs.
+rskc.region.labels = data.frame("Region" = rownames(myExpression))
+rskc.region.weights = data.frame("Case" = colnames(myExpression))
 
+# Create a vector of seeds for all 100 runs.
+set.seed(72613)
+x = rdunif(100, a = 1, b = 1000000)
 
+for (i in 1:100) {
+  
+  # Set the seed.
+  set.seed(x[i])
+  
+  # Perform RSKC clustering on the data; the number of clusters is selected
+  # a priori.
+  rskc.results.list[[i]] = RSKC(myExpression, 
+                                alpha = 0.1, 
+                                ncl = 6, #change number of clusters
+                                L1 = sqrt(ncol(myExpression)))
+  
+  # Add the cluster assignments for run i to the 'rskc.region.labels'.
+  rskc.region.labels[i+1] = rskc.results.list[[i]]$labels
+  colnames(rskc.region.labels)[i+1] = paste("Run_", i, sep = "")
+  
+  # Add the variable weights for run i to the 'rskc.region.weights'
+  rskc.region.weights[i+1] = rskc.results.list[[i]]$weights
+  colnames(rskc.region.weights)[i+1] = paste("Run_", i, sep = "")
+  
+  # Create a list of data frames containing the clustering data multiplied by 
+  # the corresponding RSKC variable weights.
+  rskc.weighted.list[[i]] = sweep(myExpression, 2, 
+                                  rskc.results.list[[i]]$weights, "*")
+}
 
+# Transpose the data frame with the cluster labels from the 100 runs.
+rskc.region.labels.t <-  rskc.region.labels %>%
+  column_to_rownames("Region") %>%
+  t() %>%
+  data.frame()
+
+# Create an empty 16x16 data frame
+rskc.cluster.regions.wide <-  data.frame(matrix(ncol = 16, nrow = 16)) %>%
+  # Set the column and row names as the regions (ordered alphabetically)
+  set_colnames(regions) %>%
+  set_rownames(regions)
+
+# Add in the number of matches for each ith row/jth column combination to 
+# create the adjacency matrix.
+for (i in 1:length(regions)) {
+  for (j in 1:length(regions)) {
+    
+    rskc.cluster.regions.wide[i,j] = sum(rskc.region.labels.t[[regions[i]]] == rskc.region.labels.t[[regions[j]]])
+    
+  }
+}
+
+# Convert the adjacency matrix to long format for various plotting purposes
+rskc.cluster.regions.long <-  rskc.cluster.regions.wide %>%
+  # Give the region row names their own column
+  rownames_to_column("Region_1") %>%
+  # Lengthen the data with melt() so we have three columns: 
+  # Region_1, Region_2 and the total number of matches.
+  melt(id.vars = "Region_1", variable.name = "Region_2", value.name = "Matches") %>%
+  # Convert the number of matches to a proportion
+  mutate(Matches = Matches / 100)
+
+# Convert all values in the 'rskc.cluster.regions.wide' matrix into 
+# proportions.
+rskc.region.prop <- apply(rskc.cluster.regions.wide, 2, function(x) return(x/100)) %>% 
+  as.matrix()
+
+# Assign a dendrogram for the matrix of matched clustering of RSKC regions.
+rskc_dendro <- set(as.dendrogram(hclust(dist(rskc.region.prop))), "branches_lwd", 3) %>%
+  reorder(1:20)
+
+# Define a colour 'ylOrRd' from brewer palette.
+ylOrRd <- colorRampPalette(brewer.pal(n = 9, name = "YlOrRd"))
+
+heatmap <- heatmap.2(rskc.region.prop, 
+                     scale = "none", 
+                     col = ylOrRd(100),
+                     Rowv = rskc_dendro,
+                     Colv = rskc_dendro,
+                     key = TRUE,
+                     key.xlab = "Proportion of Matches on \n 100 RSKC Runs",
+                     trace = "none", # Remove the histogram trace from heat map
+                     density.info = "none", # Remove the histogram from color key
+                     srtCol = 45, # Rotate column labels on heat map
+                     margins = c(5, 10),
+                     key.xtickfun = function(){
+                       breaks = pretty(parent.frame()$breaks)
+                       breaks = breaks[c(1, length(breaks))]
+                       list(at = parent.frame()$scale01(breaks),
+                            labels = breaks)
+                     }
+                     )
+```
 
