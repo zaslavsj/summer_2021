@@ -329,7 +329,7 @@ elbow_plot
 
 ## RSKC (10 Runs)
 
-This chunk serves as a snapshot of the RSKC over 10 runs (i.e. different set.seed values) in order to visualize the variation in cluster label assignments for each observation. The 10 runs were carried out for each of $K = 3, 4, 5$.
+This chunk serves as a snapshot of the RSKC over 10 runs (i.e. different set.seed values) in order to visualize the variation in cluster label assignments for each observation. The 10 runs were carried out for each of $K = 4,5,6,7$.
 
 ```{r}
 set.seed(72613)
@@ -518,7 +518,7 @@ while (T) {
 ```
 
 ```{r, echo = FALSE, fig.align = 'center', fig.height = 14, fig.width = 6}
-# Create 5x2 figure for the 10 scatter plots using  K = 3 for RSKC.
+# Create 5x2 figure for the 10 scatter plots using  K = 4 for RSKC.
 ggarrange(tsne_list_4[[1]], tsne_list_4[[2]],
           tsne_list_4[[3]], tsne_list_4[[4]],
           tsne_list_4[[5]], tsne_list_4[[6]],
@@ -529,7 +529,7 @@ ggarrange(tsne_list_4[[1]], tsne_list_4[[2]],
 ```
 
 ```{r, echo = FALSE, fig.align = 'center', fig.height = 14, fig.width = 6}
-# Create 5x2 figure for the 10 scatter plots using  K = 3 for RSKC.
+# Create 5x2 figure for the 10 scatter plots using  K = 5 for RSKC.
 ggarrange(tsne_list_5[[1]], tsne_list_5[[2]],
           tsne_list_5[[3]], tsne_list_5[[4]],
           tsne_list_5[[5]], tsne_list_5[[6]],
@@ -542,7 +542,7 @@ ggarrange(tsne_list_5[[1]], tsne_list_5[[2]],
 \newpage
 
 ```{r, echo = FALSE, fig.align = 'center', fig.height = 14, fig.width = 6}
-# Create 5x2 figure for the 10 scatter plots using K = 4 for RSKC.
+# Create 5x2 figure for the 10 scatter plots using K = 6 for RSKC.
 ggarrange(tsne_list_6[[1]], tsne_list_6[[2]],
           tsne_list_6[[3]], tsne_list_6[[4]],
           tsne_list_6[[5]], tsne_list_6[[6]],
@@ -555,7 +555,7 @@ ggarrange(tsne_list_6[[1]], tsne_list_6[[2]],
 \newpage
 
 ```{r, echo = FALSE, fig.align = 'center', fig.height = 14, fig.width = 6}
-# Create 5x2 figure for the 10 scatter plots using K = 5 for RSKC.
+# Create 5x2 figure for the 10 scatter plots using K = 7 for RSKC.
 ggarrange(tsne_list_7[[1]], tsne_list_7[[2]],
           tsne_list_7[[3]], tsne_list_7[[4]],
           tsne_list_7[[5]], tsne_list_7[[6]],
@@ -847,6 +847,13 @@ fidelity_region_bubble_mean$Brain.Region <- factor(fidelity_region_bubble_mean$B
 
 ### Bubble Plot to Visualize Important Gene and Cell Types per Brain Region
 ```{r, warning = FALSE, fig.align = 'center', fig.width = 8, fig.height = 5}
+# Create a vector of colours to colour the x-axis labels on bubble plot
+# according to their cluster labels
+cluster_colours <- c("brown2", "brown2", "brown2", "brown2", "darkorange", "darkorange", 
+                     "darkorange", "darkorange", "cornflowerblue", "cornflowerblue", 
+                     "cornflowerblue", "darkgreen", "darkgreen", "coral1", "coral1", 
+                     "darkmagenta", "darkmagenta", "darkmagenta")
+
 # Create bubble plot showing brain region vs. gene and cell type. Each point
 # is coloured by the mean fidelity score.
 bubble_region <- ggplot(fidelity_region_bubble_mean, aes(x = Gene_Cell, y = Brain.Region)) +
@@ -860,7 +867,7 @@ bubble_region <- ggplot(fidelity_region_bubble_mean, aes(x = Gene_Cell, y = Brai
        y = "Brain Region",
        fill = "Mean Fidelity Score",
        size = "Size") +
-  theme(axis.text.x = element_text(colour = "black", size = 10, angle = 45,
+  theme(axis.text.x = element_text(colour = cluster_colours, size = 10, angle = 45,
                                    margin = margin(t = 10, r = 10, b = 0, l = 0)),
         axis.text.y = element_text(colour = "black", size = 10),
         axis.ticks.x = element_blank(),
