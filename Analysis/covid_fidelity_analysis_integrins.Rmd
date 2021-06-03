@@ -777,9 +777,10 @@ fidelity_clust_bubble_mean$Gene_Cell <- factor(fidelity_clust_bubble_mean$Gene_C
 bubble_clust <- ggplot(fidelity_clust_bubble_mean, aes(x = Gene_Cell, y = cluster_labels2)) +
   geom_point(aes(size = 5, fill = Mean_Fidelity), colour = "black", pch = 21) +
   coord_flip() +
-  scale_color_gradient2(low="blue", mid="white",
-                        high="red", space ="Lab", guide = "colourbar",
-                        aesthetics = "fill") + # Blue-white-red colour gradient
+  scale_fill_gradient2(low = "blue", mid = "white", midpoint = 10, high = "red") +
+  #scale_color_gradient2(low="blue", mid="white",
+                        #high="red", space ="Lab", guide = "colourbar",
+                        #aesthetics = "fill") + # Blue-white-red colour gradient
   # scale_fill_viridis(direction = -1) + # Viridis colour gradient
   labs(x = "Gene and Cell Type", # Arranged in smallest to largest RSKC weights
        y = "Cluster",
@@ -859,9 +860,10 @@ cluster_colours <- c("brown2", "brown2", "brown2", "brown2", "darkorange", "dark
 bubble_region <- ggplot(fidelity_region_bubble_mean, aes(x = Gene_Cell, y = Brain.Region)) +
   geom_point(aes(size = 5, fill = Mean_Fidelity), colour = "black", pch = 21) +
   coord_flip() +
-  scale_color_gradient2(low="blue", mid="white",
-                        high="red", space ="Lab", guide = "colourbar",
-                        aesthetics = "fill") + # Blue-white-red colour gradient
+  scale_fill_gradient2(low = "blue", mid = "white", midpoint = 10, high = "red") +
+  #scale_color_gradient2(low="blue", mid="white",
+                        #high="red", space ="Lab", guide = "colourbar",
+                        #aesthetics = "fill") + # Blue-white-red colour gradient
   # scale_fill_viridis(direction = -1) + # Viridis colour gradient
   labs(x = "Gene and Cell Type", # Arranged in smallest to largest RSKC weights
        y = "Brain Region",
