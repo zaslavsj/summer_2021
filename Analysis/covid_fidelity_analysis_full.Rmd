@@ -31,6 +31,12 @@ set.seed(72613)
 # Load full dataset
 all_fidelity <- read.csv(here("Data", "ALL_Fidelity.csv"))
 
+# List of 12 SARS-CoV-2 receptors: 
+# ANPEP, ENPEP, ACE2, DPP4, SCARB1, AXL, NRP1, NRP2, CLEC4M, CLEC4G, CD209, CEACAM1
+# List of 4 SARS-CoV-2 proteases: 
+# TMPRSS2, FURIN, ADAM17, CTSL
+# List of 13 SARS-CoV-2 integrins:
+# ITGB3, ITGA5, ITGB1, ITGB6, ITGAV, ITGB8, ITGB2, ITGA2B, ITGAM, ITGAL, ITGA3, ITGA8, ITGB5
 # Define a vector containing all SARS-CoV-2 related genes of interest.
 genes_full_list <- c("ANPEP", "ENPEP", "ACE2", "DPP4", "SCARB1", "AXL", 
                      "NRP1", "NRP2", "CLEC4M", "CLEC4G", "CD209", "CEACAM1", 
