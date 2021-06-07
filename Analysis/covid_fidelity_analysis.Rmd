@@ -785,8 +785,9 @@ bubble_clust
 ```{r, echo = FALSE, include = FALSE}
 # Save the generated cluster bubble plot as png in appropriate folder destination
 # within the project directory.
-bubble_clust_path <- file.path(here("Plots", 
-                                     paste0('RSKC_bubbleplot_clusters_K=5.png')))
+bubble_clust_path <- file.path(
+  here("Plots", paste0('RSKC_bubbleplot_clusters_K=5.png'))
+  )
 
 png(file = bubble_clust_path,
     units = "in",
@@ -876,8 +877,9 @@ dendro
 ```{r, echo = FALSE, include = FALSE}
 # Save the generated brain region bubble plot as png in appropriate folder destination
 # within the project directory.
-bubble_region_path <- file.path(here("Plots", 
-                                     paste0('RSKC_bubbleplot_regions_K=5.png')))
+bubble_region_path <- file.path(
+  here("Plots", paste0('RSKC_bubbleplot_regions_K=5.png'))
+  )
 
 png(file = bubble_region_path,
     units = "in",
