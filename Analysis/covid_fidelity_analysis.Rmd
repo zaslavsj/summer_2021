@@ -697,16 +697,17 @@ weights_100_runs <- rowMeans(rskc.region.weights[-1]) %>%
 
 # Obtain list of top eight largest average weights and their corresponding 
 # gene_celltype.
-rskc_weights_top_8 <- rskc.region.weights %>% 
-  mutate(Average_Weight = weights_100_runs) %>% 
-  select("Case", "Average_Weight") %>% 
-  arrange(desc(Average_Weight)) %>% 
+rskc_weights_top_8 <- rskc.region.weights %>%
+  mutate(Average_Weight = weights_100_runs) %>%
+  select("Case", "Average_Weight") %>%
+  arrange(desc(Average_Weight)) %>%
   head(8)
 rskc_weights_top_8
 
 # Select only the top eight features from the 'fidelity_5_clusts' data frame.
 fidelity_top_features <- fidelity_5_clusts[,names(fidelity_5_clusts) %in% 
                                             rskc_weights_top_8$Case]
+
 
 # Append the brain regions and cluster labels from fidelity_5_clusts
 # to 'fidelity_top_features' and assign to 'fidelity_features_clusts'.
