@@ -941,8 +941,8 @@ viol_plot_path <- file.path(
 
 png(file = viol_plot_path,
     units = "in",
-    width = 7,
-    height = 6,
+    width = 8,
+    height = 4,
     res = 300 #,compression = 'lzw'
 )
 
