@@ -167,7 +167,7 @@ while (T) {
       theme_classic() +
       geom_bar(stat = 'identity') +
       theme(axis.text.x = element_text(angle = 45, vjust = 0.6)) +
-      scale_y_continuous(expand = c(0,0)) +
+      scale_y_continuous(expand = c(0, 0)) +
       ggtitle(paste0("RSKC Weights for K = ",i)) +
       xlab("") +
       ylab("Weights\n")
@@ -179,7 +179,7 @@ while (T) {
     
     # For the purposes of an elbow plot, we want to run RSKC more times than 
     # specified in 'clust_vect' above, so create new vector 'elbow_clust_vect'
-    elbow_clust_vect <- c(2,3,4,5,6,7,8,9,10,11,12,13,14,15,16)
+    elbow_clust_vect <- c(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)
     
     # Assign another empty list to 'elbow_rskc_list'.
     elbow_rskc_list <- c()
@@ -749,7 +749,7 @@ fidelity_features_clusts <- fidelity_features_clusts %>%
 ```
 
 ## Prepare Data Frame for Fidelity Statistics Based on Clusters
-```{r prepare cluster bubble plot's dataframe}
+```{r prepare cluster bubble plot dataframe}
 # Compute the mean fidelity score for each gene_celltype for each cluster label.
 # Pivot data frame for further plotting steps.
 fidelity_clust_bubble_mean <- fidelity_features_clusts %>% 
@@ -821,7 +821,7 @@ dev.off()
 ```
 
 ## Prepare Data Frame for Fidelity Statistics Based on Brain Regions
-```{r prepare region bubble plot's dataframe}
+```{r prepare region bubble plot dataframe}
 # Compute the mean fidelity score for each gene_celltype for each brain region.
 # Pivot data frame for further plotting steps.
 fidelity_region_bubble_mean <- fidelity_features_clusts %>% 
@@ -905,6 +905,8 @@ print(bubble_region)
 dev.off()
 ```
 
+\newpage
+
 ## Violin Plot for Visualizing Cell Type Fidelity Scores
 ```{r generate violin plot, fig.align = 'center', fig.width = 7, fig.height = 5}
 # Prepare a data frame containing separate columns for the cell type and 
@@ -934,7 +936,7 @@ celltype_viol
 # Save the generated bubble plot as png in appropriate folder destination
 # within the project directory.
 viol_plot_path <- file.path(
-  here("COVID-19/Figures", paste0('celltype_violin_plot_prorec.png'))
+  here("Plots", paste0('celltype_violin_plot_prorec.png'))
   )
 
 png(file = viol_plot_path,
