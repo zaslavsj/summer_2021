@@ -649,7 +649,7 @@ rskc.cluster.regions.long <-  rskc.cluster.regions.wide %>%
 
 ### Heat Maps to Visualize Proportion of Shared Clusters
 #### Unclustered Heat Map
-```{r, fig.align = 'center', fig.height = 5, fig.width = 7}
+```{r unclustered heat map, fig.align = 'center', fig.height = 5, fig.width = 7}
 # Factor the regions with levels corresponding to the specified brain region
 # names from the 'regions' vector.
 region.rskc.cluster.matches.ordered <-  rskc.cluster.regions.long %>%
@@ -673,7 +673,7 @@ ggplot(region.rskc.cluster.matches.ordered, aes(x = Region_1, y = Region_2, fill
         axis.ticks = element_blank())
 ```
 #### Hierarchical Clustered Heat Map
-```{r, fig.align = 'center', fig.height = 5, fig.width = 7}
+```{r clustered heat map, fig.align = 'center', fig.height = 5, fig.width = 7}
 # Convert all values in the 'rskc.cluster.regions.wide' matrix into 
 # proportions.
 rskc.region.prop <- apply(rskc.cluster.regions.wide, 2, function(x) return(x/100)) %>% 
@@ -708,7 +708,7 @@ heatmap.2(rskc.region.prop,
 \newpage
 
 ## Select Gene and Cell Combinations of Interest Based on RSKC Weights (100 Runs)
-```{r}
+```{r identify top eight features}
 # Take the average weight for each gene_celltype across 100 RSKC runs.
 weights_100_runs <- rowMeans(rskc.region.weights[-1]) %>% 
   as_vector()
@@ -739,17 +739,17 @@ fidelity_features_clusts <- fidelity_features_clusts %>%
   select(cluster_labels) %>% 
   mutate(cluster_labels2 = case_when(
     cluster_labels == 1 ~ 4,
-    cluster_labels == 2 ~ 6,
-    cluster_labels == 3 ~ 2,
+    cluster_labels == 2 ~ 5,
+    cluster_labels == 3 ~ 1,
     cluster_labels == 4 ~ 3,
-    cluster_labels == 5 ~ 1,
-    cluster_labels == 6 ~ 5)) %>% 
+    cluster_labels == 5 ~ 6,
+    cluster_labels == 6 ~ 2)) %>% 
   select(cluster_labels2) %>% 
   add_column(fidelity_features_clusts)
 ```
 
 ## Prepare Data Frame for Fidelity Statistics Based on Clusters
-```{r}
+```{r prepare cluster bubble plot's dataframe}
 # Compute the mean fidelity score for each gene_celltype for each cluster label.
 # Pivot data frame for further plotting steps.
 fidelity_clust_bubble_mean <- fidelity_features_clusts %>% 
@@ -771,7 +771,7 @@ fidelity_clust_bubble_mean$Gene_Cell <- factor(fidelity_clust_bubble_mean$Gene_C
 ```
 
 ### Bubble Plot to Visualize Important Gene and Cell Types in Clusters
-```{r, fig.align = 'center', fig.width = 8, fig.height = 4}
+```{r generate cluster bubble plot, fig.align = 'center', fig.width = 8, fig.height = 4}
 # Create bubble plot showing cluster label vs. gene and cell type. Each point
 # is coloured by the mean fidelity score.
 bubble_clust <- ggplot(fidelity_clust_bubble_mean, aes(x = Gene_Cell, y = cluster_labels2)) +
@@ -801,11 +801,12 @@ bubble_clust <- ggplot(fidelity_clust_bubble_mean, aes(x = Gene_Cell, y = cluste
         legend.position = "right")
 bubble_clust
 ```
-```{r, echo = FALSE, include = FALSE}
+```{r export cluster bubble plot, echo = FALSE, include = FALSE}
 # Save the generated cluster bubble plot as png in appropriate folder destination
 # within the project directory.
-bubble_clust_path <- file.path(here("Plots", 
-                                     paste0('RSKC_bubbleplot_clusters_K=6_prorec.png')))
+bubble_clust_path <- file.path(
+  here("Plots", paste0('RSKC_bubbleplot_clusters_K=6_prorec.png'))
+  )
 
 png(file = bubble_clust_path,
     units = "in",
@@ -820,7 +821,7 @@ dev.off()
 ```
 
 ## Prepare Data Frame for Fidelity Statistics Based on Brain Regions
-```{r}
+```{r prepare region bubble plot's dataframe}
 # Compute the mean fidelity score for each gene_celltype for each brain region.
 # Pivot data frame for further plotting steps.
 fidelity_region_bubble_mean <- fidelity_features_clusts %>% 
@@ -853,7 +854,7 @@ fidelity_region_bubble_mean$Brain.Region <- factor(fidelity_region_bubble_mean$B
 ```
 
 ### Bubble Plot to Visualize Important Gene and Cell Types per Brain Region
-```{r, warning = FALSE, fig.align = 'center', fig.width = 8, fig.height = 5}
+```{r generate region bubble plot, warning = FALSE, fig.align = 'center', fig.width = 8, fig.height = 5}
 # Create bubble plot showing brain region vs. gene and cell type. Each point
 # is coloured by the mean fidelity score.
 bubble_region <- ggplot(fidelity_region_bubble_mean, aes(x = Gene_Cell, y = Brain.Region)) +
@@ -885,11 +886,12 @@ bubble_region <- ggplot(fidelity_region_bubble_mean, aes(x = Gene_Cell, y = Brai
 bubble_region
 ```
 
-```{r, echo = FALSE, include = FALSE}
+```{r export region bubble plote, echo = FALSE, include = FALSE}
 # Save the generated brain region bubble plot as png in appropriate folder destination
 # within the project directory.
-bubble_region_path <- file.path(here("Plots", 
-                                     paste0('RSKC_bubbleplot_regions_K=6_prorec.png')))
+bubble_region_path <- file.path(
+  here("Plots", paste0('RSKC_bubbleplot_regions_K=6_prorec.png'))
+  )
 
 png(file = bubble_region_path,
     units = "in",
@@ -904,7 +906,7 @@ dev.off()
 ```
 
 ## Violin Plot for Visualizing Cell Type Fidelity Scores
-```{r}
+```{r generate violin plot, fig.align = 'center', fig.width = 7, fig.height = 5}
 # Prepare a data frame containing separate columns for the cell type and 
 # fidelity score.
 fidelity_celltype <- pivot_longer(fidelity, cols = -c("Brain.Region", "cluster_labels"),
@@ -927,4 +929,22 @@ celltype_viol <- ggplot(fidelity_celltype, aes(x = Cell.Subtype, y = Fidelity,
         axis.title.x = element_text(size = 12),
         axis.title.y = element_text(size = 12))
 celltype_viol
+```
+```{r export violin plot as png, echo = FALSE, include = FALSE}
+# Save the generated bubble plot as png in appropriate folder destination
+# within the project directory.
+viol_plot_path <- file.path(
+  here("COVID-19/Figures", paste0('celltype_violin_plot_prorec.png'))
+  )
+
+png(file = viol_plot_path,
+    units = "in",
+    width = 7,
+    height = 6,
+    res = 300 #,compression = 'lzw'
+)
+
+print(celltype_viol)
+
+dev.off()
 ```
