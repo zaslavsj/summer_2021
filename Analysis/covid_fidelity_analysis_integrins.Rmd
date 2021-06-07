@@ -680,8 +680,7 @@ rskc.region.prop <- apply(rskc.cluster.regions.wide, 2, function(x) return(x/100
   as.matrix()
 
 # Assign a dendrogram for the matrix of matched clustering of RSKC regions.
-rskc_dendro <- set(as.dendrogram(hclust(dist(rskc.region.prop))), "branches_lwd", 3) %>%
-  reorder(1:20)
+rskc_dendro <- set(as.dendrogram(hclust(dist(rskc.region.prop))), "branches_lwd", 3) 
 
 # Define a colour 'ylOrRd' from brewer palette.
 ylOrRd <- colorRampPalette(brewer.pal(n = 9, name = "YlOrRd"))
@@ -739,11 +738,11 @@ fidelity_features_clusts <- fidelity_features_clusts %>%
   select(cluster_labels) %>% 
   mutate(cluster_labels2 = case_when(
     cluster_labels == 1 ~ 3,
-    cluster_labels == 2 ~ 4,
-    cluster_labels == 3 ~ 1,
-    cluster_labels == 4 ~ 2,
-    cluster_labels == 5 ~ 6,
-    cluster_labels == 6 ~ 5)) %>% 
+    cluster_labels == 2 ~ 1,
+    cluster_labels == 3 ~ 6,
+    cluster_labels == 4 ~ 4,
+    cluster_labels == 5 ~ 5,
+    cluster_labels == 6 ~ 2)) %>% 
   select(cluster_labels2) %>% 
   add_column(fidelity_features_clusts)
 ```
@@ -836,8 +835,12 @@ fidelity_region_bubble_mean$Gene_Cell <- as.character(fidelity_region_bubble_mea
 fidelity_region_bubble_mean$Gene_Cell <- factor(fidelity_region_bubble_mean$Gene_Cell, 
                                                 levels = rev(gene_level_order))
 
+# Rearrange order of dendrogram leaves such that regions with higher mean fidelity scores
+# are on the left, for visualization purposes.
+rskc_dendro2 <- rotate(rskc_dendro, c(15:16, 17:18, 12:14, 9:11, 5:8, 1:4))
+
 # Make a vector that contains the brain regions in order of the clustered heatmap.
-region_clust_order <- as.list(labels(rskc_dendro))
+region_clust_order <- as.list(labels(rskc_dendro2))
 
 # Modify the order of the brain region in the 'fidelity_region_bubble_mean' data
 # frame to match the desired order from 'region_clust_order'.
@@ -849,11 +852,12 @@ fidelity_region_bubble_mean$Brain.Region <- factor(fidelity_region_bubble_mean$B
 ### Bubble Plot to Visualize Important Gene and Cell Types per Brain Region
 ```{r, warning = FALSE, fig.align = 'center', fig.width = 8, fig.height = 5}
 # Create a vector of colours to colour the x-axis labels on bubble plot
-# according to their cluster labels
-cluster_colours <- c("brown2", "brown2", "brown2", "brown2", "darkorange", "darkorange", 
-                     "darkorange", "darkorange", "cornflowerblue", "cornflowerblue", 
-                     "cornflowerblue", "darkgreen", "darkgreen", "coral1", "coral1", 
-                     "darkmagenta", "darkmagenta", "darkmagenta")
+# according to their cluster labels; matches clustering from bubble plot above
+cluster_colours <- c("brown2", "brown2", "darkorange", "darkorange", 
+                     "cornflowerblue", "cornflowerblue", "cornflowerblue", 
+                     "darkgreen", "darkgreen", "darkgreen", "darkgreen", "coral1", 
+                     "coral1", "coral1", "darkmagenta", "darkmagenta", "darkmagenta", 
+                     "darkmagenta")
 
 # Create bubble plot showing brain region vs. gene and cell type. Each point
 # is coloured by the mean fidelity score.
@@ -886,7 +890,7 @@ bubble_region <- ggplot(fidelity_region_bubble_mean, aes(x = Gene_Cell, y = Brai
 bubble_region
 
 # Plot dendrogram of brain regions made previously for heat map.
-dendro <- ggdendrogram(rskc_dendro)
+dendro <- ggdendrogram(rskc_dendro2)
 dendro
 ```
 
@@ -917,8 +921,7 @@ fidelity_celltype <- pivot_longer(fidelity, cols = -c("Brain.Region", "cluster_l
                                    names_sep = "_",
                                    values_to = "Fidelity")
 
-# Create violin plot showing the fidelity score distributions for each cell
-# type. 
+# Create violin plot showing the fidelity score distributions for each celltype. 
 celltype_viol <- ggplot(fidelity_celltype, aes(x = Cell.Subtype, y = Fidelity, 
                                                fill = Cell.Subtype)) +
   geom_violin(trim = FALSE) +
@@ -932,4 +935,22 @@ celltype_viol <- ggplot(fidelity_celltype, aes(x = Cell.Subtype, y = Fidelity,
         axis.title.x = element_text(size = 12),
         axis.title.y = element_text(size = 12))
 celltype_viol
+```
+
+```{r, echo = FALSE, include = FALSE}
+# Save the generated violin plots as png in appropriate folder destination
+# within the project directory.
+violin_plot_path <- file.path(here("Plots", 
+                                   paste0('Fidelity_violinplot_celltype_integrins.png')))
+
+png(file = violin_plot_path,
+    units = "in",
+    width = 8,
+    height = 4,
+    res = 300 #,compression = 'lzw'
+)
+
+print(celltype_viol)
+
+dev.off()
 ```
