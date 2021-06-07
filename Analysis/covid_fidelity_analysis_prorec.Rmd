@@ -87,7 +87,7 @@ set.seed(72613)
 while (T) {
   
   # Assign desired number of clusters to 'clust_vect'.
-  clust_vect <- c(2,4,6,8)
+  clust_vect <- c(2, 4, 6, 8)
   
   # Assign an empty list to 'rskc_list'.
   rskc_list <- list()
@@ -330,7 +330,7 @@ set.seed(72613)
 while (T) {
   
   # Assign the values of 3, 4, 5, 6 to 'clust_vect'.
-  clust_vect <- c(3,4,5,6)
+  clust_vect <- c(3, 4, 5, 6)
   
   # Assign empty lists to 'rskc.results.list' and 'rskc.weighted.list'
   # to store the results and the RSKC weighted data frames that result
@@ -680,8 +680,7 @@ rskc.region.prop <- apply(rskc.cluster.regions.wide, 2, function(x) return(x/100
   as.matrix()
 
 # Assign a dendrogram for the matrix of matched clustering of RSKC regions.
-rskc_dendro <- set(as.dendrogram(hclust(dist(rskc.region.prop))), "branches_lwd", 3) %>%
-  reorder(1:20)
+rskc_dendro <- set(as.dendrogram(hclust(dist(rskc.region.prop))), "branches_lwd", 3)
 
 # Define a colour 'ylOrRd' from brewer palette.
 ylOrRd <- colorRampPalette(brewer.pal(n = 9, name = "YlOrRd"))
@@ -836,8 +835,15 @@ fidelity_region_bubble_mean$Gene_Cell <- as.character(fidelity_region_bubble_mea
 fidelity_region_bubble_mean$Gene_Cell <- factor(fidelity_region_bubble_mean$Gene_Cell, 
                                                 levels = rev(gene_level_order))
 
+# Rearrange order of dendrogram leaves such that cortices start at the left.
+rskc_dendro2 <- rotate(rskc_dendro, c(11:13, 17, 18, 16, 15, 14, 6:10, 1:5))
+
+# Plot dendrogram made previously for heat map, with rearranged order of brain
+# regions
+dendro_plot <- plot(rskc_dendro2 %>% set("branches_lwd", 4))
+
 # Make a vector that contains the brain regions in order of the four clusters.
-region_clust_order <- as.list(labels(rskc_dendro))
+region_clust_order <- as.list(labels(rskc_dendro2))
 
 # Modify the order of the brain region in the 'fidelity_region_bubble_mean' data
 # frame to match the desired order from 'region_clust_order'.
@@ -877,9 +883,6 @@ bubble_region <- ggplot(fidelity_region_bubble_mean, aes(x = Gene_Cell, y = Brai
         panel.border = element_blank(),
         legend.position = "right")
 bubble_region
-
-# Plot dendrogram of brain regions made previously for heat map.
-dendro_plot <- plot(rskc_dendro %>% set("branches_lwd", 3), labels = FALSE)
 ```
 
 ```{r, echo = FALSE, include = FALSE}
