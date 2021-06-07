@@ -95,7 +95,7 @@ set.seed(72613)
 while (T) {
   
   # Assign desired number of clusters to 'clust_vect'.
-  clust_vect <- c(2,4,6,8)
+  clust_vect <- c(2, 4, 6, 8)
   
   # Assign an empty list to 'rskc_list'.
   rskc_list <- list()
@@ -187,7 +187,7 @@ while (T) {
     
     # For the purposes of an elbow plot, we want to run RSKC more times than 
     # specified in 'clust_vect' above, so create new vector 'elbow_clust_vect'
-    elbow_clust_vect <- c(2,3,4,5,6,7,8,9,10,11,12,13,14,15,16)
+    elbow_clust_vect <- c(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)
     
     # Assign another empty list to 'elbow_rskc_list'.
     elbow_rskc_list <- c()
@@ -336,7 +336,7 @@ set.seed(72613)
 while (T) {
   
   # Assign the values of 3, 4, 5 to 'clust_vect'.
-  clust_vect <- c(3,4,5)
+  clust_vect <- c(3, 4, 5)
   
   # Assign empty lists to 'rskc.results.list' and 'rskc.weighted.list'
   # to store the results and the RSKC weighted data frames that result
@@ -802,8 +802,11 @@ fidelity_region_bubble_mean$Gene_Cell <- as.character(fidelity_region_bubble_mea
 fidelity_region_bubble_mean$Gene_Cell <- factor(fidelity_region_bubble_mean$Gene_Cell, 
                                                 levels = rev(gene_level_order))
 
+# Rearrange order of dendrogram leaves such that cortices start at the left.
+rskc_dendro2 <- rotate(rskc_dendro, c(8:12, 16, 15, 17, 18, 13, 14, 1:7))
+
 # Make a vector that contains the brain regions in order of the four clusters.
-region_clust_order <- as.list(labels(rskc_dendro))
+region_clust_order <- as.list(labels(rskc_dendro2))
 
 # Modify the order of the brain region in the 'fidelity_region_bubble_mean' data
 # frame to match the desired order from 'region_clust_order'.
