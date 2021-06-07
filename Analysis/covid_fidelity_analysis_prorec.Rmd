@@ -899,3 +899,29 @@ print(bubble_region)
 
 dev.off()
 ```
+
+## Violin Plot for Visualizing Cell Type Fidelity Scores
+```{r}
+# Prepare a data frame containing separate columns for the cell type and 
+# fidelity score.
+fidelity_celltype <- pivot_longer(fidelity, cols = -c("Brain.Region", "cluster_labels"),
+                                   names_to = c("Gene", "Cell.Subtype"),
+                                   names_sep = "_",
+                                   values_to = "Fidelity")
+
+# Create violin plot showing the fidelity score distributions for each cell
+# type. 
+celltype_viol <- ggplot(fidelity_celltype, aes(x = Cell.Subtype, y = Fidelity, 
+                                               fill = Cell.Subtype)) +
+  geom_violin(trim = FALSE) +
+  geom_boxplot(width = 0.1, fill = "white") +
+  theme_minimal() +
+  labs(x = "Cell Type",
+       y = "Fidelity Score",
+       fill = "Cell Type") +
+  theme(axis.text.x = element_text(colour = "black", size = 10),
+        axis.text.y = element_text(colour = "black", size = 10),
+        axis.title.x = element_text(size = 12),
+        axis.title.y = element_text(size = 12))
+celltype_viol
+```
