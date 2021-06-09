@@ -79,7 +79,7 @@ regions <- c("FCX", "PCX", "TCX", "LIM", "IN", "OCX","BF", "CLA", "AMY", "HIP",
 # Choose only the desired brain regions from the data frame.
 fidelity <- fidelity_subset.wide %>% 
   filter(Brain.Region %in% regions) %>% 
-  slice(match(regions, Brain.Region)) %>% # Reorder rows to match entries in "regions" vector
+  slice(match(regions, Brain.Region)) %>% # Reorder rows to match entries in 'regions' vect
   select(-contains("Percentile")) # Remove NA columns
 
 # Use the brain regions to name the rows and remove the brain region column.
@@ -125,7 +125,7 @@ while (T) {
   for (i in clust_vect) {
     # i = 2
     # Increment 'counter' with a value of 1.
-    counter = counter + 1
+    counter <- counter + 1
     
     ###### RSKC ######
     
@@ -178,7 +178,7 @@ while (T) {
       geom_bar(stat = 'identity') +
       theme(axis.text.x = element_text(angle = 45, vjust = 0.6)) +
       scale_y_continuous(expand = c(0,0)) +
-      ggtitle(paste0("RSKC Weights for K = ",i)) +
+      ggtitle(paste0("RSKC Weights for K = ", i)) +
       xlab("") +
       ylab("Weights\n")
     
@@ -188,22 +188,21 @@ while (T) {
     ###### Elbow Plot ######
     
     # For the purposes of an elbow plot, we want to run RSKC more times than 
-    # specified in 'clust_vect' above, so create new vector 'elbow_clust_vect'
-    elbow_clust_vect <- c(2,3,4,5,6,7,8,9,10,11,12,13,14,15,16)
+    # specified in 'clust_vect' above, so create new vector 'elbow_clust_vect'.
+    elbow_clust_vect <- c(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)
     
     # Assign another empty list to 'elbow_rskc_list'.
     elbow_rskc_list <- c()
     
     # Only produce elbow plot when we are on the last run of the while loop,
-    # since we only need one elbow plot
-    if (i == clust_vect[length(clust_vect)]){
+    # since we only need one elbow plot.
+    if (i == clust_vect[length(clust_vect)]) {
       
-      elbow_counter = 0
+      elbow_counter <- 0
       
       for (n in elbow_clust_vect) {
-        # n = 2
         # Increment 'counter' with a value of 1.
-        elbow_counter = elbow_counter + 1
+        elbow_counter <- elbow_counter + 1
         
         # Perform RSKC for whatever-the-value-of-'n'-is many clusters using 
         # 'myFidelity', which has brain region as rows and gene_celltype as columns.
@@ -255,8 +254,8 @@ while (T) {
     set.seed(72613)
     tsne <- Rtsne(weighted_fidelity, perplexity = 5)
     
-    # Create new df 'tsne_out' which contains the two dimensions obtained from tSNE
-    # and corresponding regions
+    # Create new df 'tsne_out' which contains the two dimensions obtained from 
+    # tSNE and corresponding regions
     tsne_out <- tsne$Y %>%
       data.frame(regions) %>%
       rename(Brain.Region = regions, V1 = X1, V2 = X2) #rename columns
@@ -286,7 +285,7 @@ while (T) {
                                             colour = "white"),
             panel.border = element_blank(),
             axis.line = element_line(),
-            legend.position = 'bottom',
+            legend.position = "bottom",
             legend.background = element_rect(fill = NA,
                                              colour = NA), 
             legend.title.align=0.5) +
@@ -366,11 +365,11 @@ while (T) {
   
   # Create empty data frames to store the cluster assignments and cluster weights 
   # for each of the 10 runs.
-    rskc_region_labels_4 = data.frame("Region" = rownames(myFidelity))
-    rskc_region_labels_5 = data.frame("Region" = rownames(myFidelity))
-    rskc_region_labels_6 = data.frame("Region" = rownames(myFidelity))
-    rskc_region_labels_7 = data.frame("Region" = rownames(myFidelity))
-    rskc_region_weights = data.frame("Case" = colnames(myFidelity))
+    rskc_region_labels_4 <- data.frame("Region" = rownames(myFidelity))
+    rskc_region_labels_5 <- data.frame("Region" = rownames(myFidelity))
+    rskc_region_labels_6 <- data.frame("Region" = rownames(myFidelity))
+    rskc_region_labels_7 <- data.frame("Region" = rownames(myFidelity))
+    rskc_region_weights <- data.frame("Case" = colnames(myFidelity))
     
   # For 'i' -- the current number of clusters -- in 'clust_vect'...
   for (i in clust_vect) {
@@ -379,7 +378,7 @@ while (T) {
     
     # Create a vector of seeds for all 10 runs.
     set.seed(72613)
-    x = rdunif(10, a = 1, b = 1000000)
+    x <- rdunif(10, a = 1, b = 1000000)
     
     for (counter in 1:10) {
       
@@ -395,23 +394,24 @@ while (T) {
                                            L1 = sqrt(ncol(myFidelity)))
       
       # Use the following if statements to add the cluster assignments for run i to 
-      # the corresponding 'rskc_region_labels_3', 'rskc_region_labels_4' or 'rskc_region_labels_5'.
-      if (i == 4){
+      # the corresponding 'rskc_region_labels_3', 'rskc_region_labels_4' or 
+      # 'rskc_region_labels_5'.
+      if (i == 4) {
         rskc_region_labels_4[counter+1] <- rskc_results_list[[counter]]$labels
         colnames(rskc_region_labels_4)[counter+1] <- paste("Run_", counter, sep = "")
       }
       
-      if (i == 5){
+      if (i == 5) {
         rskc_region_labels_5[counter+1] <- rskc_results_list[[counter]]$labels
         colnames(rskc_region_labels_5)[counter+1] <- paste("Run_", counter, sep = "")
       }
       
-      if (i == 6){
+      if (i == 6) {
         rskc_region_labels_6[counter+1] <- rskc_results_list[[counter]]$labels
         colnames(rskc_region_labels_6)[counter+1] <- paste("Run_", counter, sep = "")
       }
       
-      if (i == 7){
+      if (i == 7) {
         rskc_region_labels_7[counter+1] <- rskc_results_list[[counter]]$labels
         colnames(rskc_region_labels_7)[counter+1] <- paste("Run_", counter, sep = "")
       }
@@ -573,17 +573,17 @@ Having previously selected the number of clusters to use for RSKC (i.e. 6), this
 ```{r}
 # Create empty lists to store the results and the RSKC weighted data frames 
 # that result from the clustering.
-rskc.results.list = list()
-rskc.weighted.list = list()
+rskc.results.list <- list()
+rskc.weighted.list <- list()
 
 # Create empty data frames to store the cluster assignments and cluster weights 
 # for each of the 100 runs.
-rskc.region.labels = data.frame("Region" = rownames(myFidelity))
-rskc.region.weights = data.frame("Case" = colnames(myFidelity))
+rskc.region.labels <- data.frame("Region" = rownames(myFidelity))
+rskc.region.weights <- data.frame("Case" = colnames(myFidelity))
 
 # Create a vector of seeds for all 100 runs.
 set.seed(72613)
-x = rdunif(100, a = 1, b = 1000000)
+x <- rdunif(100, a = 1, b = 1000000)
 
 for (i in 1:100) {
   
@@ -592,23 +592,23 @@ for (i in 1:100) {
   
   # Perform RSKC clustering on the data; the number of clusters is selected
   # a priori.
-  rskc.results.list[[i]] = RSKC(myFidelity, 
-                                alpha = 0.1, 
-                                ncl = 6, 
-                                L1 = sqrt(ncol(myFidelity)))
+  rskc.results.list[[i]] <- RSKC(myFidelity, 
+                                 alpha = 0.1, 
+                                 ncl = 6, 
+                                 L1 = sqrt(ncol(myFidelity)))
   
   # Add the cluster assignments for run i to the 'rskc.region.labels'.
-  rskc.region.labels[i+1] = rskc.results.list[[i]]$labels
-  colnames(rskc.region.labels)[i+1] = paste("Run_", i, sep = "")
+  rskc.region.labels[i+1] <- rskc.results.list[[i]]$labels
+  colnames(rskc.region.labels)[i+1] <- paste("Run_", i, sep = "")
   
   # Add the variable weights for run i to the 'rskc.region.weights'
-  rskc.region.weights[i+1] = rskc.results.list[[i]]$weights
-  colnames(rskc.region.weights)[i+1] = paste("Run_", i, sep = "")
+  rskc.region.weights[i+1] <- rskc.results.list[[i]]$weights
+  colnames(rskc.region.weights)[i+1] <- paste("Run_", i, sep = "")
   
   # Create a list of data frames containing the clustering data multiplied by 
   # the corresponding RSKC variable weights.
-  rskc.weighted.list[[i]] = sweep(myFidelity, 2, 
-                                  rskc.results.list[[i]]$weights, "*")
+  rskc.weighted.list[[i]] <- sweep(myFidelity, 2, 
+                                   rskc.results.list[[i]]$weights, "*")
 }
 ```
 
@@ -631,13 +631,14 @@ rskc.cluster.regions.wide <-  data.frame(matrix(ncol = 18, nrow = 18)) %>%
 for (i in 1:length(regions)) {
   for (j in 1:length(regions)) {
     
-    rskc.cluster.regions.wide[i,j] = sum(rskc.region.labels.t[[regions[i]]] == rskc.region.labels.t[[regions[j]]])
+    rskc.cluster.regions.wide[i,j] <- sum(rskc.region.labels.t[[regions[i]]] == 
+                                          rskc.region.labels.t[[regions[j]]])
     
   }
 }
 
 # Convert the adjacency matrix to long format for various plotting purposes
-rskc.cluster.regions.long <-  rskc.cluster.regions.wide %>%
+rskc.cluster.regions.long <- rskc.cluster.regions.wide %>%
   # Give the region row names their own column
   rownames_to_column("Region_1") %>%
   # Lengthen the data with melt() so we have three columns: 
@@ -652,7 +653,7 @@ rskc.cluster.regions.long <-  rskc.cluster.regions.wide %>%
 ```{r unclustered heat map, fig.align = 'center', fig.height = 5, fig.width = 7}
 # Factor the regions with levels corresponding to the specified brain region
 # names from the 'regions' vector.
-region.rskc.cluster.matches.ordered <-  rskc.cluster.regions.long %>%
+region.rskc.cluster.matches.ordered <- rskc.cluster.regions.long %>%
   # Factor Region_1
   mutate(Region_1 = factor(Region_1, levels = regions)) %>%
   # Factor Region_2
@@ -698,8 +699,8 @@ heatmap.2(rskc.region.prop,
           srtCol = 45, # Rotate column labels on heat map
           margins = c(5, 10),
           key.xtickfun = function(){
-            breaks = pretty(parent.frame()$breaks)
-            breaks = breaks[c(1, length(breaks))]
+            breaks <- pretty(parent.frame()$breaks)
+            breaks <- breaks[c(1, length(breaks))]
             list(at = parent.frame()$scale01(breaks),
                  labels = breaks)
           }
