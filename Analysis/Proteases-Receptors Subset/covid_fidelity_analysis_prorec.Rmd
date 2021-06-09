@@ -1048,3 +1048,22 @@ celltype_raincloud <- ggplot(fidelity_celltype, aes(x = cluster_labels, y = Fide
         axis.title.y = element_text(size = 12))
 celltype_raincloud
 ```
+
+```{r export raincloud plot as png, echo = FALSE, include = FALSE}
+# Save the generated raincloud plot as png in appropriate folder destination
+# within the project directory.
+raincloud_plot_path <- file.path(
+  here("Plots", paste0('raincloud_plot_prorec.png'))
+  )
+
+png(file = raincloud_plot_path,
+    units = "in",
+    width = 8,
+    height = 4,
+    res = 300 #,compression = 'lzw'
+)
+
+print(celltype_viol)
+
+dev.off()
+```
