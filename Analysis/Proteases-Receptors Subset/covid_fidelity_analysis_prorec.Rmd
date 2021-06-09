@@ -1026,6 +1026,8 @@ GeomFlatViolin <-
 )
 ```
 
+\newpage
+
 ## Raincloud Plots for Fidelity Scores by Cluster
 ```{r generate raincloud plot, fig.align = 'center', fig.width = 12, fig.height = 8}
 # Create raincloud plot showing the fidelity score distributions for each
@@ -1036,7 +1038,6 @@ celltype_raincloud <- ggplot(fidelity_celltype, aes(x = cluster_labels, y = Fide
   coord_flip() +
   geom_jitter(aes(colour = cluster_labels), width = 0.1, size = 1, alpha = 0.5) +
   geom_boxplot(width = 0.1, guides = FALSE, outlier.shape = NA, alpha = 0.5) +
-  # geom_boxplot(width = 0.1, fill = "white") +
   theme_minimal() +
   labs(x = "Cluster",
        y = "Fidelity Score",
