@@ -34,15 +34,15 @@ all_fidelity <- read.csv(here("Data", "ALL_Fidelity.csv"))
 
 # Define a vector containing all SARS-CoV-2 related protease and rector genes
 # of interest.
-genes_prorec_subset <- c("ANPEP", "ENPEP", "ACE2", "DPP4", "SCARB1", "AXL", 
-                       "NRP1", "NRP2", "CLEC4M", "CLEC4G", "CD209", "CEACAM1", 
+genes_prorec_subset <- c("ANPEP", "ENPEP", "ACE2", "DPP4", "SCARB1", "AXL",
+                       "NRP1", "NRP2", "CLEC4M", "CLEC4G", "CD209", "CEACAM1",
                        "TMPRSS2", "FURIN", "ADAM17", "CTSL")
 
-# Filter full dataset to include only the genes of interest and drop the 
+# Filter full dataset to include only the genes of interest and drop the
 # columns that correspond to "Entrez" and "Alias".
 fidelity_subset <- all_fidelity %>%
   filter(Gene %in% genes_prorec_subset) %>% # Includes protease/receptor genes
-  select(-c(2,3)) 
+  select(-c(2, 3))
 
 # Tidy the data frame by separating the previous columns into
 # two new columns for the brain region and cell subtype. Assign each of the
@@ -53,8 +53,8 @@ fidelity_subset.long <-  pivot_longer(fidelity_subset, cols = -Gene,
                                       names_sep = "_",
                                       values_to = "Fidelity")
 
-# Pivot the data frame to a wide view by assigning new columns corresponding to 
-# the gene_celltype for each brain region. Assign the fidelity scores as 
+# Pivot the data frame to a wide view by assigning new columns corresponding to
+# the gene_celltype for each brain region. Assign the fidelity scores as
 # the values.
 fidelity_subset.wide <- pivot_wider(fidelity_subset.long,
                                     names_from = c("Gene", "Cell.Subtype"),
@@ -62,19 +62,19 @@ fidelity_subset.wide <- pivot_wider(fidelity_subset.long,
                                     names_sep = "_")
 
 # Define a vector containing brain regions of interest. This list comes from the
-# Oldham Lab website (https://oldhamlab.ctec.ucsf.edu/). Note: 'SC' contains 
+# Oldham Lab website (https://oldhamlab.ctec.ucsf.edu/). Note: 'SC' contains
 # NA values.
 regions <- c("FCX", "PCX", "TCX", "LIM", "IN", "OCX","BF", "CLA", "AMY", "HIP",
              "STR", "GP", "DI", "MID", "PON", "MED", "CB", "WM") #, "SC")
 
 # Choose only the desired brain regions from the data frame.
-fidelity <- fidelity_subset.wide %>% 
-  filter(Brain.Region %in% regions) %>% 
+fidelity <- fidelity_subset.wide %>%
+  filter(Brain.Region %in% regions) %>%
   slice(match(regions, Brain.Region)) %>% # Reorder rows to match entries in "regions" vector
   select(-contains("Percentile")) # Remove NA columns
 
 # Use the brain regions to name the rows and remove the brain region column.
-myFidelity <- fidelity %>% 
+myFidelity <- fidelity %>%
   column_to_rownames("Brain.Region")
 ```
 
@@ -86,13 +86,13 @@ This while loop contains sections for RSKC, elbow plot, obtaining weighted data,
 set.seed(72613)
 
 while (T) {
-  
+
   # Assign desired number of clusters to 'clust_vect'.
   clust_vect <- c(2, 4, 6, 8)
-  
+
   # Assign an empty list to 'rskc_list'.
   rskc_list <- list()
-  
+
   # Assign 8 colours to 'col_vect'.
   col_vect <- c("#FF0000",
                 "#0000FF",
@@ -102,36 +102,34 @@ while (T) {
                 "#FFFF00",
                 "#A65628",
                 "#F781BF")
-  
+
   # Assign a value of 0 to 'counter'.
   counter <- 0
-  
+
   # Assign an empty list to 'tsne_list'.
   tsne_list <- list()
-  
+
   # Assign an empty list to 'weight_list'.
   weight_list <- list()
-  
+
   # For 'i' -- the current number of clusters -- in 'clust_vect'...
   for (i in clust_vect) {
-    # i = 2
     # Increment 'counter' with a value of 1.
-    counter = counter + 1
+    counter <- counter + 1
     
     ###### RSKC ######
     
     # Perform RSKC for whatever-the-value-of-'i'-is many clusters using 
     # 'myFidelity', which has brain region as rows and gene_celltype as columns.
     # Assign RSKC's output as an entry in 'rskc_list'. 
-    rskc_list[[counter]] <- RSKC(myFidelity, 
+    rskc_list[[counter]] <- RSKC(myFidelity,
                                  ncl = i,
                                  alpha = 0.1,
                                  L1 = sqrt(ncol(myFidelity)))
-    
-    
+
     # Convert the row names of 'myFidelity' to a column
     # called 'Brain.Region' and store it in 'gene_and_region'.
-    gene_and_region <- myFidelity %>% 
+    gene_and_region <- myFidelity %>%
       rownames_to_column("Brain.Region")
     
     # For the current object in 'rskc_list' convert the cluster labels
@@ -1053,7 +1051,7 @@ celltype_raincloud
 # Save the generated raincloud plot as png in appropriate folder destination
 # within the project directory.
 raincloud_plot_path <- file.path(
-  here("Plots", paste0('raincloud_plot_prorec.png'))
+  here("Plots", paste0("raincloud_plot_prorec.png"))
   )
 
 png(file = raincloud_plot_path,
