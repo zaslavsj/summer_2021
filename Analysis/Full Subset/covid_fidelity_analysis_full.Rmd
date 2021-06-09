@@ -21,6 +21,7 @@ library(viridis) # For color palettes
 library(gplots) # For heatmap.2()
 library(dendextend) # For manipulating visual appearance of dendrograms
 library(ggdendro) # For constructing dendrograms based on ggplot
+library(see) # For geom_violinhalf()
 
 # Set the seed
 set.seed(72613)
@@ -52,8 +53,8 @@ fidelity_subset <- all_fidelity %>%
 
 # Tidy the data frame by separating the previous columns into
 # two new columns for the brain region and cell subtype. Assign each of the
-# values to a new column for the fidelity scores. The tidy data's
-# columns each correspond to a varaible and each observation is a new row.
+# values to a new column for the fidelity scores. The tidy data
+# columns each correspond to a variable and each observation is a new row.
 fidelity_subset.long <-  pivot_longer(fidelity_subset, cols = -Gene,
                                       names_to = c("Brain.Region", "Cell.Subtype"),
                                       names_sep = "_",
@@ -175,7 +176,7 @@ while (T) {
       geom_bar(stat = 'identity') +
       theme(axis.text.x = element_text(angle = 45, vjust = 0.6)) +
       scale_y_continuous(expand = c(0, 0)) +
-      ggtitle(paste0("RSKC Weights for K = ",i)) +
+      ggtitle(paste0("RSKC Weights for K = ", i)) +
       xlab("") +
       ylab("Weights\n")
     
@@ -287,10 +288,10 @@ while (T) {
             legend.background = element_rect(fill = NA,
                                              colour = NA), 
             legend.title.align = 0.5) +
-      guides(fill=guide_legend(nrow = 2,
-                               ncol = 4, 
-                               byrow = TRUE)) +
-      labs(x="V1", y="V2") 
+      guides(fill = guide_legend(nrow = 2,
+                                 ncol = 4, 
+                                 byrow = TRUE)) +
+      labs(x = "V1", y = "V2") 
     
     # Assign 'tsne_scatter' as an entry in 'tsne_list'.
     tsne_list[[counter]] <- tsne_scatter
@@ -351,7 +352,8 @@ while (T) {
                 "#FFA500",
                 "#FFFF00")
   
-  # Assign an empty list to 'tsne_list_3', 'tsne_list_4', and 'tsne_list_5'.
+  # Assign an empty list to 'tsne_list_3', 'tsne_list_4', 'tsne_list_5',
+  # and 'tsne_list_6'.
   tsne_list_3 <- list()
   tsne_list_4 <- list()
   tsne_list_5 <- list()
@@ -362,11 +364,11 @@ while (T) {
   
   # Create empty data frames to store the cluster assignments and cluster weights 
   # for each of the 10 runs.
-    rskc_region_labels_3 = data.frame("Region" = rownames(myFidelity))
-    rskc_region_labels_4 = data.frame("Region" = rownames(myFidelity))
-    rskc_region_labels_5 = data.frame("Region" = rownames(myFidelity))
-    rskc_region_labels_6 = data.frame("Region" = rownames(myFidelity))
-    rskc_region_weights = data.frame("Case" = colnames(myFidelity))
+    rskc_region_labels_3 <- data.frame("Region" = rownames(myFidelity))
+    rskc_region_labels_4 <- data.frame("Region" = rownames(myFidelity))
+    rskc_region_labels_5 <- data.frame("Region" = rownames(myFidelity))
+    rskc_region_labels_6 <- data.frame("Region" = rownames(myFidelity))
+    rskc_region_weights <- data.frame("Case" = colnames(myFidelity))
     
   # For 'i' -- the current number of clusters -- in 'clust_vect'...
   for (i in clust_vect) {
@@ -477,7 +479,7 @@ while (T) {
         guides(fill = guide_legend(nrow = 2,
                                  ncol = 4, 
                                  byrow = TRUE)) +
-        labs(x="V1", y="V2") 
+        labs(x = "V1", y = "V2") 
       
       # Use if statements to assign 'tsne_scatter' as an entry in 'tsne_list_3',
       # 'tsne_list_4', 'tsne_list_5', or 'tsne_list_6' depending on the current i.
@@ -584,8 +586,8 @@ rskc.weighted.list <- list()
 
 # Create empty data frames to store the cluster assignments and cluster weights 
 # for each of the 100 runs.
-rskc.region.labels = data.frame("Region" = rownames(myFidelity))
-rskc.region.weights = data.frame("Case" = colnames(myFidelity))
+rskc.region.labels <- data.frame("Region" = rownames(myFidelity))
+rskc.region.weights <- data.frame("Case" = colnames(myFidelity))
 
 # Create a vector of seeds for all 100 runs.
 set.seed(72613)
@@ -637,13 +639,13 @@ rskc.cluster.regions.wide <- data.frame(matrix(ncol = 18, nrow = 18)) %>%
 for (i in 1:length(regions)) {
   for (j in 1:length(regions)) {
     
-    rskc.cluster.regions.wide[i,j] = sum(rskc.region.labels.t[[regions[i]]] == rskc.region.labels.t[[regions[j]]])
+    rskc.cluster.regions.wide[i, j] = sum(rskc.region.labels.t[[regions[i]]] == rskc.region.labels.t[[regions[j]]])
     
   }
 }
 
 # Convert the adjacency matrix to long format for various plotting purposes
-rskc.cluster.regions.long <-  rskc.cluster.regions.wide %>%
+rskc.cluster.regions.long <- rskc.cluster.regions.wide %>%
   # Give the region row names their own column
   rownames_to_column("Region_1") %>%
   # Lengthen the data with melt() so we have three columns: 
@@ -685,7 +687,7 @@ ggplot(region.rskc.cluster.matches.ordered, aes(x = Region_1,
 ```{r, fig.align = 'center', fig.height = 5, fig.width = 7}
 # Convert all values in the 'rskc.cluster.regions.wide' matrix into 
 # proportions.
-rskc.region.prop <- apply(rskc.cluster.regions.wide, 2, function(x) return(x/100)) %>% 
+rskc.region.prop <- apply(rskc.cluster.regions.wide, 2, function(x) return(x / 100)) %>% 
   as.matrix()
 
 # Assign a dendrogram for the matrix of matched clustering of RSKC regions.
@@ -967,4 +969,27 @@ png(file = viol_plot_path,
 print(celltype_viol)
 
 dev.off()
+```
+
+\newpage
+
+## Raincloud Plots for Fidelity Scores by Cluster
+```{r, fig.align = 'center', fig.width = 12, fig.height = 8}
+# Create raincloud plot showing the fidelity score distributions for each
+# cluster.
+celltype_raincloud <- ggplot(fidelity_celltype, aes(x = cluster_labels, y = Fidelity, 
+                                               fill = cluster_labels)) +
+  geom_violinhalf(position = position_nudge(x = 0.15, y = 0)) +
+  coord_flip() +
+  geom_jitter(aes(colour = cluster_labels), width = 0.1, size = 1, alpha = 0.5) +
+  geom_boxplot(width = 0.1, outlier.shape = NA, alpha = 0.5) +
+  theme_minimal() +
+  labs(x = "Cluster",
+       y = "Fidelity Score",
+       fill = "Cluster") +
+  theme(axis.text.x = element_text(colour = "black", size = 10),
+        axis.text.y = element_text(colour = "black", size = 10),
+        axis.title.x = element_text(size = 12),
+        axis.title.y = element_text(size = 12))
+celltype_raincloud
 ```
