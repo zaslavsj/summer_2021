@@ -1003,8 +1003,8 @@ raincloud_plot_path <- file.path(
 
 png(file = raincloud_plot_path,
     units = "in",
-    width = 8,
-    height = 4,
+    width = 12,
+    height = 8,
     res = 300 #,compression = 'lzw'
 )
 
