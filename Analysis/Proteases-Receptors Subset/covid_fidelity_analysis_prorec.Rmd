@@ -1002,7 +1002,7 @@ png(file = raincloud_plot_path,
     res = 300 #,compression = 'lzw'
 )
 
-print(celltype_viol)
+print(celltype_raincloud)
 
 dev.off()
 ```
