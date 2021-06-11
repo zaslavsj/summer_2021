@@ -1123,7 +1123,8 @@ loess.raw.zscore.stamp.collection = ggplot(covid.gene.exp.zscore.long,
         panel.grid = element_blank())
 
 # Determine how many pages we will need
-num_pages = length(genes)
+# Each region needs two pages
+num_pages = 2*length(regions)
 
 # Save the plots as a pdf
 devEval(type = "pdf",
@@ -1134,11 +1135,19 @@ devEval(type = "pdf",
         expr = {
           for (j in 1:num_pages) {
             # Plot LOESS curve for each and facet wrap by gene
+            if (j %% 2 == 1) {
               print(loess.raw.zscore.stamp.collection + 
-                      facet_wrap_paginate(vars(Region, Gene), 
-                                          ncol = 4, nrow = 4, 
-                                          page = j, scales = "free_y"))
+                    facet_wrap_paginate(vars(Region, Gene), 
+                                        ncol = 4, nrow = 4, 
+                                        page = j, scales = "free_y"))
+              }
+            if (j %% 2 == 0) {
+              print(loess.raw.zscore.stamp.collection + 
+                    facet_wrap_paginate(vars(Region, Gene), 
+                                        ncol = 4, nrow = 3, 
+                                        page = j, scales = "free_y"))
             }
+          }
         })
 ```
 
