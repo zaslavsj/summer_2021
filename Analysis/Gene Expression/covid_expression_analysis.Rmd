@@ -1037,8 +1037,10 @@ ggplot(test.raw, aes(x = Years, y = Expression)) +
 PDF of LOESS Curves for Z-scored for 28 Genes by Region 
 ```{r message=FALSE, warning=FALSE}
 # Create the plots and store them as loess.raw.zscore.stamp.collection
-loess.raw.zscore.stamp.collection = ggplot(covid.gene.exp.zscore.long, aes(x = Years, y = Expression)) +
-  # Add in shading in the background to separate pre-natal, infancy, childhood, and adulthood
+loess.raw.zscore.stamp.collection = ggplot(covid.gene.exp.zscore.long, 
+                                           aes(x = Years, y = Expression)) +
+  # Add in shading in the background to separate pre-natal, infancy, childhood, 
+  # and adulthood
   annotate("rect", xmin = 0, xmax = 40/52, ymin = -Inf, ymax = Inf, alpha = 0.2, fill = "grey40") +
   annotate("rect", xmin = 40/52, xmax = 92/52, ymin = -Inf, ymax = Inf, alpha = 0.2, fill = "grey60") +
   annotate("rect", xmin = 92/52, xmax = 40/52 + 18, ymin = -Inf, ymax = Inf, alpha = 0.2, fill = "grey80") +
@@ -1079,16 +1081,20 @@ devEval(type = "pdf",
           for (j in 1:num_pages) {
             # Plot LOESS curve for each and facet wrap by gene
               print(loess.raw.zscore.stamp.collection + 
-                      facet_wrap_paginate(vars(Gene, Region), ncol = 4, nrow = 4, page = j,scales = "free_y"))
+                      facet_wrap_paginate(vars(Gene, Region), 
+                                          ncol = 4, nrow = 4, 
+                                          page = j, scales = "free_y"))
             }
         })
 ```
 
-PDF of LOESS Curves for Z-scored for 28 Genes by Region 
-```{r warning=FALSE}
+PDF of LOESS Curves for Z-scored for 16 Regions by Gene 
+```{r message=FALSE, warning=FALSE}
 # Create the plots and store them as loess.raw.zscore.stamp.collection
-loess.raw.zscore.stamp.collection = ggplot(covid.gene.exp.zscore.long, aes(x = Years, y = Expression)) +
-  # Add in shading in the background to separate pre-natal, infancy, childhood, and adulthood
+loess.raw.zscore.stamp.collection = ggplot(covid.gene.exp.zscore.long, 
+                                           aes(x = Years, y = Expression)) +
+  # Add in shading in the background to separate pre-natal, infancy, childhood, 
+  # and adulthood
   annotate("rect", xmin = 0, xmax = 40/52, ymin = -Inf, ymax = Inf, alpha = 0.2, fill = "grey40") +
   annotate("rect", xmin = 40/52, xmax = 92/52, ymin = -Inf, ymax = Inf, alpha = 0.2, fill = "grey60") +
   annotate("rect", xmin = 92/52, xmax = 40/52 + 18, ymin = -Inf, ymax = Inf, alpha = 0.2, fill = "grey80") +
@@ -1129,7 +1135,9 @@ devEval(type = "pdf",
           for (j in 1:num_pages) {
             # Plot LOESS curve for each and facet wrap by gene
               print(loess.raw.zscore.stamp.collection + 
-                      facet_wrap_paginate(vars(Region, Gene), ncol = 4, nrow = 4, page = j,scales = "free_y"))
+                      facet_wrap_paginate(vars(Region, Gene), 
+                                          ncol = 4, nrow = 4, 
+                                          page = j, scales = "free_y"))
             }
         })
 ```
