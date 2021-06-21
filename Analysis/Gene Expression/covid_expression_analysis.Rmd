@@ -58,6 +58,9 @@ all_expression <- all_expression %>%
   select(Sample, Region, Years, genes) %>%
   filter(Region %in% regions_16)
 
+# Take absolute value of 'Years' column to get rid of negative values.
+all_expression$Years <- abs(all_expression$Years)
+
 # Create a data frame grouping each observation by the brain region and 
 # computing the average expression of each gene within a given brain region. 
 gene_expression <- all_expression %>% 
