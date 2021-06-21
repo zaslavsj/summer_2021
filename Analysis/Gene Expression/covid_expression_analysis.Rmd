@@ -41,7 +41,7 @@ all_expression <- read.csv(here("Data", "Kang Data 17528 genes 1340 cases.csv"))
 # ITGB3, ITGA5, ITGB1, ITGB6, ITGAV, ITGB8, ITGB2, ITGA2B, ITGAM, ITGAL, ITGA3, ITGA8, ITGB5
 
 # Create a vector containing all of the names of the 29 genes of interest,
-# and sort into alphabetical order
+# and sort into alphabetical order.
 genes <- c('ANPEP', 'ENPEP', 'ACE2', 'DPP4', 'SCARB1', 'AXL', 'NRP1', 'NRP2', 'CLEC4M', 
            'CLEC4G', 'CD209', 'CEACAM1', 'TMPRSS2', 'FURIN', 'ADAM17', 'CTSL1', 'ITGB3', 
            'ITGA5', 'ITGB1', 'ITGB6', 'ITGAV', 'ITGB8', 'ITGB2', 'ITGA2B', 'ITGAM', 
@@ -49,21 +49,23 @@ genes <- c('ANPEP', 'ENPEP', 'ACE2', 'DPP4', 'SCARB1', 'AXL', 'NRP1', 'NRP2', 'C
   sort()
 
 # Define a vector containing the 16 brain regions of interest (ordered alphabetically).
-regions <- c('A1C', 'AMY', 'CBC', 'DFC', 'HIP', 'IPC', 'ITC', 'M1C', 'MD', 'MFC', 'OFC',
+regions_16 <- c('A1C', 'AMY', 'CBC', 'DFC', 'HIP', 'IPC', 'ITC', 'M1C', 'MD', 'MFC', 'OFC',
              'S1C', 'STC', 'STR', 'V1C', 'VFC')
 
+# Select desired columns from original full data frame, and turn 'Sample' column
+# into row names.
 all_expression <- all_expression %>%
   select(Sample, Region, Years, genes) %>%
   column_to_rownames("Sample") 
 
 # Create a data frame grouping each observation by the brain region and 
-# computing the average expression of each gene within a given brain region.
+# computing the average expression of each gene within a given brain region. Then
+# filter to keep only desired regions.
 gene_expression <- all_expression %>% 
-  group_by(Region) %>% 
-  filter(Region %in% regions) %>%
+  group_by(Region) %>%
   summarize_at(vars(all_of(genes)), mean) %>%
-  rename(Brain.Region = Region)
-
+  rename(Brain.Region = Region) %>%
+  filter(Brain.Region %in% regions_16)
 
 # Use the brain regions to name the rows and remove the brain region column.
 myExpression <- gene_expression %>%
