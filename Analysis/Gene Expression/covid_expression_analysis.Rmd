@@ -52,20 +52,18 @@ genes <- c('ANPEP', 'ENPEP', 'ACE2', 'DPP4', 'SCARB1', 'AXL', 'NRP1', 'NRP2', 'C
 regions_16 <- c('A1C', 'AMY', 'CBC', 'DFC', 'HIP', 'IPC', 'ITC', 'M1C', 'MD', 'MFC', 'OFC',
              'S1C', 'STC', 'STR', 'V1C', 'VFC')
 
-# Select desired columns from original full data frame, and turn 'Sample' column
-# into row names.
+# Select desired columns from original full data frame, then filter to keep only 
+# desired regions.
 all_expression <- all_expression %>%
   select(Sample, Region, Years, genes) %>%
-  column_to_rownames("Sample") 
+  filter(Region %in% regions_16)
 
 # Create a data frame grouping each observation by the brain region and 
-# computing the average expression of each gene within a given brain region. Then
-# filter to keep only desired regions.
+# computing the average expression of each gene within a given brain region. 
 gene_expression <- all_expression %>% 
   group_by(Region) %>%
   summarize_at(vars(all_of(genes)), mean) %>%
-  rename(Brain.Region = Region) %>%
-  filter(Brain.Region %in% regions_16)
+  rename(Brain.Region = Region)
 
 # Use the brain regions to name the rows and remove the brain region column.
 myExpression <- gene_expression %>%
@@ -1093,7 +1091,7 @@ num_pages = length(genes)
 
 # Save the plots as a pdf
 devEval(type = "pdf",
-        path = here("Plots"),
+        path = here("Exploration"),
         name = "LOESS Curves of Non-Transformed Z Scored Expression for all 29 Genes By Region with SE no points",
         height = 9, 
         width = 9,
@@ -1148,7 +1146,7 @@ num_pages = 2*length(regions)
 
 # Save the plots as a pdf
 devEval(type = "pdf",
-        path = here("Plots"),
+        path = here("Exploration"),
         name = "LOESS Curves of Non-Transformed Z Scored Expression for all 16 Regions By Gene with SE no points",
         height = 9, 
         width = 9,
