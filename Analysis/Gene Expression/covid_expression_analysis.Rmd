@@ -58,8 +58,13 @@ all_expression <- all_expression %>%
   select(Sample, Region, Years, genes) %>%
   filter(Region %in% regions_16)
 
+<<<<<<< HEAD
 # Add 40/52 to the 'Years' column to get rid of negative values.
 all_expression$Years <- all_expression[, 3] + 40/52
+=======
+# Take absolute value of 'Years' column to get rid of negative values.
+all_expression$Years <- abs(all_expression$Years)
+>>>>>>> a19028ba1c98762bd29ffedd714e07aee8950641
 
 # Create a data frame grouping each observation by the brain region and 
 # computing the average expression of each gene within a given brain region. 
@@ -71,11 +76,14 @@ gene_expression <- all_expression %>%
 # Use the brain regions to name the rows and remove the brain region column.
 myExpression <- gene_expression %>%
   column_to_rownames("Brain.Region")
+<<<<<<< HEAD
 ```
 
 ```{r include=FALSE}
 # Export 'all_expression' data frame as a .csv file
 write.csv(all_expression, "/Users/rachelkwan/Documents/Lab/summer_2021/Data/COVID Data - 29 Genes - 1281 Samples from 16 Regions - No Transformation.csv", row.names = FALSE)
+=======
+>>>>>>> a19028ba1c98762bd29ffedd714e07aee8950641
 ```
 
 
