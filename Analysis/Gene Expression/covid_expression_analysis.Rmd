@@ -63,19 +63,50 @@ all_expression$Years <- all_expression[, 3] + 40/52
 
 # Create a data frame grouping each observation by the brain region and 
 # computing the average expression of each gene within a given brain region. 
-gene_expression <- all_expression %>% 
-  group_by(Region) %>%
-  summarize_at(vars(all_of(genes)), mean) %>%
-  rename(Brain.Region = Region)
+#gene_expression <- all_expression %>% 
+  #group_by(Region) %>%
+  #summarize_at(vars(all_of(genes)), mean) %>%
+  #rename(Brain.Region = Region)
 
 # Use the brain regions to name the rows and remove the brain region column.
-myExpression <- gene_expression %>%
-  column_to_rownames("Brain.Region")
+#myExpression <- gene_expression %>%
+  #column_to_rownames("Brain.Region")
 ```
 
 ```{r include=FALSE}
 # Export 'all_expression' data frame as a .csv file
 write.csv(all_expression, "/Users/rachelkwan/Documents/Lab/summer_2021/Data/COVID Data - 29 Genes - 1281 Samples from 16 Regions - No Transformation.csv", row.names = FALSE)
+```
+
+# Build Data Frame
+
+The first thing we have to do is clean our data into the preferred $N \times p$ format for clustering, then we can impute the data using the 5 nearest neighbors.
+
+```{r}
+# Build the data frame of regions vs gene expressions for each sample
+region.reformatted.log2.exp.data = all_expression %>%
+  # Convert the data frame to long format
+  melt(id.vars = c("Sample", "Region", "Years"), variable.name = "Gene", value.name = "Expression") %>%
+  # Separate the Sample column into 3 strings: the sample ID, the region, and the hemisphere
+  separate(col = Sample, into = c("Sample", "Region2", "Hemisphere"), sep = "_") %>%
+  # Combine the gene name, sample ID and hemisphere to make a new column called GeneSample
+  unite("GeneSample", c(Gene, Sample, Hemisphere)) %>%
+  # Pivot the data so each GeneSample gets its own column (for clustering)
+  dcast(Region ~ GeneSample, value.var = "Expression") %>%
+  # Move the Regions column to the rownames
+  column_to_rownames("Region")  %>%
+  # Select only columns with 4 or less NAs
+  select_if(~sum(is.na(.)) <= 4)
+
+# Impute the missing data
+imputed.region.clustering.results.log2 = impute.knn(data = as.matrix(region.reformatted.log2.exp.data), k = 5, 
+                                               colmax = 0.25, rng.seed = 262626)
+
+# Convert the results into our new data frame for clustering
+myExpression = data.frame(imputed.region.clustering.results.log2$data)
+
+# Store the region names in a vector called regions
+regions = rownames(myExpression)
 ```
 
 
@@ -788,7 +819,7 @@ for (i in 1:100) {
 }
 
 # Transpose the data frame with the cluster labels from the 100 runs.
-rskc.region.labels.t <-  rskc.region.labels %>%
+rskc.region.labels.t <- rskc.region.labels %>%
   column_to_rownames("Region") %>%
   t() %>%
   data.frame()
