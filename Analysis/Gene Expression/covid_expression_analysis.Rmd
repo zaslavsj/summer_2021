@@ -31,26 +31,53 @@ set.seed(72613)
 ## Import and Prepare Dataset
 ```{r}
 # Load full dataset
-all_expression <- read.csv(here("Data", "COVID Data - 28 Genes - 1281 Samples from 16 Regions - No Transformation.csv"))
+all_expression <- read.csv(here("Data", "Kang Data 17528 genes 1340 cases.csv")) 
 
-# Create a vector containing all of the names of the genes of interest.
-genes <- as_vector(colnames(all_expression)[4:31])
+# List of 12 SARS-CoV-2 receptors:
+# ANPEP, ENPEP, ACE2, DPP4, SCARB1, AXL, NRP1, NRP2, CLEC4M, CLEC4G, CD209, CEACAM1
+# List of 4 SARS-CoV-2 proteases:
+# TMPRSS2, FURIN, ADAM17, CTSL
+# List of 13 SARS-CoV-2 integrins:
+# ITGB3, ITGA5, ITGB1, ITGB6, ITGAV, ITGB8, ITGB2, ITGA2B, ITGAM, ITGAL, ITGA3, ITGA8, ITGB5
+
+# Create a vector containing all of the names of the 29 genes of interest,
+# and sort into alphabetical order.
+genes <- c('ANPEP', 'ENPEP', 'ACE2', 'DPP4', 'SCARB1', 'AXL', 'NRP1', 'NRP2', 'CLEC4M', 
+           'CLEC4G', 'CD209', 'CEACAM1', 'TMPRSS2', 'FURIN', 'ADAM17', 'CTSL1', 'ITGB3', 
+           'ITGA5', 'ITGB1', 'ITGB6', 'ITGAV', 'ITGB8', 'ITGB2', 'ITGA2B', 'ITGAM', 
+           'ITGAL', 'ITGA3', 'ITGA8', 'ITGB5') %>%
+  sort()
+
+# Define a vector containing the 16 brain regions of interest (ordered alphabetically).
+regions_16 <- c('A1C', 'AMY', 'CBC', 'DFC', 'HIP', 'IPC', 'ITC', 'M1C', 'MD', 'MFC', 'OFC',
+             'S1C', 'STC', 'STR', 'V1C', 'VFC')
+
+# Select desired columns from original full data frame, then filter to keep only 
+# desired regions.
+all_expression <- all_expression %>%
+  select(Sample, Region, Years, genes) %>%
+  filter(Region %in% regions_16)
+
+# Add 40/52 to the 'Years' column to get rid of negative values.
+all_expression$Years <- all_expression[, 3] + 40/52
 
 # Create a data frame grouping each observation by the brain region and 
-# computing the average expression of each gene within a given brain region.
+# computing the average expression of each gene within a given brain region. 
 gene_expression <- all_expression %>% 
-  group_by(Region) %>% 
+  group_by(Region) %>%
   summarize_at(vars(all_of(genes)), mean) %>%
   rename(Brain.Region = Region)
 
 # Use the brain regions to name the rows and remove the brain region column.
 myExpression <- gene_expression %>%
   column_to_rownames("Brain.Region")
-
-# Define a vector containing the 16 brain regions of interest
-# (ordered alphabetically), for later use.
-regions <- rownames(myExpression)
 ```
+
+```{r include=FALSE}
+# Export 'all_expression' data frame as a .csv file
+write.csv(all_expression, "/Users/rachelkwan/Documents/Lab/summer_2021/Data/COVID Data - 29 Genes - 1281 Samples from 16 Regions - No Transformation.csv", row.names = FALSE)
+```
+
 
 ## Perform Robust and Sparse K-Means Clustering (RSKC) and t-SNE Together
 
@@ -1034,7 +1061,7 @@ ggplot(test.raw, aes(x = Years, y = Expression)) +
 
 # Plot the LOESS Curves and Save As PDFs
 
-PDF of LOESS Curves for Z-scored for 28 Genes by Region 
+PDF of LOESS Curves for Z-scored for 29 Genes by Region 
 ```{r message=FALSE, warning=FALSE}
 # Create the plots and store them as loess.raw.zscore.stamp.collection
 loess.raw.zscore.stamp.collection = ggplot(covid.gene.exp.zscore.long, 
@@ -1073,8 +1100,8 @@ num_pages = length(genes)
 
 # Save the plots as a pdf
 devEval(type = "pdf",
-        path = here("Plots"),
-        name = "LOESS Curves of Non-Transformed Z Scored Expression for all 28 Genes By Region with SE no points",
+        path = here("Exploration"),
+        name = "LOESS Curves of Non-Transformed Z Scored Expression for all 29 Genes By Region with SE no points",
         height = 9, 
         width = 9,
         expr = {
@@ -1128,7 +1155,7 @@ num_pages = 2*length(regions)
 
 # Save the plots as a pdf
 devEval(type = "pdf",
-        path = here("Plots"),
+        path = here("Exploration"),
         name = "LOESS Curves of Non-Transformed Z Scored Expression for all 16 Regions By Gene with SE no points",
         height = 9, 
         width = 9,
