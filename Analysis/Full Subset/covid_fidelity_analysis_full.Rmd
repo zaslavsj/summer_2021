@@ -1,5 +1,7 @@
 ---
-title: "COVID-19 Project: RSKC Analysis for Fidelity Scores - Proteases, Receptors, and Integrins Together"
+title: | 
+  | COVID-19 Project: RSKC Analysis for Fidelity Scores
+  | Proteases, Receptors, and Integrins Together
 author: "Rachel Kwan and Jonathan Zaslavsky"
 date: "`r Sys.Date()`"
 output: pdf_document
@@ -43,7 +45,7 @@ genes_full_list <- c("ANPEP", "ENPEP", "ACE2", "DPP4", "SCARB1", "AXL",
                      "NRP1", "NRP2", "CLEC4M", "CLEC4G", "CD209", "CEACAM1",
                      "TMPRSS2", "FURIN", "ADAM17", "CTSL", "ITGB3", "ITGA5",
                      "ITGB1", "ITGB6", "ITGAV", "ITGB8", "ITGB2", "ITGA2B",
-                     "ITGAM", "ITGAL", "ITGA3", "ITGA8")
+                     "ITGAM", "ITGAL", "ITGA3", "ITGA8", "ITGB5")
 
 # Filter full dataset to include only the genes of interest and drop the
 # columns that correspond to "Entrez" and "Alias".
@@ -87,7 +89,7 @@ myFidelity <- fidelity %>%
 
 ## Perform Robust and Sparse K-Means Clustering (RSKC) and t-SNE Together
 
-This while loop contains sections for RSKC, elbow plot, obtaining weighted data, and tSNE. Desmond's code was used as template for this while loop, in particular, for the RSKC and tSNE sections.
+This while loop contains sections for RSKC, elbow plot, obtaining weighted data, and t-SNE.
 
 ```{r}
 set.seed(72613)
@@ -573,7 +575,7 @@ ggarrange(tsne_list_6[[1]], tsne_list_6[[2]],
 
 ## RSKC (100 Runs)
 
-Having previously selected the number of clusters to use for RSKC (i.e. 4), this portion of the code aims to evaluate the proportion of brain regions clustered together over 100 runs (i.e. 100 different set.seed values). The code is derived from previous work (i.e. Keon and Brendan).
+Having previously selected the number of clusters to use for RSKC (i.e. 4), this portion of the code aims to evaluate the proportion of brain regions clustered together over 100 runs (i.e. 100 different set.seed values).
 
 ```{r}
 # Create empty lists to store the results and the RSKC weighted data frames
@@ -664,9 +666,8 @@ region.rskc.cluster.matches.ordered <- rskc.cluster.regions.long %>%
   mutate(Region_2 = factor(Region_2, levels = regions))
 
 # Plot the adjacency matrix as a heat map
-ggplot(region.rskc.cluster.matches.ordered, aes(x = Region_1,
-                                                y = Region_2,
-                                                fill = Matches)) +
+region_heatmap1 <- ggplot(region.rskc.cluster.matches.ordered,
+                          aes(x = Region_1, y = Region_2, fill = Matches)) +
   geom_tile() +
   scale_fill_gradientn(colours = brewer.pal(n = 9, name = "YlOrRd")) +
   labs(x = NULL,
@@ -675,16 +676,40 @@ ggplot(region.rskc.cluster.matches.ordered, aes(x = Region_1,
   theme_minimal() +
   theme(panel.border = element_blank(),
         panel.background = element_blank(),
-        axis.text.x = element_text(colour = "black", angle = 45),
-        axis.text.y = element_text(colour = "black"),
+        axis.text.x = element_text(size = 12, colour = "black",
+                                   angle = 45,
+                                   vjust = 0.6),
+        axis.text.y = element_text(size = 12, colour = "black"),
+        legend.text = element_text(size = 11, colour = "black"),
         axis.ticks = element_blank())
+region_heatmap1
+```
+
+```{r, echo = FALSE, include = FALSE, eval = FALSE}
+# Save the generated heat map as png in appropriate folder destination
+# within the project directory.
+region_heatmap1_path <- file.path(
+  here("Plots/Full Subset/RSKC Heat Maps",
+       paste0('RSKC_brain_region_clustering_heatmap_K=5_full.png'))
+  )
+
+png(file = region_heatmap1_path,
+    units = "in",
+    width = 8,
+    height = 6,
+    res = 300 #,compression = 'lzw'
+)
+
+print(region_heatmap1)
+
+dev.off()
 ```
 
 #### Hierarchical Clustered Heat Map
 ```{r, fig.align = 'center', fig.height = 5, fig.width = 7}
 # Convert all values in the 'rskc.cluster.regions.wide' matrix into
 # proportions.
-rskc.region.prop <- apply(rskc.cluster.regions.wide, 2, function(x) return(x / 100)) %>%
+rskc.region.prop <- apply(rskc.cluster.regions.wide, 2, function(x) return(x/100)) %>%
   as.matrix()
 
 # Assign a dendrogram for the matrix of matched clustering of RSKC regions.
@@ -713,10 +738,51 @@ heatmap.2(rskc.region.prop,
           )
 ```
 
+```{r, echo = FALSE, include = FALSE, eval = FALSE}
+# Save the generated heat map as png in appropriate folder destination
+# within the project directory.
+region_heatmap2_path <- file.path(
+  here("Plots/Full Subset/RSKC Heat Maps", 
+       paste0('RSKC_brain_region_clustering_heatmap_dendro_K=5_full.png'))
+  )
+
+png(file = region_heatmap2_path,
+    units = "in",
+    width = 8,
+    height = 6,
+    res = 300 #, compression = 'lzw'
+)
+
+# Make the heat map; group the brain regions in the heat map that are clustered
+# together.
+heatmap.2(rskc.region.prop,
+          scale = "none",
+          col = ylOrRd(100),
+          Rowv = rskc_dendro,
+          Colv = rskc_dendro,
+          key = TRUE,
+          keysize = 1,
+          key.xlab = "Proportion of Matches on \n 100 RSKC Runs",
+          trace = "none", # Remove the histogram trace lines from heat map
+          density.info = "none", # Remove the density plot from inside color key
+          srtCol = 45, # Rotate column labels on heat map
+          margins = c(5, 10),
+          cexRow = 1,
+          cexCol = 1,
+          key.xtickfun = function() {
+            breaks = pretty(parent.frame()$breaks)
+            breaks = breaks[c(1, length(breaks))]
+            list(at = parent.frame()$scale01(breaks),
+                 labels = breaks)
+          })
+
+dev.off()
+```
+
 \newpage
 
 ## Select Gene and Cell Combinations of Interest Based on RSKC Weights (100 Runs)
-```{r}
+```{r identify top eight features}
 # Take the average weight for each gene_celltype across 100 RSKC runs.
 weights_100_runs <- rowMeans(rskc.region.weights[-1]) %>%
   as_vector()
@@ -740,7 +806,7 @@ fidelity_top_features <- fidelity_5_clusts[, names(fidelity_5_clusts) %in%
 fidelity_features_clusts <- bind_cols(fidelity_5_clusts[, c(1, ncol(fidelity_5_clusts))],
                                       fidelity_top_features)
 
-# Create a duplicate data frame containing column for cluster labels that are
+# Create a duplicate data frame containing a column for cluster labels that are
 # reassigned based on the order of appearance in the clustered heat map (i.e.
 # clusters in order 1-6 when reading the heat map left to right).
 fidelity_features_clusts <- fidelity_features_clusts %>%
@@ -784,9 +850,11 @@ fidelity_clust_bubble_mean$Gene_Cell <- factor(fidelity_clust_bubble_mean$Gene_C
 bubble_clust <- ggplot(fidelity_clust_bubble_mean, aes(x = Gene_Cell, y = cluster_labels2)) +
   geom_point(aes(size = 5, fill = Mean_Fidelity), colour = "black", pch = 21) +
   coord_flip() +
-  scale_color_gradient2(low = "blue", mid = "white",
-                        high = "red", space = "Lab", guide = "colourbar",
-                        aesthetics = "fill") + # Blue-white-red colour gradient
+  # Blue-white-red colour gradient
+  scale_fill_gradient2(low = "blue", 
+                       mid = "white", 
+                       midpoint = 0, 
+                       high = "red") +
   # scale_fill_viridis(direction = -1) + # Viridis colour gradient
   labs(x = "Gene and Cell Type", # Arranged in smallest to largest RSKC weights
        y = "Cluster",
@@ -812,11 +880,12 @@ bubble_clust <- ggplot(fidelity_clust_bubble_mean, aes(x = Gene_Cell, y = cluste
 bubble_clust
 ```
 
-```{r, echo = FALSE, include = FALSE}
+```{r, echo = FALSE, include = FALSE, eval = FALSE}
 # Save the generated cluster bubble plot as png in appropriate folder destination
 # within the project directory.
 bubble_clust_path <- file.path(
-  here("Plots", paste0("RSKC_bubbleplot_clusters_K=5_full.png"))
+  here("Plots/Full Subset/RSKC Bubble Plots", 
+       paste0("RSKC_bubbleplot_clusters_K=5_full.png"))
   )
 
 png(file = bubble_clust_path,
@@ -847,8 +916,9 @@ fidelity_region_bubble_mean$Gene_Cell <- as.character(fidelity_region_bubble_mea
 fidelity_region_bubble_mean$Gene_Cell <- factor(fidelity_region_bubble_mean$Gene_Cell,
                                                 levels = rev(gene_level_order))
 
-# Rearrange order of dendrogram leaves such that cortices start at the left.
-rskc_dendro2 <- rotate(rskc_dendro, c(4, 5, 3, 2, 1, 17, 18, 14:16, 10:13, 6:9))
+# Rearrange order of dendrogram leaves such that regions with the highest
+# fidelity starts at the left.
+rskc_dendro2 <- rotate(rskc_dendro, c(16:18, 13, 14, 12, 15, 9:11, 8, 7, 6, 5, 1:4))
 
 # Plot dendrogram made previously for heat map, with rearranged order of brain
 # regions
@@ -864,17 +934,39 @@ fidelity_region_bubble_mean$Brain.Region <- factor(fidelity_region_bubble_mean$B
                                                    levels = region_clust_order)
 ```
 
+```{r, echo = FALSE, include = FALSE, eval = FALSE}
+# Save the generated dendrogram for the bubble plot as png in appropriate folder
+# destination within the project directory.
+bubble_dendro_path <- file.path(
+  here("Plots/Full Subset/RSKC Bubble Plots",
+       paste0("RSKC_brain_region_dendro_K=5_full.png"))
+  )
+
+png(file = bubble_dendro_path,
+    units = "in",
+    width = 6,
+    height = 3.5,
+    res = 300 #,compression = 'lzw'
+)
+
+print(plot(rskc_dendro2 %>% set("branches_lwd", 4)))
+
+dev.off()
+```
+
 ### Bubble Plot to Visualize Important Gene and Cell Types per Brain Region
-```{r, warning = FALSE, fig.align = 'center', fig.width = 8, fig.height = 5}
+```{r, warning = FALSE, fig.align = 'center', fig.width = 8, fig.height = 4}
 # Create bubble plot showing brain region vs. gene and cell type. Each point
 # is coloured by the mean fidelity score.
 bubble_region <- ggplot(fidelity_region_bubble_mean, aes(x = Gene_Cell,
                                                          y = Brain.Region)) +
   geom_point(aes(size = 5, fill = Mean_Fidelity), colour = "black", pch = 21) +
   coord_flip() +
-  scale_color_gradient2(low = "blue", mid = "white",
-                        high = "red", space = "Lab", guide = "colourbar",
-                        aesthetics = "fill") + # Blue-white-red colour gradient
+  # Blue-white-red colour gradient
+  scale_fill_gradient2(low = "blue", 
+                       mid = "white", 
+                       midpoint = 0, 
+                       high = "red") +
   # scale_fill_viridis(direction = -1) + # Viridis colour gradient
   labs(x = "Gene and Cell Type", # Arranged in smallest to largest RSKC weights
        y = "Brain Region",
@@ -903,11 +995,12 @@ bubble_region <- ggplot(fidelity_region_bubble_mean, aes(x = Gene_Cell,
 bubble_region
 ```
 
-```{r, echo = FALSE, include = FALSE}
+```{r, echo = FALSE, include = FALSE, eval = FALSE}
 # Save the generated brain region bubble plot as png in appropriate folder
 # destination within the project directory.
 bubble_region_path <- file.path(
-  here("Plots", paste0("RSKC_bubbleplot_regions_K=5_full.png"))
+  here("Plots/Full Subset/RSKC Bubble Plots",
+       paste0("RSKC_bubbleplot_regions_K=5_full.png"))
   )
 
 png(file = bubble_region_path,
@@ -951,11 +1044,12 @@ celltype_viol <- ggplot(fidelity_celltype, aes(x = Cell.Subtype, y = Fidelity,
 celltype_viol
 ```
 
-```{r export violin plot as png, echo = FALSE, include = FALSE}
-# Save the generated bubble plot as png in appropriate folder destination
+```{r export violin plot as png, echo = FALSE, include = FALSE, eval = FALSE}
+# Save the generated violin plot as png in appropriate folder destination
 # within the project directory.
 viol_plot_path <- file.path(
-  here("Plots", paste0("celltype_violin_plot_full.png"))
+  here("Plots/Full Subset/Cluster Violin Plots",
+       paste0("celltype_violin_plot_full.png"))
   )
 
 png(file = viol_plot_path,
@@ -978,7 +1072,7 @@ dev.off()
 # cluster.
 celltype_raincloud <- ggplot(fidelity_celltype, aes(x = cluster_labels,
                                                     y = Fidelity,
-                                               fill = cluster_labels)) +
+                                                    fill = cluster_labels)) +
   geom_violinhalf(position = position_nudge(x = 0.15, y = 0)) +
   coord_flip() +
   geom_jitter(aes(colour = cluster_labels),
@@ -988,17 +1082,19 @@ celltype_raincloud <- ggplot(fidelity_celltype, aes(x = cluster_labels,
   labs(x = "Cluster",
        y = "Fidelity Score",
        fill = "Cluster") +
-  theme(axis.text.x = element_text(colour = "black", size = 10),
-        axis.text.y = element_text(colour = "black", size = 10),
-        axis.title.x = element_text(size = 12),
-        axis.title.y = element_text(size = 12))
+  theme(axis.text.x = element_text(colour = "black", size = 12),
+        axis.text.y = element_text(colour = "black", size = 12),
+        axis.title.x = element_text(size = 14),
+        axis.title.y = element_text(size = 14))
 celltype_raincloud
 ```
-```{r export raincloud plot as png, echo = FALSE, include = FALSE}
+
+```{r export raincloud plot as png, echo = FALSE, include = FALSE, eval = FALSE}
 # Save the generated raincloud plot as png in appropriate folder destination
 # within the project directory.
 raincloud_plot_path <- file.path(
-  here("Plots", paste0("raincloud_plot_full.png"))
+  here("Plots", paste0("raincloud_plot_K=6_full.png"))
+
   )
 
 png(file = raincloud_plot_path,
@@ -1011,4 +1107,11 @@ png(file = raincloud_plot_path,
 print(celltype_raincloud)
 
 dev.off()
+```
+
+\newpage
+
+## Session Information
+```{r, echo = FALSE}
+sessionInfo()
 ```
