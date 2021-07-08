@@ -1165,8 +1165,8 @@ celltype_raincloud
 # Save the generated raincloud plot as png in appropriate folder destination
 # within the project directory.
 raincloud_plot_path <- file.path(
-  here("Plots/Full Subset/Cluster Raincloud Plots",
-       paste0("raincloud_plot_K=6_full.png"))
+  here("Plots", paste0("raincloud_plot_K=6_full.png"))
+
   )
 
 png(file = raincloud_plot_path,
