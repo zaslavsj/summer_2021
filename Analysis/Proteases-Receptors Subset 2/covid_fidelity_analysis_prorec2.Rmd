@@ -50,8 +50,8 @@ fidelity_subset <- all_fidelity %>%
 
 # Tidy the data frame by separating the previous columns into
 # two new columns for the brain region and cell subtype. Assign each of the
-# values to a new column for the fidelity scores. The tidy data's
-# columns each correspond to a varaible and each observation is a new row.
+# values to a new column for the fidelity scores. The tidy data
+# columns each correspond to a variable and each observation is a new row.
 fidelity_subset.long <-  pivot_longer(fidelity_subset, cols = -Gene,
                                       names_to = c("Brain.Region", "Cell.Subtype"),
                                       names_sep = "_",
@@ -79,6 +79,8 @@ fidelity <- fidelity_subset.wide %>%
 myFidelity <- fidelity %>% 
   column_to_rownames("Brain.Region")
 ```
+
+\newpage
 
 ## Perform Robust and Sparse K-Means Clustering (RSKC) and t-SNE Together
 
@@ -299,7 +301,7 @@ while (T) {
 }
 ```
 
-```{r, fig.align = 'center', fig.height = 6, fig.width = 6}
+```{r, echo = FALSE, fig.align = 'center', fig.height = 6, fig.width = 6}
 # Make figures for all the plots obtained from the while loop above
 # i.e. the RSKC scatter plots, the RKSC weights, and elbow plot
 ggarrange(tsne_list[[1]], tsne_list[[2]],
@@ -308,7 +310,7 @@ ggarrange(tsne_list[[1]], tsne_list[[2]],
           nrow = 2)
 ```
 
-```{r, fig.align = 'center', fig.height = 12, fig.width = 16}
+```{r, echo = FALSE, fig.align = 'center', fig.height = 12, fig.width = 16}
 ggarrange(weight_list[[1]], weight_list[[2]],
           weight_list[[3]], weight_list[[4]],
           ncol = 2,
@@ -546,6 +548,8 @@ while (T) {
 }
 ```
 
+\newpage
+
 ```{r, echo = FALSE, fig.align = 'center', fig.height = 14, fig.width = 6}
 # Create 5x2 figure for the 10 scatter plots using  K = 2 for RSKC.
 ggarrange(tsne_list_2[[1]], tsne_list_2[[2]],
@@ -556,6 +560,8 @@ ggarrange(tsne_list_2[[1]], tsne_list_2[[2]],
           ncol = 2,
           nrow = 5)
 ```
+
+\newpage
 
 ```{r, echo = FALSE, fig.align = 'center', fig.height = 14, fig.width = 6}
 # Create 5x2 figure for the 10 scatter plots using  K = 3 for RSKC.
@@ -880,7 +886,8 @@ fidelity_clust_bubble_mean$Gene_Cell <- factor(fidelity_clust_bubble_mean$Gene_C
 ```{r generate cluster bubble plot, fig.align = 'center', fig.width = 6, fig.height = 4}
 # Create bubble plot showing cluster label vs. gene and cell type. Each point
 # is coloured by the mean fidelity score.
-bubble_clust <- ggplot(fidelity_clust_bubble_mean, aes(x = Gene_Cell, y = cluster_labels2)) +
+bubble_clust <- ggplot(fidelity_clust_bubble_mean, aes(x = Gene_Cell,
+                                                       y = cluster_labels2)) +
   geom_point(aes(size = 5, fill = Mean_Fidelity), colour = "black", pch = 21) +
   coord_flip() +
   # Blue-white-red colour gradient
@@ -987,10 +994,11 @@ dev.off()
 ```
 
 ### Bubble Plot to Visualize Important Gene and Cell Types per Brain Region
-```{r generate region bubble plot, fig.align = 'center', fig.width = 8, fig.height = 5}
+```{r generate region bubble plot, fig.align = 'center', fig.width = 8, fig.height = 3.5}
 # Create bubble plot showing brain region vs. gene and cell type. Each point
 # is coloured by the mean fidelity score.
-bubble_region <- ggplot(fidelity_region_bubble_mean, aes(x = Gene_Cell, y = Brain.Region)) +
+bubble_region <- ggplot(fidelity_region_bubble_mean, aes(x = Gene_Cell,
+                                                         y = Brain.Region)) +
   geom_point(aes(size = 5, fill = Mean_Fidelity), colour = "black", pch = 21) +
   coord_flip() +
   # Blue-white-red colour gradient
@@ -1047,7 +1055,9 @@ dev.off()
 
 \newpage
 
-## Violin Plot for Visualizing Cell Type Fidelity Scores
+## Visualizing Summary Statistics for Fidelity Score Data
+
+### Violin Plot for Visualizing Cell Type Fidelity Scores
 ```{r generate violin plot, fig.align = 'center', fig.width = 8, fig.height = 4}
 # Prepare a data frame containing separate columns for the cell type and 
 # fidelity score.
@@ -1062,14 +1072,16 @@ celltype_viol <- ggplot(fidelity_celltype, aes(x = Cell.Subtype, y = Fidelity,
                                                fill = Cell.Subtype)) +
   geom_violin(trim = FALSE) +
   geom_boxplot(width = 0.1, fill = "white") +
-  theme_minimal() +
   labs(x = "Cell Type",
        y = "Fidelity Score",
        fill = "Cell Type") +
-  theme(axis.text.x = element_text(colour = "black", size = 10),
-        axis.text.y = element_text(colour = "black", size = 10),
-        axis.title.x = element_text(size = 12),
-        axis.title.y = element_text(size = 12))
+  theme(axis.text.x = element_text(colour = "black", size = 12),
+        axis.text.y = element_text(colour = "black", size = 12),
+        axis.title.x = element_text(size = 14, face = "bold"),
+        axis.title.y = element_text(size = 14, face = "bold"),
+        panel.grid.major = element_blank(),
+        panel.background = element_blank(),
+        axis.line = element_line(size = 0.5, colour = "black"))
 celltype_viol
 ```
 
@@ -1095,8 +1107,8 @@ dev.off()
 
 \newpage
 
-## Raincloud Plots for Fidelity Scores by Cluster
-```{r generate raincloud plot, fig.align = 'center', fig.width = 8, fig.height = 7}
+### Raincloud Plots for Fidelity Scores by Cluster
+```{r generate raincloud plot, fig.align = 'center', fig.width = 8, fig.height = 6}
 # Define colour palette for the clusters.
 cluster_colours <- c("#4477AA", "#66CCEE", "#228833")#, "#CCBB44", "#EE6677", "#AA3377")
 
@@ -1109,6 +1121,7 @@ celltype_raincloud <- ggplot(fidelity_celltype, aes(x = cluster_labels,
   coord_flip() +
   scale_fill_manual(values = cluster_colours) +
   scale_colour_manual(values = cluster_colours) +
+  scale_y_continuous(breaks = c(-5, 0, 5, 10, 15)) +
   geom_jitter(aes(colour = cluster_labels),
               width = 0.1, size = 1, alpha = 0.5) +
   geom_boxplot(width = 0.1, outlier.shape = NA, alpha = 0.5) +
@@ -1117,8 +1130,8 @@ celltype_raincloud <- ggplot(fidelity_celltype, aes(x = cluster_labels,
        fill = "Cluster") +
   theme(axis.text.x = element_text(colour = "black", size = 12),
         axis.text.y = element_text(colour = "black", size = 12),
-        axis.title.x = element_text(size = 14),
-        axis.title.y = element_text(size = 14),
+        axis.title.x = element_text(size = 14, face = "bold"),
+        axis.title.y = element_text(size = 14, face = "bold"),
         legend.key = element_blank(),
         panel.grid.major = element_blank(),
         panel.background = element_blank(),
@@ -1144,6 +1157,161 @@ png(file = raincloud_plot_path,
 print(celltype_raincloud)
 
 dev.off()
+```
+
+\newpage
+
+### Violin Plot of Brain Region Fidelity Scores by Cell Type for Each Gene
+```{r, echo = FALSE, fig.align = 'center', fig.width = 10, fig.height = 10}
+# Prepare subset data frame with only ACE2 information.
+fidelity_ACE2_summary <- fidelity_celltype %>% 
+  filter(Gene == "ACE2")
+
+# Prepare subset data frame with only DPP4 information.
+fidelity_DPP4_summary <- fidelity_celltype %>% 
+  filter(Gene == "DPP4")
+
+# Prepare subset data frame with only NRP1 information.
+fidelity_NRP1_summary <- fidelity_celltype %>% 
+  filter(Gene == "NRP1")
+
+# Prepare subset data frame with only TMPRSS2 information.
+fidelity_TMPRSS2_summary <- fidelity_celltype %>% 
+  filter(Gene == "TMPRSS2")
+
+# Prepare subset data frame with only FURIN information.
+fidelity_FURIN_summary <- fidelity_celltype %>% 
+  filter(Gene == "FURIN")
+
+# Prepare subset data frame with only ADAM17 information.
+fidelity_ADAM17_summary <- fidelity_celltype %>% 
+  filter(Gene == "ADAM17")
+
+# Combine all of the gene subsets into one list.
+gene_summary_subsets <- list(fidelity_ACE2_summary, fidelity_DPP4_summary,
+                             fidelity_NRP1_summary, fidelity_TMPRSS2_summary,
+                             fidelity_FURIN_summary, fidelity_ADAM17_summary)
+
+# Create list of violin plots showing the fidelity score distributions based on
+# the brain regions for each cell type, for each gene of interest.
+gene_celltype_viol <- lapply(gene_summary_subsets, function(i) {
+  ggplot(i, aes(x = Cell.Subtype, y = Fidelity, 
+                                               fill = Cell.Subtype)) +
+  geom_violin(trim = FALSE) +
+  geom_boxplot(width = 0.1, fill = "white") +
+  scale_x_discrete(labels = c("A", "M", "N", "O")) +
+  labs(x = "Cell Type",
+       y = "Fidelity Score",
+       fill = "Cell Type") +
+  theme(axis.text.x = element_text(size = 12, colour = "black"),
+        axis.text.y = element_text(size = 12, colour = "black"),
+        axis.title.x = element_text(size = 14, face = "bold"),
+        axis.title.y = element_text(size = 14, face = "bold"),
+        axis.line.x = element_line(size = 0.5, colour = "black"),
+        axis.line.y = element_line(size = 0.5, colour = "black"),
+        panel.background = element_blank(),
+        panel.grid = element_blank())
+})
+
+facet_gene_celltype <- ggarrange(gene_celltype_viol[[1]], gene_celltype_viol[[2]],
+                                 gene_celltype_viol[[3]], gene_celltype_viol[[4]],
+                                 gene_celltype_viol[[5]], gene_celltype_viol[[6]],
+                                 nrow = 3,
+                                 ncol = 2, 
+                                 labels = c("ACE2", "DPP4", "NRP1",
+                                            "TMPRSS2", "FURIN", "ADAM17"),
+                                 label.x = 0.7,
+                                 label.y = 1,
+                                 align = "hv")
+facet_gene_celltype
+```
+
+\newpage
+
+### Violin Plot of Gene Fidelity Scores by Cell Type for Brain Region
+```{r, echo = FALSE, fig.align = 'center', fig.width = 15, fig.height = 10}
+# Prepare subset data frame with only FCX information.
+fidelity_FCX_summary <- fidelity_celltype %>% 
+  filter(Brain.Region == "FCX")
+
+# Prepare subset data frame with only PCX information.
+fidelity_PCX_summary <- fidelity_celltype %>% 
+  filter(Brain.Region == "PCX")
+
+# Prepare subset data frame with only TCX information.
+fidelity_TCX_summary <- fidelity_celltype %>% 
+  filter(Brain.Region == "TCX")
+
+# Prepare subset data frame with only OCX information.
+fidelity_OCX_summary <- fidelity_celltype %>% 
+  filter(Brain.Region == "OCX")
+
+# Prepare subset data frame with only AMY information.
+fidelity_AMY_summary <- fidelity_celltype %>% 
+  filter(Brain.Region == "AMY")
+
+# Prepare subset data frame with only HIP information.
+fidelity_HIP_summary <- fidelity_celltype %>% 
+  filter(Brain.Region == "HIP")
+
+# Prepare subset data frame with only STR information.
+fidelity_STR_summary <- fidelity_celltype %>% 
+  filter(Brain.Region == "STR")
+
+# Prepare subset data frame with only DI information.
+fidelity_DI_summary <- fidelity_celltype %>% 
+  filter(Brain.Region == "DI")
+
+# Prepare subset data frame with only CB information.
+fidelity_CB_summary <- fidelity_celltype %>% 
+  filter(Brain.Region == "CB")
+
+# Combine all of the region subsets into one list.
+region_summary_subsets <- list(fidelity_FCX_summary, fidelity_PCX_summary,
+                               fidelity_TCX_summary, fidelity_OCX_summary,
+                               fidelity_AMY_summary, fidelity_HIP_summary,
+                               fidelity_STR_summary, fidelity_DI_summary,
+                               fidelity_CB_summary)
+
+# Create list of violin plots showing the fidelity score distributions based on
+# the brain regions for each cell type, for each gene of interest.
+region_celltype_viol <- lapply(region_summary_subsets, function(i) {
+  ggplot(i, aes(x = Cell.Subtype, y = Fidelity, 
+                                               fill = Cell.Subtype)) +
+  geom_violin(trim = FALSE) +
+  geom_boxplot(width = 0.1, fill = "white") +
+  scale_x_discrete(labels = c("A", "M", "N", "O")) +
+  labs(x = "Cell Type",
+       y = "Fidelity Score",
+       fill = "Cell Type") +
+  theme(axis.text.x = element_text(size = 12, colour = "black"),
+        axis.text.y = element_text(size = 12, colour = "black"),
+        axis.title.x = element_text(size = 14, face = "bold"),
+        axis.title.y = element_text(size = 14, face = "bold"),
+        axis.line.x = element_line(size = 0.5, colour = "black"),
+        axis.line.y = element_line(size = 0.5, colour = "black"),
+        panel.background = element_blank(),
+        panel.grid = element_blank())
+})
+
+facet_region_celltype <- ggarrange(region_celltype_viol[[1]],
+                                   region_celltype_viol[[2]],
+                                   region_celltype_viol[[3]],
+                                   region_celltype_viol[[4]],
+                                   region_celltype_viol[[5]],
+                                   region_celltype_viol[[6]],
+                                   region_celltype_viol[[7]],
+                                   region_celltype_viol[[8]],
+                                   region_celltype_viol[[9]],
+                                   nrow = 3,
+                                   ncol = 3,
+                                   labels = c("FCX", "PCX", "TCX",
+                                              "OCX", "AMY", "HIP",
+                                              "STR", "DI", "CB"),
+                                   label.x = 0.7,
+                                   label.y = 1,
+                                   align = "hv")
+facet_region_celltype
 ```
 
 \newpage
