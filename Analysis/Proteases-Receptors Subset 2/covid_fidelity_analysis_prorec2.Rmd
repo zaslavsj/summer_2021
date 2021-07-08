@@ -1268,9 +1268,9 @@ fidelity_CB_summary <- fidelity_celltype %>%
 
 # Combine all of the region subsets into one list.
 region_summary_subsets <- list(fidelity_FCX_summary, fidelity_PCX_summary,
-                               fidelity_TCX_summary, fidelity_OCX_summary,
-                               fidelity_AMY_summary, fidelity_HIP_summary,
+                               fidelity_OCX_summary, fidelity_TCX_summary,
                                fidelity_STR_summary, fidelity_DI_summary,
+                               fidelity_HIP_summary, fidelity_AMY_summary,
                                fidelity_CB_summary)
 
 # Create list of violin plots showing the fidelity score distributions based on
@@ -1305,9 +1305,9 @@ facet_region_celltype <- ggarrange(region_celltype_viol[[1]],
                                    region_celltype_viol[[9]],
                                    nrow = 3,
                                    ncol = 3,
-                                   labels = c("FCX", "PCX", "TCX",
-                                              "OCX", "AMY", "HIP",
-                                              "STR", "DI", "CB"),
+                                   labels = c("FCX", "PCX", "OCX",
+                                              "TCX", "STR", "DI",
+                                              "HIP", "AMY", "CB"),
                                    label.x = 0.7,
                                    label.y = 1,
                                    align = "hv")
@@ -1316,8 +1316,10 @@ facet_region_celltype
 
 \newpage
 
-## Correlation Matrix of Gene and Cell Subtypes
-```{r, fig.align = 'center', fig.width = 8, fig.height = 8}
+## Correlation Matrices
+
+### All Gene and Cell Subtypes
+```{r, echo = FALSE, fig.align = 'center', fig.width = 8, fig.height = 8}
 # Prepare data frame that contains all gene_celltype and associated fidelity
 # scores.
 fidelity_gene_celltype <- fidelity %>% 
@@ -1330,6 +1332,90 @@ fidelity_gene_celltype_cor <- cor(fidelity_gene_celltype)
 # all genes and cell subtypes across all brain regions. Wrap the figure with
 # a hierarchical cluster dendrogram.
 heatmap.2(fidelity_gene_celltype_cor,
+          scale = "none", 
+          col = colorRampPalette(c("darkblue", "white", "darkred"))(200),
+          hclustfun = hclust,
+          key = TRUE,
+          key.xlab = "Correlation",
+          lhei = c(1, 7),
+          keysize = 0.9,
+          key.par = list(cex = 0.5),
+          trace = "none", # Remove the histogram trace from heat map
+          density.info = "none", # Remove the histogram from color key
+          margins = c(14, 12), # Adjust dimensions of heat map
+          # Include only first and last labels on x-axis of legend
+          key.xtickfun = function(){
+            breaks = pretty(parent.frame()$breaks)
+            breaks = breaks[c(1, length(breaks))]
+            list(at = parent.frame()$scale01(breaks),
+                 labels = breaks)
+          }
+          )
+```
+
+\newpage
+
+### Receptor Genes and Cell Subtypes for All Brain Regions
+```{r, echo = FALSE, fig.align = 'center', fig.width = 6, fig.height = 6}
+# Define a vector used to match strings that start with the name of a receptor.
+receptors_toMatch <- c("^ACE2", "^DPP4", "^NRP1")
+
+# Prepare data frame that contains all receptor gene_celltype and associated
+# fidelity scores.
+fidelity_gene_celltype_receptors <- fidelity %>% 
+  select(grep(paste(receptors_toMatch, collapse = "|"),
+              as_vector(colnames(fidelity)),
+              value = TRUE))
+
+# Compute the correlation matrix for the gene_celltype across all brain regions.
+fidelity_gene_celltype_receptors_cor <- cor(fidelity_gene_celltype_receptors)
+
+# Create heat map visualizing the correlation matrix of fidelity scores for 
+# receptor genes and cell subtypes across all brain regions. Wrap the figure
+# with a hierarchical cluster dendrogram.
+heatmap.2(fidelity_gene_celltype_receptors_cor,
+          scale = "none", 
+          col = colorRampPalette(c("darkblue", "white", "darkred"))(200),
+          hclustfun = hclust,
+          key = TRUE,
+          key.xlab = "Correlation",
+          lhei = c(1, 7),
+          keysize = 0.9,
+          key.par = list(cex = 0.5),
+          trace = "none", # Remove the histogram trace from heat map
+          density.info = "none", # Remove the histogram from color key
+          margins = c(14, 12), # Adjust dimensions of heat map
+          # Include only first and last labels on x-axis of legend
+          key.xtickfun = function(){
+            breaks = pretty(parent.frame()$breaks)
+            breaks = breaks[c(1, length(breaks))]
+            list(at = parent.frame()$scale01(breaks),
+                 labels = breaks)
+          }
+          )
+```
+
+\newpage
+
+### Protease Genes and Cell Subtypes for All Brain Regions
+```{r, echo = FALSE, fig.align = 'center', fig.width = 6, fig.height = 6}
+# Define a vector used to match strings that start with the name of a protease.
+protease_toMatch <- c("^TMPRSS2", "^FURIN", "^ADAM17")
+
+# Prepare data frame that contains all protease gene_celltype and associated
+# fidelity scores.
+fidelity_gene_celltype_proteases <- fidelity %>% 
+  select(grep(paste(protease_toMatch, collapse = "|"),
+              as_vector(colnames(fidelity)),
+              value = TRUE))
+
+# Compute the correlation matrix for the gene_celltype across all brain regions.
+fidelity_gene_celltype_proteases_cor <- cor(fidelity_gene_celltype_proteases)
+
+# Create heat map visualizing the correlation matrix of fidelity scores for 
+# protease genes and cell subtypes across all brain regions. Wrap the figure
+# with a hierarchical cluster dendrogram.
+heatmap.2(fidelity_gene_celltype_proteases_cor,
           scale = "none", 
           col = colorRampPalette(c("darkblue", "white", "darkred"))(200),
           hclustfun = hclust,
