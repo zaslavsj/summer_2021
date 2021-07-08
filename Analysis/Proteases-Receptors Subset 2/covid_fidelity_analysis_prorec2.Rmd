@@ -1314,6 +1314,41 @@ facet_region_celltype <- ggarrange(region_celltype_viol[[1]],
 facet_region_celltype
 ```
 
+## Correlation Matrix of Gene and Cell Subtypes
+```{r, fig.align = 'center', fig.width = 8, fig.height = 8}
+# Prepare data frame that contains all gene_celltype and associated fidelity
+# scores.
+fidelity_gene_celltype <- fidelity %>% 
+  select(-c("Brain.Region", "cluster_labels"))
+
+# Compute the correlation matrix for the gene_celltype across all brain regions.
+fidelity_gene_celltype_cor <- cor(fidelity_gene_celltype)
+
+# Create heat map visualizing the correlation matrix of fidelity scores for 
+# all genes and cell subtypes across all brain regions. Wrap the figure with
+# a hierarchical cluster dendrogram.
+heatmap.2(fidelity_gene_celltype_cor,
+          scale = "none", 
+          col = colorRampPalette(c("darkblue", "white", "darkred"))(200),
+          hclustfun = hclust,
+          key = TRUE,
+          key.xlab = "Correlation",
+          lhei = c(1, 7),
+          keysize = 0.9,
+          key.par = list(cex = 0.5),
+          trace = "none", # Remove the histogram trace from heat map
+          density.info = "none", # Remove the histogram from color key
+          margins = c(14, 12), # Adjust dimensions of heat map
+          # Include only first and last labels on x-axis of legend
+          key.xtickfun = function(){
+            breaks = pretty(parent.frame()$breaks)
+            breaks = breaks[c(1, length(breaks))]
+            list(at = parent.frame()$scale01(breaks),
+                 labels = breaks)
+          }
+          )
+```
+
 \newpage
 
 ## Session Information
