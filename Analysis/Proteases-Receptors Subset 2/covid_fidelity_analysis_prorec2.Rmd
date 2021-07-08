@@ -1228,7 +1228,7 @@ facet_gene_celltype
 
 \newpage
 
-### Violin Plot of Gene Fidelity Scores by Cell Type for Brain Region
+### Violin Plot of Gene Fidelity Scores by Cell Type for Each Brain Region
 ```{r, echo = FALSE, fig.align = 'center', fig.width = 15, fig.height = 10}
 # Prepare subset data frame with only FCX information.
 fidelity_FCX_summary <- fidelity_celltype %>% 
@@ -1313,6 +1313,8 @@ facet_region_celltype <- ggarrange(region_celltype_viol[[1]],
                                    align = "hv")
 facet_region_celltype
 ```
+
+\newpage
 
 ## Correlation Matrix of Gene and Cell Subtypes
 ```{r, fig.align = 'center', fig.width = 8, fig.height = 8}
