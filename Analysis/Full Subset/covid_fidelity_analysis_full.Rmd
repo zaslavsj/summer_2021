@@ -319,6 +319,11 @@ ggarrange(weight_list[[1]], weight_list[[2]],
           nrow = 2)
 ```
 
+```{r}
+weight_list[[1]]
+```
+
+
 ```{r, echo = FALSE, fig.align = 'center', fig.height = 5, fig.width = 7}
 elbow_plot
 ```
@@ -618,6 +623,73 @@ for (i in 1:100) {
                                   rskc.results.list[[i]]$weights, "*")
 }
 ```
+
+### RSKC Weights
+```{r}
+# Compute the standard deviation of the weights across 100 runs for each gene.
+weights_sd <- apply(rskc.region.weights[-1], 1, sd) %>% 
+  as_tibble() %>% 
+  rename(Weight_SD = value)
+
+# Compute the average weight for each gene across 100 RSKC runs. Append the
+# average weights to the previously prepared data frame containing the standard
+# deviation of the weights and the names of the genes. Rename the weight column.
+weights_100_runs <- rowMeans(rskc.region.weights[-1]) %>% 
+  as_tibble() %>% 
+  cbind(weights_sd, rskc.region.weights[1]) %>% 
+  rename(Avg_Weight = value)
+
+# Join data frames
+rskc.avg.weights.gene <- inner_join(weights_100_runs, rskc.region.weights,
+                                    by = "Case")
+
+# Obtain the top 8 average weights to show in the bar plot
+rskc.avg.weights.gene.top <- rskc.avg.weights.gene %>%
+  arrange(desc(Avg_Weight)) %>%
+  top_n(8)
+
+# Create a bar plot of the RSKC feature weights for the top 8 genes.
+weights_barplot <- ggplot(rskc.avg.weights.gene.top, aes(x = reorder(Case, -Avg_Weight), 
+                                                         y = Avg_Weight)) +
+  geom_bar(stat = "identity") +
+  geom_errorbar(aes(ymin = Avg_Weight - Weight_SD, 
+                    ymax = Avg_Weight + Weight_SD),
+                size = 0.8,
+                width = 0.3,
+                colour = "black") +
+  labs(x = "Gene",
+       y = "Average RSKC Feature Weight") +
+  theme(
+    axis.text.x = element_text(size = 11, angle = 55, hjust = 1),
+    axis.text.y = element_text(size = 11),
+    axis.title.x = element_text(face = "bold", size = 14),
+    axis.title.y = element_text(face = "bold", size = 14),
+    panel.grid = element_blank()
+  )
+weights_barplot
+```
+
+
+```{r, echo = FALSE, include = FALSE, eval = FALSE}
+# Save the average RSKC weight bar plot as png in appropriate folder destination
+# within the project directory.
+weights_barplot_path <- file.path(
+  here("Plots",
+       paste0('RSKC_top_8_weights_K=5_full.png'))
+  )
+
+png(file = weights_barplot_path,
+    units = "in",
+    width = 8,
+    height = 6,
+    res = 300 #,compression = 'lzw'
+)
+
+print(weights_barplot)
+
+dev.off()
+```
+
 
 ### Calculating Proportion of Times Brain Regions are Clustered Together
 ```{r}
