@@ -1316,6 +1316,279 @@ facet_region_celltype
 
 \newpage
 
+### Bar Plots for Visualizing Cell Type Fidelity Scores of Each Gene by Brain Region
+#### ACE2
+```{r, echo = FALSE, fig.align = 'center', fig.width = 10, fig.height = 10}
+# Change the order of brain regions in the data frame as desired.
+fidelity_ACE2_summary2 <- transform(fidelity_ACE2_summary, 
+                                    Brain.Region = factor(Brain.Region,
+                                                          levels = c("FCX",
+                                                                     "PCX",
+                                                                     "TCX",
+                                                                     "OCX",
+                                                                     "AMY", 
+                                                                     "HIP",
+                                                                     "STR",
+                                                                     "DI",
+                                                                     "CB")))
+
+# Create faceted plot of the fidelity scores for each cell type by brain region
+# for ACE2.
+ACE2_facet_region_celltype <- ggplot(fidelity_ACE2_summary2,
+                                     aes(x = Cell.Subtype, y = Fidelity,
+                                         fill = Cell.Subtype)) +
+  geom_bar(stat = "identity", width = 0.8) +
+  scale_x_discrete(labels = c("A", "M", "N", "O")) +
+  labs(title = "ACE2",
+       x = "Cell Type",
+       y = "Fidelity Score",
+       fill = "Cell Type") +
+  theme(axis.text.x = element_text(size = 12, colour = "black"),
+        axis.text.y = element_text(size = 12, colour = "black"),
+        axis.title.x = element_text(size = 14, face = "bold"),
+        axis.title.y = element_text(size = 14, face = "bold"),
+        axis.line.x = element_line(size = 0.5, colour = "black"),
+        axis.line.y = element_line(size = 0.5, colour = "black"),
+        legend.position = "none",
+        panel.grid.major.y = element_line(colour = "grey90"),
+        panel.background = element_blank(),
+        panel.grid = element_blank())+
+  facet_wrap(~Brain.Region)
+ACE2_facet_region_celltype
+```
+
+```{r export facet fidelity bar plot as png, echo = FALSE, include = FALSE, eval = FALSE}
+# Save the generated bar plot as png in appropriate folder destination
+# within the project directory.
+gene_facet_fidelity_celltype <- file.path(
+  here("Plots/Proteases-Receptors Subset 2/Summary Plots",
+       paste0('ADAM17_region_celltype_bar_plot_prorec2.png'))
+  )
+
+png(file = gene_facet_fidelity_celltype,
+    units = "in",
+    width = 10,
+    height = 10,
+    res = 300 #,compression = 'lzw'
+)
+
+print(ADAM17_facet_region_celltype)
+
+dev.off()
+```
+
+\newpage
+
+#### DPP4
+```{r, echo = FALSE, fig.align = 'center', fig.width = 10, fig.height = 10}
+# Change the order of brain regions in the data frame as desired.
+fidelity_DPP4_summary2 <- transform(fidelity_DPP4_summary, 
+                                    Brain.Region = factor(Brain.Region,
+                                                          levels = c("FCX",
+                                                                     "PCX",
+                                                                     "TCX",
+                                                                     "OCX",
+                                                                     "AMY", 
+                                                                     "HIP",
+                                                                     "STR",
+                                                                     "DI",
+                                                                     "CB")))
+
+# Create faceted plot of the fidelity scores for each cell type by brain region
+# for DPP4.
+DPP4_facet_region_celltype <- ggplot(fidelity_DPP4_summary2,
+                                     aes(x = Cell.Subtype, y = Fidelity,
+                                         fill = Cell.Subtype)) +
+  geom_bar(stat = "identity", width = 0.8) +
+  scale_x_discrete(labels = c("A", "M", "N", "O")) +
+  labs(title = "DPP4",
+       x = "Cell Type",
+       y = "Fidelity Score",
+       fill = "Cell Type") +
+  theme(axis.text.x = element_text(size = 12, colour = "black"),
+        axis.text.y = element_text(size = 12, colour = "black"),
+        axis.title.x = element_text(size = 14, face = "bold"),
+        axis.title.y = element_text(size = 14, face = "bold"),
+        axis.line.x = element_line(size = 0.5, colour = "black"),
+        axis.line.y = element_line(size = 0.5, colour = "black"),
+        legend.position = "none",
+        panel.grid.major.y = element_line(colour = "grey90"),
+        panel.background = element_blank(),
+        panel.grid = element_blank())+
+  facet_wrap(~Brain.Region)
+DPP4_facet_region_celltype
+```
+
+\newpage
+
+#### NRP1
+```{r, echo = FALSE, fig.align = 'center', fig.width = 10, fig.height = 10}
+# Change the order of brain regions in the data frame as desired.
+fidelity_NRP1_summary2 <- transform(fidelity_NRP1_summary, 
+                                    Brain.Region = factor(Brain.Region,
+                                                          levels = c("FCX",
+                                                                     "PCX",
+                                                                     "TCX",
+                                                                     "OCX",
+                                                                     "AMY", 
+                                                                     "HIP",
+                                                                     "STR",
+                                                                     "DI",
+                                                                     "CB")))
+
+# Create faceted plot of the fidelity scores for each cell type by brain region
+# for NRP1.
+NRP1_facet_region_celltype <- ggplot(fidelity_NRP1_summary2,
+                                     aes(x = Cell.Subtype, y = Fidelity,
+                                         fill = Cell.Subtype)) +
+  geom_bar(stat = "identity", width = 0.8) +
+  scale_x_discrete(labels = c("A", "M", "N", "O")) +
+  labs(title = "NRP1",
+       x = "Cell Type",
+       y = "Fidelity Score",
+       fill = "Cell Type") +
+  theme(axis.text.x = element_text(size = 12, colour = "black"),
+        axis.text.y = element_text(size = 12, colour = "black"),
+        axis.title.x = element_text(size = 14, face = "bold"),
+        axis.title.y = element_text(size = 14, face = "bold"),
+        axis.line.x = element_line(size = 0.5, colour = "black"),
+        axis.line.y = element_line(size = 0.5, colour = "black"),
+        legend.position = "none",
+        panel.grid.major.y = element_line(colour = "grey90"),
+        panel.background = element_blank(),
+        panel.grid = element_blank())+
+  facet_wrap(~Brain.Region)
+NRP1_facet_region_celltype
+```
+
+\newpage
+
+#### TMPRSS2
+```{r, echo = FALSE, fig.align = 'center', fig.width = 10, fig.height = 10}
+# Change the order of brain regions in the data frame as desired.
+fidelity_TMPRSS2_summary2 <- transform(fidelity_TMPRSS2_summary, 
+                                    Brain.Region = factor(Brain.Region,
+                                                          levels = c("FCX",
+                                                                     "PCX",
+                                                                     "TCX",
+                                                                     "OCX",
+                                                                     "AMY", 
+                                                                     "HIP",
+                                                                     "STR",
+                                                                     "DI",
+                                                                     "CB")))
+
+# Create faceted plot of the fidelity scores for each cell type by brain region
+# for TMPRSS2.
+TMPRSS2_facet_region_celltype <- ggplot(fidelity_TMPRSS2_summary2,
+                                     aes(x = Cell.Subtype, y = Fidelity,
+                                         fill = Cell.Subtype)) +
+  geom_bar(stat = "identity", width = 0.8) +
+  scale_x_discrete(labels = c("A", "M", "N", "O")) +
+  labs(title = "TMPRSS2",
+       x = "Cell Type",
+       y = "Fidelity Score",
+       fill = "Cell Type") +
+  theme(axis.text.x = element_text(size = 12, colour = "black"),
+        axis.text.y = element_text(size = 12, colour = "black"),
+        axis.title.x = element_text(size = 14, face = "bold"),
+        axis.title.y = element_text(size = 14, face = "bold"),
+        axis.line.x = element_line(size = 0.5, colour = "black"),
+        axis.line.y = element_line(size = 0.5, colour = "black"),
+        legend.position = "none",
+        panel.grid.major.y = element_line(colour = "grey90"),
+        panel.background = element_blank(),
+        panel.grid = element_blank())+
+  facet_wrap(~Brain.Region)
+TMPRSS2_facet_region_celltype
+```
+
+\newpage
+
+#### FURIN
+```{r, echo = FALSE, fig.align = 'center', fig.width = 10, fig.height = 10}
+# Change the order of brain regions in the data frame as desired.
+fidelity_FURIN_summary2 <- transform(fidelity_FURIN_summary, 
+                                    Brain.Region = factor(Brain.Region,
+                                                          levels = c("FCX",
+                                                                     "PCX",
+                                                                     "TCX",
+                                                                     "OCX",
+                                                                     "AMY", 
+                                                                     "HIP",
+                                                                     "STR",
+                                                                     "DI",
+                                                                     "CB")))
+
+# Create faceted plot of the fidelity scores for each cell type by brain region
+# for FURIN.
+FURIN_facet_region_celltype <- ggplot(fidelity_FURIN_summary2,
+                                     aes(x = Cell.Subtype, y = Fidelity,
+                                         fill = Cell.Subtype)) +
+  geom_bar(stat = "identity", width = 0.8) +
+  scale_x_discrete(labels = c("A", "M", "N", "O")) +
+  labs(title = "FURIN",
+       x = "Cell Type",
+       y = "Fidelity Score",
+       fill = "Cell Type") +
+  theme(axis.text.x = element_text(size = 12, colour = "black"),
+        axis.text.y = element_text(size = 12, colour = "black"),
+        axis.title.x = element_text(size = 14, face = "bold"),
+        axis.title.y = element_text(size = 14, face = "bold"),
+        axis.line.x = element_line(size = 0.5, colour = "black"),
+        axis.line.y = element_line(size = 0.5, colour = "black"),
+        legend.position = "none",
+        panel.grid.major.y = element_line(colour = "grey90"),
+        panel.background = element_blank(),
+        panel.grid = element_blank())+
+  facet_wrap(~Brain.Region)
+FURIN_facet_region_celltype
+```
+
+\newpage
+
+#### ADAM17
+```{r, echo = FALSE, fig.align = 'center', fig.width = 10, fig.height = 10}
+# Change the order of brain regions in the data frame as desired.
+fidelity_ADAM17_summary2 <- transform(fidelity_ADAM17_summary, 
+                                    Brain.Region = factor(Brain.Region,
+                                                          levels = c("FCX",
+                                                                     "PCX",
+                                                                     "TCX",
+                                                                     "OCX",
+                                                                     "AMY", 
+                                                                     "HIP",
+                                                                     "STR",
+                                                                     "DI",
+                                                                     "CB")))
+
+# Create faceted plot of the fidelity scores for each cell type by brain region
+# for ADAM17.
+ADAM17_facet_region_celltype <- ggplot(fidelity_ADAM17_summary2,
+                                     aes(x = Cell.Subtype, y = Fidelity,
+                                         fill = Cell.Subtype)) +
+  geom_bar(stat = "identity", width = 0.8) +
+  scale_x_discrete(labels = c("A", "M", "N", "O")) +
+  labs(title = "ADAM17",
+       x = "Cell Type",
+       y = "Fidelity Score",
+       fill = "Cell Type") +
+  theme(axis.text.x = element_text(size = 12, colour = "black"),
+        axis.text.y = element_text(size = 12, colour = "black"),
+        axis.title.x = element_text(size = 14, face = "bold"),
+        axis.title.y = element_text(size = 14, face = "bold"),
+        axis.line.x = element_line(size = 0.5, colour = "black"),
+        axis.line.y = element_line(size = 0.5, colour = "black"),
+        legend.position = "none",
+        panel.grid.major.y = element_line(colour = "grey90"),
+        panel.background = element_blank(),
+        panel.grid = element_blank())+
+  facet_wrap(~Brain.Region)
+ADAM17_facet_region_celltype
+```
+
+\newpage
+
 ## Correlation Matrices
 
 ### All Gene and Cell Subtypes
