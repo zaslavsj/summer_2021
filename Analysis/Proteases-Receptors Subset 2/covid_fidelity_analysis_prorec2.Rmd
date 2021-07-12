@@ -696,7 +696,7 @@ rskc.cluster.regions.long <- rskc.cluster.regions.wide %>%
 
 ### Heat Maps to Visualize Proportion of Shared Clusters
 #### Unclustered Heat Map
-```{r unclustered heat map, fig.align = 'center', fig.height = 5, fig.width = 7}
+```{r unclustered heat map, fig.align = 'center', fig.width = 7, fig.height = 5}
 # Factor the regions with levels corresponding to the specified brain region
 # names from the 'regions' vector.
 region.rskc.cluster.matches.ordered <- rskc.cluster.regions.long %>%
@@ -746,7 +746,7 @@ dev.off()
 ```
 
 #### Hierarchical Clustered Heat Map
-```{r clustered heat map, fig.align = 'center', fig.height = 5, fig.width = 7}
+```{r clustered heat map, fig.align = 'center', fig.width = 7, fig.height = 5}
 # Convert all values in the 'rskc.cluster.regions.wide' matrix into 
 # proportions.
 rskc.region.prop <- apply(rskc.cluster.regions.wide, 2, function(x) return(x/100)) %>% 
@@ -888,7 +888,7 @@ fidelity_clust_bubble_mean$Gene_Cell <- factor(fidelity_clust_bubble_mean$Gene_C
 # is coloured by the mean fidelity score.
 bubble_clust <- ggplot(fidelity_clust_bubble_mean, aes(x = Gene_Cell,
                                                        y = cluster_labels2)) +
-  geom_point(aes(size = 5, fill = Mean_Fidelity), colour = "black", pch = 21) +
+  geom_point(aes(fill = Mean_Fidelity), colour = "black", pch = 21, size = 7) +
   coord_flip() +
   # Blue-white-red colour gradient
   scale_fill_gradient2(low = "blue", 
@@ -999,7 +999,7 @@ dev.off()
 # is coloured by the mean fidelity score.
 bubble_region <- ggplot(fidelity_region_bubble_mean, aes(x = Gene_Cell,
                                                          y = Brain.Region)) +
-  geom_point(aes(size = 5, fill = Mean_Fidelity), colour = "black", pch = 21) +
+  geom_point(aes(fill = Mean_Fidelity), colour = "black", pch = 21, size = 7) +
   coord_flip() +
   # Blue-white-red colour gradient
   scale_fill_gradient2(low = "blue", 
@@ -1123,7 +1123,7 @@ celltype_raincloud <- ggplot(fidelity_celltype, aes(x = cluster_labels,
   scale_colour_manual(values = cluster_colours) +
   scale_y_continuous(breaks = c(-5, 0, 5, 10, 15)) +
   geom_jitter(aes(colour = cluster_labels),
-              width = 0.1, size = 1, alpha = 0.5) +
+              width = 0.1, size = 1, alpha = 0.5, show.legend = FALSE) +
   geom_boxplot(width = 0.1, outlier.shape = NA, alpha = 0.5) +
   labs(x = "Cluster",
        y = "Fidelity Score",
@@ -1132,6 +1132,7 @@ celltype_raincloud <- ggplot(fidelity_celltype, aes(x = cluster_labels,
         axis.text.y = element_text(colour = "black", size = 12),
         axis.title.x = element_text(size = 14, face = "bold"),
         axis.title.y = element_text(size = 14, face = "bold"),
+        legend.position = "none",
         legend.key = element_blank(),
         panel.grid.major = element_blank(),
         panel.background = element_blank(),
@@ -1322,15 +1323,7 @@ facet_region_celltype
 # Change the order of brain regions in the data frame as desired.
 fidelity_ACE2_summary2 <- transform(fidelity_ACE2_summary, 
                                     Brain.Region = factor(Brain.Region,
-                                                          levels = c("FCX",
-                                                                     "PCX",
-                                                                     "TCX",
-                                                                     "OCX",
-                                                                     "AMY", 
-                                                                     "HIP",
-                                                                     "STR",
-                                                                     "DI",
-                                                                     "CB")))
+                                                          levels = regions))
 
 # Create faceted plot of the fidelity scores for each cell type by brain region
 # for ACE2.
@@ -1384,15 +1377,7 @@ dev.off()
 # Change the order of brain regions in the data frame as desired.
 fidelity_DPP4_summary2 <- transform(fidelity_DPP4_summary, 
                                     Brain.Region = factor(Brain.Region,
-                                                          levels = c("FCX",
-                                                                     "PCX",
-                                                                     "TCX",
-                                                                     "OCX",
-                                                                     "AMY", 
-                                                                     "HIP",
-                                                                     "STR",
-                                                                     "DI",
-                                                                     "CB")))
+                                                          levels = regions))
 
 # Create faceted plot of the fidelity scores for each cell type by brain region
 # for DPP4.
@@ -1426,15 +1411,7 @@ DPP4_facet_region_celltype
 # Change the order of brain regions in the data frame as desired.
 fidelity_NRP1_summary2 <- transform(fidelity_NRP1_summary, 
                                     Brain.Region = factor(Brain.Region,
-                                                          levels = c("FCX",
-                                                                     "PCX",
-                                                                     "TCX",
-                                                                     "OCX",
-                                                                     "AMY", 
-                                                                     "HIP",
-                                                                     "STR",
-                                                                     "DI",
-                                                                     "CB")))
+                                                          levels = regions))
 
 # Create faceted plot of the fidelity scores for each cell type by brain region
 # for NRP1.
@@ -1468,15 +1445,7 @@ NRP1_facet_region_celltype
 # Change the order of brain regions in the data frame as desired.
 fidelity_TMPRSS2_summary2 <- transform(fidelity_TMPRSS2_summary, 
                                     Brain.Region = factor(Brain.Region,
-                                                          levels = c("FCX",
-                                                                     "PCX",
-                                                                     "TCX",
-                                                                     "OCX",
-                                                                     "AMY", 
-                                                                     "HIP",
-                                                                     "STR",
-                                                                     "DI",
-                                                                     "CB")))
+                                                          levels = regions))
 
 # Create faceted plot of the fidelity scores for each cell type by brain region
 # for TMPRSS2.
@@ -1510,15 +1479,7 @@ TMPRSS2_facet_region_celltype
 # Change the order of brain regions in the data frame as desired.
 fidelity_FURIN_summary2 <- transform(fidelity_FURIN_summary, 
                                     Brain.Region = factor(Brain.Region,
-                                                          levels = c("FCX",
-                                                                     "PCX",
-                                                                     "TCX",
-                                                                     "OCX",
-                                                                     "AMY", 
-                                                                     "HIP",
-                                                                     "STR",
-                                                                     "DI",
-                                                                     "CB")))
+                                                          levels = regions))
 
 # Create faceted plot of the fidelity scores for each cell type by brain region
 # for FURIN.
@@ -1552,15 +1513,7 @@ FURIN_facet_region_celltype
 # Change the order of brain regions in the data frame as desired.
 fidelity_ADAM17_summary2 <- transform(fidelity_ADAM17_summary, 
                                     Brain.Region = factor(Brain.Region,
-                                                          levels = c("FCX",
-                                                                     "PCX",
-                                                                     "TCX",
-                                                                     "OCX",
-                                                                     "AMY", 
-                                                                     "HIP",
-                                                                     "STR",
-                                                                     "DI",
-                                                                     "CB")))
+                                                          levels = regions))
 
 # Create faceted plot of the fidelity scores for each cell type by brain region
 # for ADAM17.
