@@ -67,7 +67,7 @@ fidelity_subset.wide <- pivot_wider(fidelity_subset.long,
 
 # Define a vector containing brain regions of interest. This list comes from the
 # Oldham Lab website (https://oldhamlab.ctec.ucsf.edu/).
-regions <- c("FCX", "PCX", "TCX", "OCX", "AMY", "HIP", "STR", "DI", "CB")
+regions <- c("FCX", "PCX", "TCX", "OCX", "STR", "DI", "HIP", "AMY", "CB")
 
 # Choose only the desired brain regions from the data frame.
 fidelity <- fidelity_subset.wide %>% 
