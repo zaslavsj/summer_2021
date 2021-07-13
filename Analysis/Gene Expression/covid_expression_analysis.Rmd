@@ -23,6 +23,8 @@ library(dendextend) # For manipulating visual appearance of dendrograms
 library(ggdendro) # For constructing dendrograms based on ggplot
 library(R.devices) # For devEval() to save pdf of loess plots
 library(ggforce) # For facet_wrap_paginate()
+library(impute)
+library(pdftools) # For pdf_combine
 
 # Set the seed
 set.seed(72613)
@@ -50,7 +52,7 @@ genes <- c('ANPEP', 'ENPEP', 'ACE2', 'DPP4', 'SCARB1', 'AXL', 'NRP1', 'NRP2', 'C
 
 # Define a vector containing the 16 brain regions of interest (ordered alphabetically).
 regions_16 <- c('A1C', 'AMY', 'CBC', 'DFC', 'HIP', 'IPC', 'ITC', 'M1C', 'MD', 'MFC', 'OFC',
-             'S1C', 'STC', 'STR', 'V1C', 'VFC')
+                'S1C', 'STC', 'STR', 'V1C', 'VFC')
 
 # Select desired columns from original full data frame, then filter to keep only 
 # desired regions.
@@ -60,17 +62,6 @@ all_expression <- all_expression %>%
 
 # Add 40/52 to the 'Years' column to get rid of negative values.
 all_expression$Years <- all_expression[, 3] + 40/52
-
-# Create a data frame grouping each observation by the brain region and 
-# computing the average expression of each gene within a given brain region. 
-#gene_expression <- all_expression %>% 
-  #group_by(Region) %>%
-  #summarize_at(vars(all_of(genes)), mean) %>%
-  #rename(Brain.Region = Region)
-
-# Use the brain regions to name the rows and remove the brain region column.
-#myExpression <- gene_expression %>%
-  #column_to_rownames("Brain.Region")
 ```
 
 ```{r include=FALSE}
@@ -555,7 +546,7 @@ for (i in 1:100) {
   # a priori.
   rskc.results.list[[i]] = RSKC(myExpression, 
                                 alpha = 0.1, 
-                                ncl = 3, #change number of clusters
+                                ncl = 5, #change number of clusters
                                 L1 = sqrt(ncol(myExpression)))
   
   # Add the cluster assignments for run i to the 'rskc.region.labels'.
@@ -613,14 +604,14 @@ rskc.cluster.regions.long <-  rskc.cluster.regions.wide %>%
 ```{r, fig.align = 'center', fig.height = 5, fig.width = 7}
 # Factor the regions with levels corresponding to the specified brain region
 # names from the 'regions' vector.
-region.rskc.cluster.matches.ordered <-  rskc.cluster.regions.long %>%
+#region.rskc.cluster.matches.ordered <-  rskc.cluster.regions.long %>%
   # Factor Region_1
-  mutate(Region_1 = factor(Region_1, levels = regions)) %>%
+  #mutate(Region_1 = factor(Region_1, levels = regions)) %>%
   # Factor Region_2
-  mutate(Region_2 = factor(Region_2, levels = regions))
+  #mutate(Region_2 = factor(Region_2, levels = regions))
 
 # Plot the adjacency matrix as a heat map
-ggplot(region.rskc.cluster.matches.ordered, aes(x = Region_1, y = Region_2, fill = Matches)) +
+ggplot(rskc.cluster.regions.long, aes(x = Region_1, y = Region_2, fill = Matches)) +
   geom_tile() +
   scale_fill_gradientn(colours = brewer.pal(n = 9, name = "YlOrRd")) +
   labs(x = NULL, 
@@ -632,6 +623,16 @@ ggplot(region.rskc.cluster.matches.ordered, aes(x = Region_1, y = Region_2, fill
         axis.text.x = element_text(colour = "black", angle = 45),
         axis.text.y = element_text(colour = "black"),
         axis.ticks = element_blank())
+```
+
+```{r}
+# FROM BRENDAN'S CODE
+# Plot the adjacency matrix as a heatmap
+ggplot(rskc.cluster.regions.long, aes(x = Region_1, y = Region_2, fill = Matches)) +
+  geom_tile(colour = "black") +
+  scale_fill_gradientn(colours = c("lightyellow", "yellow", "orange", "red")) +
+  theme(axis.text.x = element_text(angle = 270)) +
+  labs(x = NULL, y = NULL, fill = "Proportion of Matches on \n100 RSKC Cluster Runs")
 ```
 
 #### Hierarchical Clustered Heat Map
@@ -882,6 +883,113 @@ heatmap.2(rskc.region.prop,
           )
 ```
 
+#### Without hclust
+```{r, echo = FALSE, fig.align = 'center', fig.width = 7, fig.height = 5}
+# Create empty lists to store the results and the RSKC weighted data frames 
+# that result from the clustering.
+rskc.results.list = list()
+rskc.weighted.list = list()
+
+# Create empty data frames to store the cluster assignments and cluster weights 
+# for each of the 100 runs.
+rskc.region.labels = data.frame("Region" = rownames(myExpression))
+rskc.region.weights = data.frame("Case" = colnames(myExpression))
+
+# Create a vector of seeds for all 100 runs.
+set.seed(72613)
+x = rdunif(100, a = 1, b = 1000000)
+
+for (i in 1:100) {
+  
+  # Set the seed.
+  set.seed(x[i])
+  
+  # Perform RSKC clustering on the data; the number of clusters is selected
+  # a priori.
+  rskc.results.list[[i]] = RSKC(myExpression, 
+                                alpha = 0.1, 
+                                ncl = 5, #change number of clusters
+                                L1 = sqrt(ncol(myExpression)))
+  
+  # Add the cluster assignments for run i to the 'rskc.region.labels'.
+  rskc.region.labels[i+1] = rskc.results.list[[i]]$labels
+  colnames(rskc.region.labels)[i+1] = paste("Run_", i, sep = "")
+  
+  # Add the variable weights for run i to the 'rskc.region.weights'
+  rskc.region.weights[i+1] = rskc.results.list[[i]]$weights
+  colnames(rskc.region.weights)[i+1] = paste("Run_", i, sep = "")
+  
+  # Create a list of data frames containing the clustering data multiplied by 
+  # the corresponding RSKC variable weights.
+  rskc.weighted.list[[i]] = sweep(myExpression, 2, 
+                                  rskc.results.list[[i]]$weights, "*")
+}
+
+# Transpose the data frame with the cluster labels from the 100 runs.
+rskc.region.labels.t <- rskc.region.labels %>%
+  column_to_rownames("Region") %>%
+  t() %>%
+  data.frame()
+
+# Create an empty 16x16 data frame
+rskc.cluster.regions.wide <-  data.frame(matrix(ncol = 16, nrow = 16)) %>%
+  # Set the column and row names as the regions (ordered alphabetically)
+  set_colnames(regions) %>%
+  set_rownames(regions)
+
+# Add in the number of matches for each ith row/jth column combination to 
+# create the adjacency matrix.
+for (i in 1:length(regions)) {
+  for (j in 1:length(regions)) {
+    
+    rskc.cluster.regions.wide[i,j] = sum(rskc.region.labels.t[[regions[i]]] == rskc.region.labels.t[[regions[j]]])
+    
+  }
+}
+
+# Convert the adjacency matrix to long format for various plotting purposes
+rskc.cluster.regions.long <-  rskc.cluster.regions.wide %>%
+  # Give the region row names their own column
+  rownames_to_column("Region_1") %>%
+  # Lengthen the data with melt() so we have three columns: 
+  # Region_1, Region_2 and the total number of matches.
+  melt(id.vars = "Region_1", variable.name = "Region_2", value.name = "Matches") %>%
+  # Convert the number of matches to a proportion
+  mutate(Matches = Matches / 100)
+
+# Convert all values in the 'rskc.cluster.regions.wide' matrix into 
+# proportions.
+rskc.region.prop <- apply(rskc.cluster.regions.wide, 2, function(x) return(x/100)) %>% 
+  as.matrix()
+
+# Assign a dendrogram for the matrix of matched clustering of RSKC regions.
+#rskc_dendro <- set(as.dendrogram(hclust(dist(rskc.region.prop))), "branches_lwd", 3) %>%
+  #reorder(1:20)
+
+# Define a colour 'ylOrRd' from brewer palette.
+ylOrRd <- colorRampPalette(brewer.pal(n = 9, name = "YlOrRd"))
+
+heatmap.2(rskc.region.prop, 
+          scale = "none", 
+          col = ylOrRd(100),
+          #Rowv = rskc_dendro,
+          #Colv = rskc_dendro,
+          key = TRUE,
+          key.xlab = "Proportion of Matches on \n 100 RSKC Runs",
+          trace = "none", # Remove the histogram trace from heat map
+          density.info = "none", # Remove the histogram from color key
+          srtCol = 45, # Rotate column labels on heat map
+          margins = c(5, 10),
+          key.xtickfun = function(){
+            breaks = pretty(parent.frame()$breaks)
+            breaks = breaks[c(1, length(breaks))]
+            list(at = parent.frame()$scale01(breaks),
+                 labels = breaks)
+          }
+          )
+```
+
+
 ### K = 6 Dendrogram-wrapped Heat Map
 
 ```{r, echo = FALSE, fig.align = 'center', fig.width = 7, fig.height = 5}
@@ -989,16 +1097,21 @@ heatmap.2(rskc.region.prop,
           )
 ```
 
-## LOESS Curves
+# LOESS Curves
 
+## Prepare data frame for LOESS Curves (Non-Uniform Age Values)
 ```{r z-score the data}
+# Specify order of regions to display in LOESS curves pdf
+new_regions_order <- c('VFC', 'DFC', 'MFC', 'OFC', 'M1C', 'S1C', 'IPC', 'STC',
+                      'A1C', 'ITC', 'V1C', 'MD', 'AMY', 'HIP', 'STR', 'CBC')
+
 covid.gene.exp.numeric <- all_expression %>%
   #Make sure all expression values are numeric in R
   mutate_at(genes, as.numeric)
 
 covid.gene.exp.zscore <- covid.gene.exp.numeric %>%
   # Group the data by region
-  group_by(Region) %>%
+  group_by(Region) %>% 
   # 'Nest' the data (i.e. build data frames for each region inside of the data frame)
   nest() %>%
   # z-score the data separately for each gene and region
@@ -1006,8 +1119,12 @@ covid.gene.exp.zscore <- covid.gene.exp.numeric %>%
   # Unnest the data
   unnest(cols = c(data))
 
+# Reorder data frame to match desired order
+covid.gene.exp.zscore.ordered <- covid.gene.exp.zscore[order(factor(covid.gene.exp.zscore$Region, 
+                                                                    levels = new_regions_order)),]
+
 # Get long version of z-scored data
-covid.gene.exp.zscore.long <- covid.gene.exp.zscore %>%
+covid.gene.exp.zscore.long <- covid.gene.exp.zscore.ordered %>%
   pivot_longer(cols = all_of(genes),
                names_to = "Gene",
                values_to = "Expression")
@@ -1047,11 +1164,11 @@ covid.gene.exp.zscore.loess.fitted = covid.gene.exp.zscore.loess %>%
 # Save the raw LOESS fitted value data as a csv
 write.csv(covid.gene.exp.zscore.loess.fitted, 
           here::here("Data", 
-                     "COVID Data - Zscored - Fitted LOESS Values for each Gene and Region.csv"),
+                     "COVID Data - Zscored - Fitted LOESS Values for 29 Genes and 16 Regions.csv"),
           row.names = FALSE)
 ```
 
-# Plot a test LOESS Curve
+## Plot a test LOESS Curve
 
 Test LOESS Curve for Z-scored (log2 transformed) Data
 ```{r}
@@ -1061,22 +1178,28 @@ test.raw = covid.gene.exp.zscore.long %>%
 
 ggplot(test.raw, aes(x = Years, y = Expression)) +
   # Add in shading in the background to separate pre-natal, infancy, childhood, and adulthood
-  annotate("rect", xmin = 0, xmax = 40/52, ymin = -Inf, ymax = Inf, alpha = 0.2, fill = "grey40") +
-  annotate("rect", xmin = 40/52, xmax = 92/52, ymin = -Inf, ymax = Inf, alpha = 0.2, fill = "grey60") +
-  annotate("rect", xmin = 92/52, xmax = 40/52 + 18, ymin = -Inf, ymax = Inf, alpha = 0.2, fill = "grey80") +
+  annotate("rect", xmin = 0, xmax = 40/52, ymin = -Inf, ymax = Inf,
+           alpha = 0.2, fill = "grey40") +
+  annotate("rect", xmin = 40/52, xmax = 92/52, ymin = -Inf, ymax = Inf,
+           alpha = 0.2, fill = "grey60") +
+  annotate("rect", xmin = 92/52, xmax = 40/52 + 18, ymin = -Inf, ymax = Inf,
+           alpha = 0.2, fill = "grey80") +
   # Add in a dashed line to separate pre and post-natal
   geom_vline(aes(xintercept = 40/52), linetype = "dashed") +
   # Add in the LOESS curves
-  geom_smooth(method = "loess", span = 0.7091, method.args = list(family = 'gaussian', degree = 2)) +
+  geom_smooth(method = "loess", span = 0.7091,
+              method.args = list(family = 'gaussian', degree = 2)) +
   # Add points
   geom_point(size = 1) +
   # Scale the x-axis by log2 and overwrite the labels
   scale_x_continuous(trans = "log2", 
-                     breaks = c(0, 10/52, 20/52, 40/52, 40/52 + 2/12, 40/52 + 6/12, 92/52, 
-                                40/52 + 2, 40/52 + 4, 40/52 + 8, 40/52 + 16, 40/52 + 32, 
+                     breaks = c(0, 10/52, 20/52, 40/52, 40/52 + 2/12,
+                                40/52 + 6/12, 92/52, 40/52 + 2, 40/52 + 4,
+                                40/52 + 8, 40/52 + 16, 40/52 + 32, 
                                 40/52 + 64, 40/52 + 90),
-                     labels = c("0 PCW", "10 PCW", "20 PCW", "0", "2 M", "6 M", "1 Y", 
-                                "2 Y", "4 Y", "8 Y", "16 Y", "32 Y", "64 Y", "90 Y")) +
+                     labels = c("0 PCW", "10 PCW", "20 PCW", "0", "2 M",
+                                "6 M", "1 Y", "2 Y", "4 Y", "8 Y", "16 Y",
+                                "32 Y", "64 Y", "90 Y")) +
   # Separate the data into 16 panels for each region
   facet_wrap(~Region + Gene) +
   # Label the axes
@@ -1086,36 +1209,47 @@ ggplot(test.raw, aes(x = Years, y = Expression)) +
   theme(axis.text.x = element_text(angle= 270, size = 7),
         axis.text.y = element_text(size = 7),
         axis.title.y = element_text(size = 9),
-        panel.grid = element_blank())
-
+        panel.grid = element_blank(),
+        strip.text.x = element_text(face = "bold"),
+        strip.background = element_rect(fill = "grey75"))
 ```
 
-# Plot the LOESS Curves and Save As PDFs
+## Plot the LOESS Curves and Save As PDFs
 
-PDF of LOESS Curves for Z-scored for 29 Genes by Region 
+### PDF of LOESS Curves for Z-scored for 29 Genes by Region 
 ```{r message=FALSE, warning=FALSE}
+# For order of plots in pdf
+covid.gene.exp.zscore.long$Region <- factor(covid.gene.exp.zscore.long$Region,
+                                            levels = new_regions_order)
+
 # Create the plots and store them as loess.raw.zscore.stamp.collection
 loess.raw.zscore.stamp.collection = ggplot(covid.gene.exp.zscore.long, 
                                            aes(x = Years, y = Expression)) +
   # Add in shading in the background to separate pre-natal, infancy, childhood, 
   # and adulthood
-  annotate("rect", xmin = 0, xmax = 40/52, ymin = -Inf, ymax = Inf, alpha = 0.2, fill = "grey40") +
-  annotate("rect", xmin = 40/52, xmax = 92/52, ymin = -Inf, ymax = Inf, alpha = 0.2, fill = "grey60") +
-  annotate("rect", xmin = 92/52, xmax = 40/52 + 18, ymin = -Inf, ymax = Inf, alpha = 0.2, fill = "grey80") +
+  annotate("rect", xmin = 0, xmax = 40/52, ymin = -Inf, ymax = Inf,
+           alpha = 0.2, fill = "grey40") +
+  annotate("rect", xmin = 40/52, xmax = 92/52, ymin = -Inf, ymax = Inf,
+           alpha = 0.2, fill = "grey60") +
+  annotate("rect", xmin = 92/52, xmax = 40/52 + 18, ymin = -Inf, ymax = Inf,
+           alpha = 0.2, fill = "grey80") +
   # Add in a dashed line to separate pre and post-natal
   geom_vline(aes(xintercept = 40/52), linetype = "dashed") +
   # Add in the LOESS curves
-  geom_smooth(method = "loess", span = 0.7091, method.args = list(family = 'gaussian', degree = 2)) +
+  geom_smooth(method = "loess", span = 0.7091,
+              method.args = list(family = 'gaussian', degree = 2)) +
   # Add points
   #geom_point(size = 1) +
   # Scale the x-axis by log2 and overwrite the labels
   scale_x_continuous(trans = "log2", 
-                     breaks = c(0, 10/52, 20/52, 40/52, 40/52 + 2/12, 40/52 + 6/12, 92/52,
-                                40/52 + 2, 40/52 + 4, 40/52 + 8, 40/52 + 16, 40/52 + 32,
+                     breaks = c(0, 10/52, 20/52, 40/52, 40/52 + 2/12,
+                                40/52 + 6/12, 92/52,40/52 + 2, 40/52 + 4,
+                                40/52 + 8, 40/52 + 16, 40/52 + 32,
                                 40/52 + 64, 40/52 + 90),
-                     labels = c("0 PCW", "10 PCW", "20 PCW", "0", "2 M", "6 M", "1 Y",
-                                "2 Y", "4 Y", "8 Y", "16 Y", "32 Y", "64 Y", "90 Y")) +
-  # Separate the data into 16 panels for each region
+                     labels = c("0 PCW", "10 PCW", "20 PCW", "0", "2 M",
+                                "6 M", "1 Y", "2 Y", "4 Y", "8 Y", "16 Y",
+                                "32 Y", "64 Y", "90 Y")) +
+  # Separate the data into 16 panels (regions) for each gene
   facet_wrap(~Gene + Region) +
   # Label the axes
   labs(x = "Age", y = "Lifespan Trajectory of Gene Expression") +
@@ -1124,17 +1258,21 @@ loess.raw.zscore.stamp.collection = ggplot(covid.gene.exp.zscore.long,
   theme(axis.text.x = element_text(angle= 270, size = 7),
         axis.text.y = element_text(size = 7),
         axis.title.y = element_text(size = 9),
-        panel.grid = element_blank())
+        panel.grid = element_blank(),
+        strip.text.x = element_text(face = "bold"),
+        strip.background = element_rect(fill = "grey75"))
 
 # Determine how many pages we will need
 num_pages = length(genes)
+```
 
+```{r eval=FALSE, include=FALSE}
 # Save the plots as a pdf
 devEval(type = "pdf",
         path = here("Exploration"),
-        name = "LOESS Curves of Non-Transformed Z Scored Expression for all 29 Genes By Region with SE no points",
+        name = "LOESS Curves of Z Scored Expression for all 29 Genes By Region with SE no points - wide",
         height = 9, 
-        width = 9,
+        width = 12,
         expr = {
           for (j in 1:num_pages) {
             # Plot LOESS curve for each and facet wrap by gene
@@ -1146,129 +1284,100 @@ devEval(type = "pdf",
         })
 ```
 
-PDF of LOESS Curves for Z-scored for 16 Regions by Gene 
-```{r message=FALSE, warning=FALSE}
+
+### PDF of LOESS Curves for Z-scored for 16 Regions by Genes
+```{r}
+# Use for loop to create a separate PDF for each region, each PDF contains
+# 29 LOESS plots for each gene. This will result in 16 PDFs which will later
+# be merged together one PDF.
+for (i in new_regions_order) {
+
+subset <- subset(covid.gene.exp.zscore.long, Region == i)
+
 # Create the plots and store them as loess.raw.zscore.stamp.collection
-loess.raw.zscore.stamp.collection = ggplot(covid.gene.exp.zscore.long, 
-                                           aes(x = Years, y = Expression)) +
+loess.raw.zscore.stamp.collection <- ggplot(subset, 
+                                            aes(x = Years, y = Expression)) +
   # Add in shading in the background to separate pre-natal, infancy, childhood, 
   # and adulthood
-  annotate("rect", xmin = 0, xmax = 40/52, ymin = -Inf, ymax = Inf, alpha = 0.2, fill = "grey40") +
-  annotate("rect", xmin = 40/52, xmax = 92/52, ymin = -Inf, ymax = Inf, alpha = 0.2, fill = "grey60") +
-  annotate("rect", xmin = 92/52, xmax = 40/52 + 18, ymin = -Inf, ymax = Inf, alpha = 0.2, fill = "grey80") +
+  annotate("rect", xmin = 0, xmax = 40/52, ymin = -Inf, ymax = Inf,
+           alpha = 0.2, fill = "grey40") +
+  annotate("rect", xmin = 40/52, xmax = 92/52, ymin = -Inf, ymax = Inf,
+           alpha = 0.2, fill = "grey60") +
+  annotate("rect", xmin = 92/52, xmax = 40/52 + 18, ymin = -Inf, ymax = Inf,
+           alpha = 0.2, fill = "grey80") +
   # Add in a dashed line to separate pre and post-natal
   geom_vline(aes(xintercept = 40/52), linetype = "dashed") +
   # Add in the LOESS curves
-  geom_smooth(method = "loess", span = 0.7091, method.args = list(family = 'gaussian', degree = 2)) +
+  geom_smooth(method = "loess", span = 0.7091,
+              method.args = list(family = 'gaussian', degree = 2)) +
   # Add points
   #geom_point(size = 1) +
   # Scale the x-axis by log2 and overwrite the labels
   scale_x_continuous(trans = "log2", 
-                     breaks = c(0, 10/52, 20/52, 40/52, 40/52 + 2/12, 40/52 + 6/12, 92/52,
-                                40/52 + 2, 40/52 + 4, 40/52 + 8, 40/52 + 16, 40/52 + 32,
+                     breaks = c(0, 10/52, 20/52, 40/52, 40/52 + 2/12,
+                                40/52 + 6/12, 92/52, 40/52 + 2, 40/52 + 4,
+                                40/52 + 8, 40/52 + 16, 40/52 + 32,
                                 40/52 + 64, 40/52 + 90),
-                     labels = c("0 PCW", "10 PCW", "20 PCW", "0", "2 M", "6 M", "1 Y",
-                                "2 Y", "4 Y", "8 Y", "16 Y", "32 Y", "64 Y", "90 Y")) +
-  # Separate the data into 16 panels for each region
+                     labels = c("0 PCW", "10 PCW", "20 PCW", "0", "2 M",
+                                "6 M", "1 Y", "2 Y", "4 Y", "8 Y", "16 Y",
+                                "32 Y", "64 Y", "90 Y")) +
+  # Separate the data into 29 panels (genes) for each region
   facet_wrap(~Region + Gene) +
   # Label the axes
   labs(x = "Age", y = "Lifespan Trajectory of Gene Expression") +
   # Change up the theme for aesthetics and clarity
   theme_bw() +
-  theme(axis.text.x = element_text(angle= 270, size = 7),
+  theme(axis.text.x = element_text(angle = 270, size = 7),
         axis.text.y = element_text(size = 7),
         axis.title.y = element_text(size = 9),
-        panel.grid = element_blank())
+        panel.grid = element_blank(),
+        strip.text.x = element_text(face = "bold"),
+        strip.background = element_rect(fill = "grey75")) 
 
-# Determine how many pages we will need
-# Each region needs two pages
-num_pages = 2*length(regions)
+# Need 2 pages for the 29 genes in each region
+num_pages2 <- 2
 
 # Save the plots as a pdf
 devEval(type = "pdf",
         path = here("Exploration"),
-        name = "LOESS Curves of Non-Transformed Z Scored Expression for all 16 Regions By Gene with SE no points",
+        name = paste0("LOESS Curves of Z-scored Expression for ", i, " by Gene with SE no points"),
         height = 9, 
-        width = 9,
+        width = 12,
         expr = {
-          for (j in 1:num_pages) {
-            # Plot LOESS curve for each and facet wrap by gene
-            if (j %% 2 == 1) {
+          for (j in 1:num_pages2) {
+            # Plot LOESS curve for each region and facet wrap by gene
               print(loess.raw.zscore.stamp.collection + 
-                    facet_wrap_paginate(vars(Region, Gene), 
-                                        ncol = 4, nrow = 4, 
-                                        page = j, scales = "free_y"))
-              }
-            if (j %% 2 == 0) {
-              print(loess.raw.zscore.stamp.collection + 
-                    facet_wrap_paginate(vars(Region, Gene), 
-                                        ncol = 4, nrow = 3, 
-                                        page = j, scales = "free_y"))
-            }
+                    facet_wrap_paginate(~Region + Gene,
+                                        ncol = 4,
+                                        nrow = 4,
+                                        page = j,
+                                        scales = "free_y"))
           }
+         
         })
+
+}
 ```
 
-Ignore for now:
-
-```{r}
-# Create the plots and store them as loess.raw.stamp.collection
-loess.raw.stamp.collection = ggplot(covid.gene.exp.raw.loess.fitted, 
-                                    aes(x = Years, y = Expression, colour = Region)) +
-  # Add in shading in the background to separate pre-natal, infancy, childhood, and adulthood
-  annotate("rect", xmin = 0, xmax = 40/52, 
-           ymin = -Inf, ymax = Inf, 
-           alpha = 0.2, fill = "grey40") +
-  annotate("rect", xmin = 40/52, xmax = 92/52, 
-           ymin = -Inf, ymax = Inf,
-           alpha = 0.2, fill = "grey60") +
-  annotate("rect", xmin = 92/52, xmax = 40/52 + 18, 
-           ymin = -Inf, ymax = Inf, 
-           alpha = 0.2, fill = "grey80") +
-  # Add in a dashed line to separate pre and post-natal
-  geom_vline(aes(xintercept = 40/52), linetype = "dashed") +
-  # Add in the LOESS curves
-  geom_path(size = 1) +
-  # Scale the x-axis by log2 and overwrite the labels
-  scale_x_continuous(trans = "log2", 
-                     breaks = c(0, 10/52, 20/52, 40/52, 40/52 + 2/12, 40/52 + 6/12, 92/52, 
-                                40/52 + 2, 40/52 + 4, 40/52 + 8, 40/52 + 16, 40/52 + 32, 
-                                40/52 + 64, 40/52 + 90),
-                     labels = c("0 PCW", "10 PCW", "20 PCW", "0", "2 M", "6 M", "1 Y", 
-                                "2 Y", "4 Y", "8 Y", "16 Y", "32 Y", "64 Y", "90 Y")) +
-  # Separate the data into 37 panels for each gene
-  facet_wrap(~Gene) +
-  # Label the axes
-  labs(x = "Age", y = "Lifespan Trajectory of Gene Expression") +
-  # Change up the theme for aesthetics and clarity
-  theme_bw() +
-  theme(axis.text.x = element_text(angle= 270, size = 7),
-        axis.text.y = element_text(size = 7),
-        axis.title.y = element_text(size = 9),
-        panel.grid = element_blank())
-loess.raw.stamp.collection
-
-# Determine how many pages we will need
-# (We do this so we can plot the 37th gene separately on the last page)
-num_pages = ceiling(length(genes)/4)
+```{r, merge pdfs into one}
+# Merge all 16 PDFs into one
+pdf_combine(
+  c("/Users/rachelkwan/Documents/Lab/summer_2021/Exploration/LOESS Curves of Z-scored Expression for VFC by Gene with SE no points.pdf",
+    "/Users/rachelkwan/Documents/Lab/summer_2021/Exploration/LOESS Curves of Z-scored Expression for DFC by Gene with SE no points.pdf",
+    "/Users/rachelkwan/Documents/Lab/summer_2021/Exploration/LOESS Curves of Z-scored Expression for MFC by Gene with SE no points.pdf",
+   "/Users/rachelkwan/Documents/Lab/summer_2021/Exploration/LOESS Curves of Z-scored Expression for OFC by Gene with SE no points.pdf",
+   "/Users/rachelkwan/Documents/Lab/summer_2021/Exploration/LOESS Curves of Z-scored Expression for M1C by Gene with SE no points.pdf",
+   "/Users/rachelkwan/Documents/Lab/summer_2021/Exploration/LOESS Curves of Z-scored Expression for S1C by Gene with SE no points.pdf",
+   "/Users/rachelkwan/Documents/Lab/summer_2021/Exploration/LOESS Curves of Z-scored Expression for IPC by Gene with SE no points.pdf",
+   "/Users/rachelkwan/Documents/Lab/summer_2021/Exploration/LOESS Curves of Z-scored Expression for STC by Gene with SE no points.pdf",
+   "/Users/rachelkwan/Documents/Lab/summer_2021/Exploration/LOESS Curves of Z-scored Expression for A1C by Gene with SE no points.pdf",
+   "/Users/rachelkwan/Documents/Lab/summer_2021/Exploration/LOESS Curves of Z-scored Expression for ITC by Gene with SE no points.pdf",
+   "/Users/rachelkwan/Documents/Lab/summer_2021/Exploration/LOESS Curves of Z-scored Expression for V1C by Gene with SE no points.pdf",
+   "/Users/rachelkwan/Documents/Lab/summer_2021/Exploration/LOESS Curves of Z-scored Expression for MD by Gene with SE no points.pdf",
+   "/Users/rachelkwan/Documents/Lab/summer_2021/Exploration/LOESS Curves of Z-scored Expression for AMY by Gene with SE no points.pdf",
+   "/Users/rachelkwan/Documents/Lab/summer_2021/Exploration/LOESS Curves of Z-scored Expression for HIP by Gene with SE no points.pdf",
+   "/Users/rachelkwan/Documents/Lab/summer_2021/Exploration/LOESS Curves of Z-scored Expression for STR by Gene with SE no points.pdf",
+   "/Users/rachelkwan/Documents/Lab/summer_2021/Exploration/LOESS Curves of Z-scored Expression for CBC by Gene with SE no points.pdf"),
+   output = "/Users/rachelkwan/Documents/Lab/summer_2021/Exploration/LOESS Curves of Z Scored Expression for all 16 Regions by Gene with SE no points - wide.pdf")
 ```
 
-Save all of these plots in a single pdf file.
-
-```{r}
-# Save the plots as a pdf
-devEval(type = "pdf",
-        name = "Supplementary - LOESS Curves of Raw Expression for all 28 Genes in all 16 Regions",
-        path = here::here("Exploration"),
-        height = 7, 
-        width = 9,
-        expr = {
-          for (j in 1:num_pages) {
-              print(covid.gene.exp.raw.loess.fitted + facet_wrap_paginate(~Gene, 
-                                                                          ncol = 2, 
-                                                                          nrow = 2, 
-                                                                          page = j, 
-                                                                          scales = "free_y"))
-          }
-        })
-```
