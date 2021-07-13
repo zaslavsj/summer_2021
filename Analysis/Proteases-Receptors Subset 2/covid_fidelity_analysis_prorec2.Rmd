@@ -24,6 +24,7 @@ library(gplots) # For heatmap.2()
 library(dendextend) # For manipulating visual appearance of dendrograms
 library(ggdendro) # For constructing dendrograms based on ggplot
 library(see) # For geom_violinhalf()
+library(dabestr) # For visualizing estimation statistics
 
 # Set the seed
 set.seed(72613)
@@ -1661,6 +1662,25 @@ heatmap.2(fidelity_gene_celltype_proteases_cor,
                  labels = breaks)
           }
           )
+```
+
+\newpage
+
+## Visualizing Estimation Statistics
+
+### Cummings Estimation Plot
+```{r, fig.align = 'center', fig.width = 7, fig.height = 4}
+# Prepare data for generating estimation plots.
+estim_plot_data <- dabest(fidelity_celltype, x = cluster_labels, y = Fidelity,
+                          idx = list(c(1, 2, 3)),
+                          paired = FALSE)
+
+# Calculate mean differences for the estimation data.
+cluster_mean_diff <- mean_diff(estim_plot_data)
+
+# Create Cummings estimation plot.
+estim_plot <- cluster_mean_diff %>% plot()
+estim_plot
 ```
 
 \newpage
